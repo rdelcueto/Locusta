@@ -1,4 +1,4 @@
-#include "population_set_gpu.h"
+#include "../population_set_gpu.h"
 
 namespace locusta {
 

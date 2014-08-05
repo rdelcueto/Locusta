@@ -1,8 +1,8 @@
 #ifndef LOCUSTA_GA_SOLVER_H
 #define LOCUSTA_GA_SOLVER_H
 
-#include "./evolutionary_solver.h"
-#include "./prngenerator/prngenerator.h"
+#include "../evolutionary_solver.h"
+#include "../../prngenerator/prngenerator.h"
 #include "ga_operators.h"
 
 namespace locusta {

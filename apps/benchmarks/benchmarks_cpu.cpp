@@ -1,4 +1,4 @@
-#include "./evaluator/bound_mapping_cpu.h"
+#include "evaluator/bound_mapping_cpu.h"
 
 namespace locusta {
 

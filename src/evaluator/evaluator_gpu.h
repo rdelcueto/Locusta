@@ -3,7 +3,6 @@
 
 #include "evaluator.h"
 #include "../population/population_set_gpu.h"
-#include "./cuda_common/cuda_helpers.h"
 
 namespace locusta {
 

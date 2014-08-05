@@ -1,7 +1,7 @@
 #ifndef _BENCHMARKS_CPU_H_
 #define _BENCHMARKS_CPU_H_
 
-#include "./evaluator/evaluator_cpu.h"
+#include "evaluator/evaluator_cpu.h"
 
 namespace locusta {
 

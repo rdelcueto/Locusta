@@ -3,7 +3,7 @@
 
 #include <functional>
 
-#include "population_set.h"
+#include "../population/population_set.h"
 
 namespace locusta {
 

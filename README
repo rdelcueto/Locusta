@@ -1,0 +1,14 @@
+Locusta 0.1.0
+A Massively Parallel Evolutionary Computation Metaheuristic Framework.
+
+Locusta provides a framework to build various population based evolutionary metaheuristics.
+
+The current implementation uses CUDA to describe massively parallel kernels, to compute: the evaluation of the fitness function on a population of genomes, the methaheuristic processes (mutation, crossover)  and the generation of pseudorandom numbers.
+
+The current metaheuristics also have a CPU parallel implementation, written using OpenMP. While the results are not invariable, given the CPU and GPU difference in mathematical operations, it provides a way to compare and measure the performance throughoutput per generation, given a metaheuristic and a fitness function.
+
+Current metaheuristics implementations:
+
+  * Genetic Algorithm (Working prototype)
+  * Differential Evolution (NOT IMPLEMENTED)
+  * Particle Swarm Optimization (NOT IMPLEMENTED)

@@ -1,3 +1,5 @@
+#include "cuda_common/cuda_helpers.h"
+
 namespace locusta {
 
     template <typename TFloat>

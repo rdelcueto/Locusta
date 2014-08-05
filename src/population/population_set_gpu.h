@@ -5,7 +5,6 @@
 #include <limits>
 #include "math_constants.h"
 #include "population_set.h"
-#include "./cuda_common/cuda_helpers.h"
 
 namespace locusta {
 

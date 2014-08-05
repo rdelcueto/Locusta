@@ -1,7 +1,16 @@
+set(HFILES
+  prngenerator/prngenerator.h
+  population/population_set.h
+  evaluator/evaluator.h
+  solvers/evolutionary_solver.h
+  solvers/ga/ga_solver.h
+  solvers/ga/ga_operators.h
+  )
+
 set(CUFILES
+  prngenerator/kernel/prngenerator_gpu.cu
   population/kernel/population_set_gpu.cu
   solvers/ga/kernel/ga_operators_gpu.cu
-  prngenerator/kernel/prngenerator_gpu.cu
   )
 
 source_group("CUDA Source Files" FILES ${CUFILES})
@@ -16,7 +25,6 @@ endif (CUDA_VERBOSE_PTXAS)
 
 #set(CUDA_SEPARABLE_COMPILATION ON)
 #set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)
-
 cuda_add_library(locusta-cuda
   ${CUFILES} 
   OPTIONS ${GENCODE_SM11})

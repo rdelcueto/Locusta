@@ -1,7 +1,7 @@
 #ifndef _BENCHMARKS_GPU_H_
 #define _BENCHMARKS_GPU_H_
 
-#include "./evaluator/evaluator_gpu.h"
+#include "evaluator/evaluator_gpu.h"
 
 namespace locusta {
 

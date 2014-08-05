@@ -6,8 +6,8 @@
 #include "ga_solver.h"
 #include "ga_operators_gpu.h"
 
-#include "./prngenerator/prngenerator_gpu.h"
-#include "./population_set_gpu.h"
+#include "../../prngenerator/prngenerator_gpu.h"
+#include "../../population/population_set_gpu.h"
 
 namespace locusta {
 

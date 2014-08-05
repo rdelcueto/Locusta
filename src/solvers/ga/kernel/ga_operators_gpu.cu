@@ -1,4 +1,4 @@
-#include "ga_operators_gpu.h"
+#include "../ga_operators_gpu.h"
 
 namespace locusta {
 

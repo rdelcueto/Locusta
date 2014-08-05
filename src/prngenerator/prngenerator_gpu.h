@@ -4,12 +4,10 @@
 //#define __extern_always_inline
 
 #include <sys/time.h>
-#include "prngenerator.h"
+#include "../prngenerator/prngenerator.h"
 
 #include <curand.h>
 #include <curand_kernel.h>
-#include "./cuda_common/curand_helper.h"
-#include "./cuda_common/cuda_helpers.h"
 
 namespace locusta {
 

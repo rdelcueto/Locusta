@@ -2,7 +2,7 @@
 #define LOCUSTA_GA_OPERATORS_H
 
 #include <functional>
-#include "./prngenerator/prngenerator.h"
+#include "../../prngenerator/prngenerator.h"
 
 namespace locusta {
 

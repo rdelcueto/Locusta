@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-namespace drosophila {
+namespace locusta {
 
     // struct MyException : public exception
     // {

@@ -2,7 +2,7 @@
 #define LOCUSTA_GA_OPERATORS_GPU_H
 
 #include "ga_operators.h"
-#include "./prngenerator/prngenerator_gpu.h"
+#include "../../prngenerator/prngenerator_gpu.h"
 
 #include <curand.h>
 #include <curand_kernel.h>

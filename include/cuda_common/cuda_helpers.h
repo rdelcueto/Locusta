@@ -2,11 +2,12 @@
 #define _CUDA_HELPERS_H_
 
 #include <iostream>
+#include <cuda_runtime.h>
 
 #define CudaSafeCall(err) __cudaSafeCall(err, __FILE__, __LINE__)
 #define CudaCheckError()  __cudaCheckError(__FILE__, __LINE__)
 
-namespace drosophila {
+namespace locusta {
 
     inline void __cudaCheckMemory()
     {

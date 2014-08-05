@@ -3,8 +3,8 @@
 
 #include <limits>
 
-#include "./prngenerator/prngenerator.h"
-#include "evolving_population_set.h"
+#include "../prngenerator/prngenerator.h"
+#include "../population/population_set.h"
 
 namespace locusta {
 
@@ -49,7 +49,7 @@ namespace locusta {
         bool _f_initialized;
 
         // Population Set
-        evolving_population_set<TFloat> * const _population;
+        population_set<TFloat> * const _population;
 
         // Evaluator
         evaluator<TFloat> * const _evaluator;

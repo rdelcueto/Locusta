@@ -1,7 +1,8 @@
 #include <iostream>
 
-#include "prngenerator_gpu.h"
-#include "./cuda_common/cuPrintf.cu"
+#include "../prngenerator_gpu.h"
+
+#include "cuda_common/cuPrintf.cu"
 
 namespace locusta {
 
