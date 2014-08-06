@@ -63,4 +63,14 @@ include_directories(${locusta_INCLUDE_DIRS})
 set(LIB_TYPE STATIC)
 
 add_subdirectory (src)
-add_subdirectory (apps)
+
+# Testing
+################################
+if (test)
+  find_package(GTest REQUIRED)
+  include_directories(${GTEST_INCLUDE_DIRS})
+
+  enable_testing()
+
+  add_subdirectory(tests)
+endif()

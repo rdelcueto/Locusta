@@ -14,12 +14,18 @@ if (CUDA_VERBOSE_PTXAS)
   set(VERBOSE_PTXAS --ptxas-options=-v)
 endif (CUDA_VERBOSE_PTXAS)
 
-add_executable(ga_cpu_test
-  tests/ga_cpu_test.cpp)
-
-cuda_add_executable(ga_gpu_test
-  tests/ga_gpu_test.cpp
+# Unit Tests
+cuda_add_executable(runUnitTests
+  locustaUnitTests.cpp
   ${CUFILES}
 )
 
-target_link_libraries(ga_gpu_test locusta-cuda ${CUDA_curand_LIBRARY})
+# Linking for Google Test.
+target_link_libraries(runUnitTests ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+
+# Locusta & Cuda linking.
+target_link_libraries(runUnitTests locusta-cuda ${CUDA_curand_LIBRARY})
+
+# This is so you can do 'make test' to see all your tests run, instead of
+# manually running the executable runUnitTests to see those specific tests.
+add_test(NAME test-population COMMAND runUnitTests)
