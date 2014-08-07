@@ -65,12 +65,33 @@ set(LIB_TYPE STATIC)
 add_subdirectory (src)
 
 # Testing
-################################
-if (test)
+option(BUILD_TESTS
+  "On to build test suite."
+  OFF
+  )
+
+if (BUILD_TESTS)
   find_package(GTest REQUIRED)
   include_directories(${GTEST_INCLUDE_DIRS})
 
   enable_testing()
 
   add_subdirectory(tests)
+endif()
+
+
+# Documentation
+option(BUILD_DOCS
+  "On to build doxygen documentation."
+  OFF
+  )
+
+if(BUILD_DOCS)
+  find_package(Doxygen REQUIRED)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  add_custom_target(doc ALL
+    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
 endif()
