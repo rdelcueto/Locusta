@@ -106,7 +106,7 @@ namespace locusta {
     }
 
     template <typename TFloat>
-    void initialize_device_population_set_wrapper
+    void initialize_device_population_set_dispatch
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      const uint32_t NUM_DIMENSIONS,
@@ -129,7 +129,7 @@ namespace locusta {
     }
 
     template <typename TFloat>
-    void update_records_wrapper
+    void update_records_dispatch
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      uint32_t * const highest_idx,
@@ -151,7 +151,7 @@ namespace locusta {
     // Template Specialization (float)
   
     template
-    void initialize_device_population_set_wrapper<float>
+    void initialize_device_population_set_dispatch<float>
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      const uint32_t NUM_DIMENSIONS,
@@ -162,7 +162,7 @@ namespace locusta {
      float * const fitness_array);
   
     template
-    void update_records_wrapper<float>
+    void update_records_dispatch<float>
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      uint32_t * const highest_idx,
@@ -174,7 +174,7 @@ namespace locusta {
     // Template Specialization (double)
   
     template
-    void initialize_device_population_set_wrapper<double>
+    void initialize_device_population_set_dispatch<double>
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      const uint32_t NUM_DIMENSIONS,
@@ -185,7 +185,7 @@ namespace locusta {
      double * const fitness_array);
   
     template
-    void update_records_wrapper<double>
+    void update_records_dispatch<double>
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      uint32_t * const highest_idx,

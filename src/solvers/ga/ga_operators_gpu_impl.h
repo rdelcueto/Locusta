@@ -5,7 +5,7 @@ namespace locusta {
     // Cuda Wrappers Forward Declarations
     template<typename TFloat>
         void
-        tournament_select_wrapper
+        tournament_select_dispatch
         (const bool F_SELF_SELECTION,
          const uint32_t SELECTION_SIZE,
          const TFloat SELECTION_P,
@@ -16,7 +16,7 @@ namespace locusta {
          const TFloat * const prnumbers_array);
 
     template<typename TFloat>
-        void whole_crossover_wrapper
+        void whole_crossover_dispatch
         (const TFloat CROSSOVER_RATE,
          const TFloat MUTATION_RATE,
          const TFloat DIST_LIMIT,
@@ -34,7 +34,7 @@ namespace locusta {
          prngenerator<TFloat> * const local_generator);
 
     template<typename TFloat>
-        void migration_ring_wrapper
+        void migration_ring_dispatch
         (const uint32_t NUM_ISLES,
          const uint32_t NUM_AGENTS,
          const uint32_t NUM_DIMENSIONS,
@@ -57,7 +57,7 @@ namespace locusta {
          uint32_t * selection_array,
          const TFloat * const prnumbers_array)
     {
-        tournament_select_wrapper<TFloat>
+        tournament_select_dispatch<TFloat>
             (F_SELF_SELECTION,
              SELECTION_SIZE,
              SELECTION_P,
@@ -86,7 +86,7 @@ namespace locusta {
          const TFloat * const prnumbers_array,
          prngenerator<TFloat> * const local_generator)
     {
-        whole_crossover_wrapper
+        whole_crossover_dispatch
             (CROSSOVER_RATE,
              MUTATION_RATE,
              DIST_LIMIT,
@@ -117,7 +117,7 @@ namespace locusta {
          const uint32_t MIGRATION_SELECTION_SIZE,
          prngenerator<TFloat> * const local_generator)
     {
-        migration_ring_wrapper<TFloat>
+        migration_ring_dispatch<TFloat>
             (NUM_ISLES,
              NUM_AGENTS,
              NUM_DIMENSIONS,

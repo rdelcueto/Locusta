@@ -4,7 +4,7 @@ namespace locusta {
 
     // Cuda Wrappers Forward Declarations
     template <typename TFloat>
-        void initialize_device_population_set_wrapper
+        void initialize_device_population_set_dispatch
         (const uint32_t NUM_ISLES,
          const uint32_t NUM_AGENTS,
          const uint32_t NUM_DIMENSIONS,
@@ -15,7 +15,7 @@ namespace locusta {
          TFloat * const fitness_array);
 
     template <typename TFloat>
-        void update_records_wrapper
+        void update_records_dispatch
         (const uint32_t NUM_ISLES,
          const uint32_t NUM_AGENTS,
          uint32_t * const highest_idx,
@@ -120,7 +120,7 @@ namespace locusta {
                                 sizeof(TFloat) * _NUM_DIMENSIONS,
                                 cudaMemcpyHostToDevice));
 
-        initialize_device_population_set_wrapper<TFloat>(_NUM_ISLES,
+        initialize_device_population_set_dispatch<TFloat>(_NUM_ISLES,
                                                          _NUM_AGENTS,
                                                          _NUM_DIMENSIONS,
                                                          _DEV_LOWER_BOUNDS,
@@ -185,7 +185,7 @@ namespace locusta {
     template <typename TFloat>
         void population_set_gpu<TFloat>::_update_records()
     {
-        update_records_wrapper(_NUM_ISLES,
+        update_records_dispatch(_NUM_ISLES,
                                _NUM_AGENTS,
                                _dev_highest_idx,
                                _dev_lowest_idx,

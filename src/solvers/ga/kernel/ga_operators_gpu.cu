@@ -310,7 +310,7 @@ namespace locusta {
     // -------------
   
     template<typename TFloat>
-    void tournament_select_wrapper
+    void tournament_select_dispatch
     (const bool F_SELF_SELECTION,
      const uint32_t SELECTION_SIZE,
      const TFloat SELECTION_P,
@@ -334,7 +334,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void whole_crossover_wrapper
+    void whole_crossover_dispatch
     (const TFloat CROSSOVER_RATE,
      const TFloat MUTATION_RATE,
      const TFloat DIST_LIMIT,
@@ -378,7 +378,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void migration_ring_wrapper
+    void migration_ring_dispatch
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      const uint32_t NUM_DIMENSIONS,
@@ -423,7 +423,7 @@ namespace locusta {
     // -------------------------------
   
     template
-    void tournament_select_wrapper<float>
+    void tournament_select_dispatch<float>
     (const bool F_SELF_SELECTION,
      const uint32_t SELECTION_SIZE,
      const float SELECTION_P,
@@ -434,7 +434,7 @@ namespace locusta {
      const float * const prnumbers_array);
 
     template
-    void whole_crossover_wrapper<float>
+    void whole_crossover_dispatch<float>
     (const float CROSSOVER_RATE,
      const float MUTATION_RATE,
      const float DIST_LIMIT,
@@ -452,7 +452,7 @@ namespace locusta {
      prngenerator<float> * const local_generator);
 
     template
-    void migration_ring_wrapper<float>
+    void migration_ring_dispatch<float>
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      const uint32_t NUM_DIMENSIONS,
@@ -469,7 +469,7 @@ namespace locusta {
     // --------------------------------
   
     template
-    void tournament_select_wrapper<double>
+    void tournament_select_dispatch<double>
     (const bool F_SELF_SELECTION,
      const uint32_t SELECTION_SIZE,
      const double SELECTION_P,
@@ -480,7 +480,7 @@ namespace locusta {
      const double * const prnumbers_array);
 
     template
-    void whole_crossover_wrapper<double>
+    void whole_crossover_dispatch<double>
     (const double CROSSOVER_RATE,
      const double MUTATION_RATE,
      const double DIST_LIMIT,
@@ -498,7 +498,7 @@ namespace locusta {
      prngenerator<double> * const local_generator);
 
     template
-    void migration_ring_wrapper<double>
+    void migration_ring_dispatch<double>
     (const uint32_t NUM_ISLES,
      const uint32_t NUM_AGENTS,
      const uint32_t NUM_DIMENSIONS,

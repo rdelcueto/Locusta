@@ -31,7 +31,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void gpu_setup_curand_wrapper(uint64_t seed,
+    void gpu_setup_curand_dispatch(uint64_t seed,
                                   curandState *curand_states,
                                   uint32_t num_generators)
     {
@@ -56,11 +56,11 @@ namespace locusta {
     }
 
     // Explicit specialization
-    template void gpu_setup_curand_wrapper<float>(uint64_t seed,
+    template void gpu_setup_curand_dispatch<float>(uint64_t seed,
                                                   curandState *curand_states,
                                                   uint32_t num_generators);
 
-    template void gpu_setup_curand_wrapper<double>(uint64_t seed,
+    template void gpu_setup_curand_dispatch<double>(uint64_t seed,
                                                    curandState *curand_states,
                                                    uint32_t num_generators);
 

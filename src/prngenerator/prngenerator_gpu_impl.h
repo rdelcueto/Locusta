@@ -4,7 +4,7 @@
 namespace locusta {
 
     template<typename TFloat>
-        void gpu_setup_curand_wrapper(uint64_t seed,
+        void gpu_setup_curand_dispatch(uint64_t seed,
                                       curandState *curand_states,
                                       uint32_t num_generators);
 
@@ -41,7 +41,7 @@ namespace locusta {
         CurandSafeCall(curandSetPseudoRandomGeneratorSeed(_bulk_prng_engine,
                                                           seed));
 
-        gpu_setup_curand_wrapper<TFloat>(seed,
+        gpu_setup_curand_dispatch<TFloat>(seed,
                                          _device_prng_engines,
                                          _NUM_GENERATORS);
     }
