@@ -46,7 +46,7 @@ namespace locusta {
     template <typename TFloat>
     void population_set_cpu<TFloat>::_initialize()
     {
-        // Value Initialization
+        /// Value Initialization
         for(uint32_t i = 0; i < _NUM_DIMENSIONS; ++i)
         {
             _var_ranges[i] = _UPPER_BOUNDS[i] - _LOWER_BOUNDS[i];
@@ -67,7 +67,7 @@ namespace locusta {
             {
                 for(uint32_t k = 0; k < _NUM_DIMENSIONS; ++k)
                 {
-                    // Initialize Data Array
+                    /// Initialize Data Array
                     const uint32_t data_idx =
                         i * _NUM_AGENTS * _NUM_DIMENSIONS +
                         j * _NUM_DIMENSIONS +
@@ -75,10 +75,10 @@ namespace locusta {
 
                     _data_array[data_idx] =
                         _LOWER_BOUNDS[k] + (_var_ranges[k] * _transformed_data_array[data_idx]);
-                    // Initialize Transformed Data Array with infinity values.
+                    /// Initialize Transformed Data Array with infinity values.
                     _transformed_data_array[data_idx] = -std::numeric_limits<TFloat>::infinity();
                 }
-                // Initialize Fitness Values
+                /// Initialize Fitness Values
                 const uint32_t fitness_idx = i * _NUM_AGENTS + j;
                 _fitness_array[fitness_idx] = -std::numeric_limits<TFloat>::infinity();
             }
@@ -88,7 +88,7 @@ namespace locusta {
     template <typename TFloat>
     void population_set_cpu<TFloat>::_print_data()
     {
-        // Update fitness values
+        /// Update fitness values
         for(uint32_t isle_count = 0; isle_count < _NUM_ISLES; ++isle_count)
         {
             std::cout << "Isle: " << isle_count << std::endl;
@@ -127,9 +127,9 @@ namespace locusta {
     {
         const uint32_t ISLES = _NUM_ISLES;
         const uint32_t AGENTS = _NUM_AGENTS;
-        //const uint32_t DIMENSIONS = _NUM_DIMENSIONS;
+        ///const uint32_t DIMENSIONS = _NUM_DIMENSIONS;
 
-        // Update per Isle Records
+        /// Update per Isle Records
 #pragma omp parallel for schedule(static)
         for(uint32_t i = 0; i < ISLES; ++i)
         {
@@ -164,7 +164,7 @@ namespace locusta {
             _lowest_fitness[i] = local_lowest_value;
         }
 
-        // Update per Global Records
+        /// Update per Global Records
         TFloat elite_highest_value = _highest_fitness[0];
         uint32_t elite_highest_idx = _highest_idx[0];
         TFloat elite_lowest_value = _lowest_fitness[0];

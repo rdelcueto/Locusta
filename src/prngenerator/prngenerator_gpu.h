@@ -1,7 +1,7 @@
 #ifndef _PRNGENERATOR_GPU_H_
 #define _PRNGENERATOR_GPU_H_
 
-//#define __extern_always_inline
+///#define __extern_always_inline
 
 #include <sys/time.h>
 #include "../prngenerator/prngenerator.h"

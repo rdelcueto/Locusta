@@ -51,6 +51,6 @@ namespace locusta {
 
     };
 
-} // namespace locusta
+} /// namespace locusta
 #include "ga_operators_gpu_impl.h"
 #endif

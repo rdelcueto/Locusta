@@ -13,13 +13,13 @@ namespace locusta {
     {
         switch (Bound_Mapping_Method)
         {
-        case 0: // Out of bounds Crop
+        case 0: /// Out of bounds Crop
             x = x > u ? u : x < l ? l : x;
             break;
-        case 1: // Out of bounds Mirror
+        case 1: /// Out of bounds Mirror
             x = x > u ? (2*u - x) : x < l ? (2*l - x) : x;
             break;
-        case 2: // Out of bounds Error
+        case 2: /// Out of bounds Error
             if ( x > u || x < l )
             {
                 x = std::numeric_limits<TFloat>::quiet_NaN();

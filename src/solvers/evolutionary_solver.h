@@ -8,7 +8,7 @@
 
 namespace locusta {
 
-    //Interface for evolutionary computing metaheuristic solvers
+    ///Interface for evolutionary computing metaheuristic solvers
     template<typename TFloat>
         class evolutionary_solver {
 
@@ -25,51 +25,51 @@ namespace locusta {
 
         virtual ~evolutionary_solver() {}
 
-        // Prints the current solver's configuration.
+        /// Prints the current solver's configuration.
         virtual void _print_solver_config() = 0;
 
-        // Prints the current elite set
+        /// Prints the current elite set
         virtual void _print_solver_elite() = 0;
 
-        // Prints the current best solution.
+        /// Prints the current best solution.
         virtual void _print_solver_solution() = 0;
 
-        // Initializes and allocated solver's dynamic resources.
+        /// Initializes and allocated solver's dynamic resources.
         virtual void _initialize() = 0;
 
-        // Finalizes and frees solver's dynamic resources.
+        /// Finalizes and frees solver's dynamic resources.
         virtual void _finalize() = 0;
 
-        // Fills the population data with uniform pseudo random numbers, and maps them into the defined domain.
+        /// Fills the population data with uniform pseudo random numbers, and maps them into the defined domain.
         virtual void _initialize_population() = 0;
 
     protected:
 
-        // Describes the state of the solver.
+        /// Describes the state of the solver.
         bool _f_initialized;
 
-        // Population Set
+        /// Population Set
         population_set<TFloat> * const _population;
 
-        // Evaluator
+        /// Evaluator
         evaluator<TFloat> * const _evaluator;
 
-        // Bulk Pseudo Random Number Generator
+        /// Bulk Pseudo Random Number Generator
         prngenerator<TFloat> * const _bulk_prn_generator;
 
-        // Bulk Pseudo Random Number array
+        /// Bulk Pseudo Random Number array
         TFloat * _bulk_prnumbers;
 
-        // Describes the size of the _bulk_prnumbers array.
+        /// Describes the size of the _bulk_prnumbers array.
         size_t _bulk_size;
 
-        //Counter describing the solver's current generation.
+        ///Counter describing the solver's current generation.
         size_t _generation_count;
 
-        //Counter describint the solver's target generation count.
+        ///Counter describint the solver's target generation count.
         size_t _generation_target;
 
     };
 
-} // namespace locusta
+} /// namespace locusta
 #endif

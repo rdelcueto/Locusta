@@ -2,7 +2,7 @@
 
 namespace locusta {
 
-    /// GPU Kernels Shared Memory Pointer.
+    //// GPU Kernels Shared Memory Pointer.
     extern __shared__ int ga_shared_memory[];
 
     template <typename TFloat>
@@ -23,13 +23,12 @@ namespace locusta {
 
         for(uint32_t i = 0; i < NUM_DIMENSIONS; ++i)
         {        
-            data_array[idx + i * NUM_ISLES * NUM_AGENTS] =
-                LOWER_BOUNDS[i] + (VAR_RANGES[i] * transformed_data_array[idx + i * NUM_ISLES * NUM_AGENTS]);
-        
-            transformed_data_array[idx + i * NUM_ISLES * NUM_AGENTS] =
-                (CUDART_NAN_F);
+            // Expects transformed_data_array to have uniform pseudo random numbers [0-1)
+            data_array[idx + i * NUM_ISLES * NUM_AGENTS] = LOWER_BOUNDS[i] + (VAR_RANGES[i] * transformed_data_array[idx + i * NUM_ISLES * NUM_AGENTS]);
+            // Resets transformed_data_array values
+            transformed_data_array[idx + i * NUM_ISLES * NUM_AGENTS] = CUDART_NAN_F;
         }
-        fitness_array[idx] = -(CUDART_NAN_F);
+        fitness_array[idx] = -(CUDART_INF_F);
     }
   
     template <typename TFloat>
@@ -41,7 +40,7 @@ namespace locusta {
      TFloat * const lowest_fitness,
      TFloat * const fitness_array)
     {
-        // GPU Shared memory
+        /// GPU Shared memory
         uint32_t *max_idx_reduction = (uint32_t *) ga_shared_memory;
         uint32_t *min_idx_reduction = (uint32_t *) &max_idx_reduction[blockDim.x];
 
@@ -50,7 +49,7 @@ namespace locusta {
 
         TFloat a, b;
     
-        // Initialize per thread fitness values
+        /// Initialize per thread fitness values
         max_eval_reduction[threadIdx.x] = min_eval_reduction[threadIdx.x] =
             fitness_array[blockIdx.x * blockDim.x + threadIdx.x];
         max_idx_reduction[threadIdx.x] = min_idx_reduction[threadIdx.x] =
@@ -59,13 +58,13 @@ namespace locusta {
         int reduction_idx = 1;
         const int reduction_limit = blockDim.x;
 
-        // Calculate reduction steps
+        /// Calculate reduction steps
         while(reduction_idx < reduction_limit)
         {
             reduction_idx <<= 1;
         }
 
-        // Parallel reduction
+        /// Parallel reduction
         while(reduction_idx != 0)
         {
             if(threadIdx.x < reduction_idx &&
@@ -93,7 +92,7 @@ namespace locusta {
             __syncthreads();
         }
 
-        // Store parallel reduction results
+        /// Store parallel reduction results
         if(threadIdx.x == 0)
         {
             highest_fitness[blockIdx.x] = max_eval_reduction[0];
@@ -148,7 +147,7 @@ namespace locusta {
         CudaCheckError();
     }
   
-    // Template Specialization (float)
+    /// Template Specialization (float)
   
     template
     void initialize_device_population_set_dispatch<float>
@@ -171,7 +170,7 @@ namespace locusta {
      float * const lowest_fitness,
      float * const fitness_array);
 
-    // Template Specialization (double)
+    /// Template Specialization (double)
   
     template
     void initialize_device_population_set_dispatch<double>

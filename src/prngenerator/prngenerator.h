@@ -5,13 +5,13 @@
 
 namespace locusta {
 
-    // struct MyException : public exception
-    // {
-    //   const char * what () const throw ()
-    //   {
-    //     return "C++ Exception";
-    //   }
-    // };
+    /// struct MyException : public exception
+    /// {
+    ///   const char * what () const throw ()
+    ///   {
+    ///     return "C++ Exception";
+    ///   }
+    /// };
 
     template<typename TFloat>
         class prngenerator {

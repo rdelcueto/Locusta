@@ -55,7 +55,7 @@ namespace locusta {
 #endif    
     }
 
-    // Explicit specialization
+    /// Explicit specialization
     template void gpu_setup_curand_dispatch<float>(uint64_t seed,
                                                   curandState *curand_states,
                                                   uint32_t num_generators);

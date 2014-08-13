@@ -42,6 +42,12 @@ namespace locusta {
         virtual const TFloat * _get_dev_upper_bounds();
         virtual const TFloat * _get_dev_lower_bounds();
 
+        virtual void _copy_dev_data_into_host(TFloat * const output_data_array);
+        virtual void _copy_host_data_into_dev(const TFloat * const input_data_array);
+
+        virtual void _copy_dev_fitness_into_host(TFloat * const output_fitness_array);
+        virtual void _copy_host_fitness_into_dev(const TFloat * const input_fitness_array);
+
         using population_set<TFloat>::_get_global_highest_isle_idx;
         using population_set<TFloat>::_get_global_highest_fitness;
         using population_set<TFloat>::_get_global_lowest_isle_idx;
@@ -62,11 +68,11 @@ namespace locusta {
 
         using population_set<TFloat>::_var_ranges;
 
-        // Device pointer to array describing the upper bound of each variable.
+        /// Device pointer to array describing the upper bound of each variable.
         TFloat * _DEV_UPPER_BOUNDS;
-        // Device pointer to array describing the lower bound of each variable.
+        /// Device pointer to array describing the lower bound of each variable.
         TFloat * _DEV_LOWER_BOUNDS;
-        // Device pointer to array describing the range of each variable.
+        /// Device pointer to array describing the range of each variable.
         TFloat * _dev_var_ranges;
 
     protected:
@@ -87,21 +93,21 @@ namespace locusta {
         using population_set<TFloat>::_global_lowest_idx;
         using population_set<TFloat>::_global_lowest_fitness;
 
-        // Device pointer to the agent's encoded data variables.
+        /// Device pointer to the agent's encoded data variables.
         TFloat * _dev_data_array;
-        // Device pointer to the agent's encoded data variables.
+        /// Device pointer to the agent's encoded data variables.
         TFloat * _dev_transformed_data_array;
-        // Device pointer to the agent's fitness value.
+        /// Device pointer to the agent's fitness value.
         TFloat * _dev_fitness_array;
 
-        // Device pointer to index of the isle's highest fitness agents.
+        /// Device pointer to index of the isle's highest fitness agents.
         uint32_t * _dev_highest_idx;
-        // Device pointer to the isle's highest fitness values.
+        /// Device pointer to the isle's highest fitness values.
         TFloat * _dev_highest_fitness;
 
-        // Device pointer to the index of the isle's lowest fitness agents.
+        /// Device pointer to the index of the isle's lowest fitness agents.
         uint32_t * _dev_lowest_idx;
-        // Device pointer to the isle's lowest fitness values.
+        /// Device pointer to the isle's lowest fitness values.
         TFloat * _dev_lowest_fitness;
 
     };

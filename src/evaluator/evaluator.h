@@ -31,17 +31,17 @@ namespace locusta {
 
         virtual void evaluate(population_set<TFloat> * population) = 0;
 
-        // Flag describing whether the evaluator will the fitness value or its negative.
+        /// Flag describing whether the evaluator will the fitness value or its negative.
         const bool _f_negate;
 
-        // Specified the bounding map method.
+        /// Specified the bounding map method.
         const uint32_t _bounding_mapping_method;
 
-        // Number of pseudo random numbers needed per evaluation
+        /// Number of pseudo random numbers needed per evaluation
         const uint32_t _num_eval_prnumbers;
 
     };
 
-} // namespace locusta
+} /// namespace locusta
 
 #endif

@@ -33,10 +33,10 @@ namespace locusta {
         using evaluator<TFloat>::_bounding_mapping_method;
         using evaluator<TFloat>::_num_eval_prnumbers;
 
-        // Pointer to fitness function
+        /// Pointer to fitness function
         gpu_evaluable_function _fitness_function;
     };
 
-} // namespace locusta
+} /// namespace locusta
 #include "evaluator_gpu_impl.h"
 #endif

@@ -16,12 +16,12 @@ namespace locusta {
             for(uint32_t j = 0; j < NUM_AGENTS; ++j)
             {
                 const uint32_t idx = i * NUM_AGENTS + j;
-                const uint32_t offset_size = NUM_ISLES * NUM_AGENTS;  // TODO: Check PRN cardinality and addressing!
+                const uint32_t offset_size = NUM_ISLES * NUM_AGENTS;  /// TODO: Check PRN cardinality and addressing!
 
                 uint32_t candidates[SELECTION_SIZE];
 
-                //Resevoir Sampling
-                // Fill
+                ///Resevoir Sampling
+                /// Fill
                 for (uint32_t k = 0; k < SELECTION_SIZE; ++k)
                 {
                     if (F_SELF_SELECTION)
@@ -33,7 +33,7 @@ namespace locusta {
                         candidates[k] = k < j ? k : k + 1;
                     }
                 }
-                // Replace
+                /// Replace
                 uint32_t random_idx;
                 uint32_t iter_limit = F_SELF_SELECTION ? NUM_AGENTS : NUM_AGENTS - 1;
                 uint32_t prn_idx = idx;
@@ -55,7 +55,7 @@ namespace locusta {
                     }
                 }
 
-                // Tournament
+                /// Tournament
                 bool switch_flag;
                 TFloat candidate_fitness_array;
                 TFloat best_fitness_array = fitness_array[candidates[0]];
@@ -79,7 +79,7 @@ namespace locusta {
                         candidates[0] = candidates[k];
                     }
                 }
-                //std::cout << candidates[0] << " WON!" << std::endl;
+                ///std::cout << candidates[0] << " WON!" << std::endl;
                 selection_array[idx] = candidates[0];
             }
         }
@@ -121,15 +121,15 @@ namespace locusta {
 
             for (uint32_t j = 0; j < NUM_DIMENSIONS; ++j)
             {
-                // Crossover
+                /// Crossover
                 if (prnumbers_array[i] < CROSSOVER_RATE)
                 {
                     offspring_array_genome[j] *= 0.5;
                     offspring_array_genome[j] += 0.5 * genome_b[j];
                 }
 
-                // Mutation
-                if (prnumbers_array[i*prn_mutation_offset + j] < MUTATION_RATE) // TODO: Check PRN Addressing
+                /// Mutation
+                if (prnumbers_array[i*prn_mutation_offset + j] < MUTATION_RATE) /// TODO: Check PRN Addressing
                 {
                     const TFloat & range = VAR_RANGES[j];
 
@@ -143,7 +143,7 @@ namespace locusta {
                     x *= DEVIATION * range;
                     x += offspring_array_genome[j];
 
-                    // Bound Checking
+                    /// Bound Checking
                     const TFloat & u = UPPER_BOUNDS[j];
                     const TFloat & l = LOWER_BOUNDS[j];
 
@@ -179,7 +179,7 @@ namespace locusta {
     {
         for(uint32_t iteration = 0; iteration < MIGRATION_SIZE; ++iteration)
         {
-            // Migration Selection
+            /// Migration Selection
             for(uint32_t i = 0; i < NUM_ISLES; ++i)
             {
                 const uint32_t isle_offset = i * NUM_AGENTS;
@@ -187,14 +187,14 @@ namespace locusta {
                 uint32_t migration_candidates_idxs[MIGRATION_SELECTION_SIZE];
                 TFloat migration_candidates_fitness[MIGRATION_SELECTION_SIZE];
 
-                // Resevoir Sampling
-                // Fill
+                /// Resevoir Sampling
+                /// Fill
                 for (uint32_t k = 0; k < MIGRATION_SELECTION_SIZE; ++k)
                 {
                     migration_candidates_idxs[k] = k;
                 }
 
-                // Replace
+                /// Replace
                 uint32_t random_idx;
 
                 for (uint32_t k = MIGRATION_SELECTION_SIZE; k < NUM_AGENTS; ++k)
@@ -206,13 +206,13 @@ namespace locusta {
                     }
                 }
 
-                // Copy needed fitness values
+                /// Copy needed fitness values
                 for (uint32_t k = 0; k < MIGRATION_SELECTION_SIZE; ++k)
                 {
                     migration_candidates_fitness[k] = fitness_array[isle_offset + migration_candidates_idxs[k]];
                 }
 
-                // Tournament
+                /// Tournament
                 bool switch_flag;
                 TFloat candidate_fitness;
                 TFloat best_fitness = migration_candidates_fitness[0];
@@ -239,7 +239,7 @@ namespace locusta {
                     migration_buffer +
                     iteration * NUM_ISLES * (NUM_DIMENSIONS + 1);
 
-                // Copy genomes to buffer
+                /// Copy genomes to buffer
                 for(uint32_t k = 0; k < NUM_DIMENSIONS; ++k)
                 {
                     buffer[k] = genome[k];
@@ -249,10 +249,10 @@ namespace locusta {
             }
         }
 
-        // Migration
+        /// Migration
         for(uint32_t iteration = 0; iteration < MIGRATION_SIZE; ++iteration)
         {
-            // Migration Selection
+            /// Migration Selection
             for(uint32_t i = 0; i < NUM_ISLES; ++i)
             {
                 const TFloat * const buffer =
@@ -273,4 +273,4 @@ namespace locusta {
         }
     }
 
-} // namespace locusta
+} /// namespace locusta

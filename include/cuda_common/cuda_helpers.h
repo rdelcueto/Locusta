@@ -92,7 +92,9 @@ namespace locusta {
 
         struct cudaDeviceProp properties;
 
+#ifdef _DEBUG
         std::cout << "Checking for CUDA Device support... ";
+#endif
         cudaError_t e = cudaGetDeviceCount(&deviceCount);
 
         if (e != cudaSuccess)
@@ -113,23 +115,17 @@ namespace locusta {
         }
         else
         {
+#ifdef _DEBUG
             std::cout << gpuDeviceCount << " GPU CUDA device(s) found\n";
+#endif
             cudaDeviceProp prop;
             CudaSafeCall(cudaGetDeviceProperties(&prop, 0));
+
+#ifdef _DEBUG
             std::cout << "Using " << prop.name;
+#endif
         }
 
-        // if (!prop.canMapHostMemory)
-        //   {
-        //     std::cerr << "CUDA Error: Device cannot Map Memory\n" << std::endl;
-        //     exit(EXIT_FAILURE);
-        //   }
-        // else
-        //   {
-        //     CudaSafeCall(cudaSetDeviceFlags(cudaDeviceMapHost));
-        //     CudaCheckError();
-        //     std::cout << "OK!\n" << std::endl;
-        //   }
     }
 }
 

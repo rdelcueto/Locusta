@@ -20,16 +20,19 @@ namespace locusta {
         {
             for (int j = 0; j < NUM_AGENTS; ++j)
             {
+                const uint32_t isle = i;
+                const uint32_t agent = j;
+
                 TFloat reduction_sum;
                 for(uint32_t r = 0; r < REPETITIONS; ++r)
                 {
                     reduction_sum = 0.0;
                     for (uint32_t k = 0; k < NUM_DIMENSIONS; ++k)
                     {
-
-                        TFloat x = agents_data[i * NUM_AGENTS * NUM_DIMENSIONS +
-                                               j * NUM_DIMENSIONS +
+                        TFloat x = agents_data[isle * NUM_AGENTS * NUM_DIMENSIONS +
+                                               agent * NUM_DIMENSIONS +
                                                k];
+
                         const TFloat &u = UPPER_BOUNDS[k];
                         const TFloat &l = LOWER_BOUNDS[k];
 
@@ -38,7 +41,7 @@ namespace locusta {
                         reduction_sum += x * x;
                     }
                 }
-                agents_fitness[i*NUM_AGENTS + j] = f_negate ?
+                agents_fitness[isle * NUM_AGENTS + agent] = f_negate ?
                     -reduction_sum :
                     reduction_sum;
             }

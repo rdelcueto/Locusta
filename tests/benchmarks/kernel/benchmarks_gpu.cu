@@ -9,18 +9,21 @@ namespace locusta {
   
     template <typename TFloat>
     __global__
-    void benchmark_gpu_func_1_kernel
-    (const TFloat * const UPPER_BOUNDS,
-     const TFloat * const LOWER_BOUNDS,
-     const uint32_t NUM_ISLES,
-     const uint32_t NUM_AGENTS,
-     const uint32_t NUM_DIMENSIONS,
-     const uint32_t bound_mapping_method,
-     const bool f_negate,
-     const TFloat * const agents_data,
-     TFloat * const agents_fitness)
+    void benchmark_gpu_func_1_kernel(const TFloat * const UPPER_BOUNDS,
+                                     const TFloat * const LOWER_BOUNDS,
+                                     const uint32_t NUM_ISLES,
+                                     const uint32_t NUM_AGENTS,
+                                     const uint32_t NUM_DIMENSIONS,
+                                     const uint32_t bound_mapping_method,
+                                     const bool f_negate,
+                                     const TFloat * const agents_data,
+                                     TFloat * const agents_fitness)
     {
-        const uint32_t gene_base_idx = blockIdx.x * NUM_DIMENSIONS * NUM_AGENTS + threadIdx.x;
+        const uint32_t isle = blockIdx.x;
+        const uint32_t agent = threadIdx.x;
+
+        const uint32_t genome_base = isle * NUM_AGENTS + agent;
+        const uint32_t gene_offset = NUM_ISLES * NUM_AGENTS;
 
         TFloat reduction_sum;
         for(uint32_t r = 0; r < REPETITIONS; ++r)
@@ -28,7 +31,7 @@ namespace locusta {
             reduction_sum = 0;
             for(uint32_t i = 0; i < NUM_DIMENSIONS; ++i)
             {
-                TFloat x = agents_data[gene_base_idx + i * NUM_AGENTS];
+                TFloat x = agents_data[genome_base + i * gene_offset];
 
                 bound_mapping(bound_mapping_method,
                               UPPER_BOUNDS[i],
@@ -39,7 +42,7 @@ namespace locusta {
             }
         }
 
-        const uint32_t fitness_idx = blockIdx.x * NUM_AGENTS + threadIdx.x;
+        const uint32_t fitness_idx = isle * NUM_AGENTS + agent;
         agents_fitness[fitness_idx] = f_negate ?
             -reduction_sum :
             reduction_sum;

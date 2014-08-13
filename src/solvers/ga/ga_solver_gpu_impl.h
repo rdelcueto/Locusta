@@ -114,14 +114,14 @@ namespace locusta {
 
         uint32_t num_breed = NUM_AGENTS + NUM_AGENTS * NUM_DIMENSIONS;
 
-        //FIXME: PRNG == agents * eval_prngnumbers?
+        ///FIXME: PRNG == agents * eval_prngnumbers?
         uint32_t num_eval_prn = NUM_AGENTS * _evaluator->_num_eval_prnumbers;
 
         _prn_isle_offset = num_selection + num_breed + num_eval_prn;
 
         _bulk_size = _prn_isle_offset * NUM_ISLES;
 
-        // Memory resource allocation
+        /// Memory resource allocation
 
         CudaSafeCall(cudaMalloc((void **) &(_dev_extended_upper_bounds),
                                 NUM_DIMENSIONS * sizeof(TFloat)));
@@ -147,7 +147,7 @@ namespace locusta {
         _elite_genomes = new TFloat [NUM_ISLES * NUM_DIMENSIONS];
         _elite_fitness = new TFloat [NUM_ISLES];
 
-        // Initializing Solver Values
+        /// Initializing Solver Values
         _generation_count = 0.0;
 
         for(uint32_t i = 0; i < NUM_ISLES; ++i)
@@ -167,13 +167,13 @@ namespace locusta {
         const TFloat * const upper_bounds = _dev_population->_UPPER_BOUNDS;
         const TFloat * const lower_bounds = _dev_population->_LOWER_BOUNDS;
 
-        // Extended bounds
+        /// Extended bounds
         TFloat _extended_upper_bounds[NUM_DIMENSIONS];
         TFloat _extended_lower_bounds[NUM_DIMENSIONS];
 
         for(uint32_t i = 0; i < NUM_DIMENSIONS; ++i)
         {
-            // Bound Checking
+            /// Bound Checking
             const TFloat range = variable_ranges[i];
             const TFloat extension = _range_extension_p == 0 ?
                 0 : range * _range_extension_p * 0.5;
@@ -321,6 +321,19 @@ namespace locusta {
             generation_target : 0;
     }
 
+
+    template <typename TFloat>
+        void ga_solver_gpu<TFloat>::_generate_prngs()
+    {
+        _bulk_prn_generator->_generate(_bulk_size, _dev_bulk_prnumbers);
+    }
+
+    template <typename TFloat>
+        void ga_solver_gpu<TFloat>::_evaluate_genomes()
+    {
+        _evaluator->evaluate(_dev_population);
+    }
+
     template <typename TFloat>
         void ga_solver_gpu<TFloat>::_advance_generation()
     {
@@ -331,23 +344,23 @@ namespace locusta {
             _initialize();
         }
 
-        // Renew Pseudo Random Numbers
-        _bulk_prn_generator->_generate(_bulk_size, _dev_bulk_prnumbers);
+        /// Renew Pseudo Random Numbers
+        _generate_prngs();
 
-        // Evaluate Population's Fitness
-        _evaluator->evaluate(_dev_population);
+        /// Evaluate Population's Fitness
+        _evaluate_genomes();
 
-        // Update Population Records
+        /// Update Population Records
         _dev_population->_update_records();
 
-        // Replace Lowest Fitness with elite (Steady-State)
+        /// Replace Lowest Fitness with elite (Steady-State)
         _replace_update_elite();
 
 #ifdef _DEBUG
         _dev_population->_print_data();
 #endif
 
-        // Population Migration between isles
+        /// Population Migration between isles
         if (_generation_count != 0 &&
             _migration_step != 0 &&
             _migration_size != 0 &&
@@ -356,16 +369,16 @@ namespace locusta {
             _migrate();
         }
 
-        // Parent Selection
+        /// Parent Selection
         _select();
 
-        // // Offspring generation: Crossover and Mutation Operation
+        /// /// Offspring generation: Crossover and Mutation Operation
         _breed();
 
-        // Switch pointers Offspring Genomes <-> Data Genomes
+        /// Switch pointers Offspring Genomes <-> Data Genomes
         _dev_population->_swap_data_sets();
 
-        // Advance Counter
+        /// Advance Counter
         _generation_count++;
     }
 
@@ -456,7 +469,7 @@ namespace locusta {
         const uint32_t * const lowest_idx = _dev_population->_get_lowest_idx_array();
         const TFloat * const lowest_fitness = _dev_population->_get_lowest_fitness_array();
 
-        // TODO: Replace copy with kernel version
+        /// TODO: Replace copy with kernel version
         for(uint32_t i = 0; i < NUM_ISLES; ++i)
         {
 
@@ -466,20 +479,20 @@ namespace locusta {
             std::cout << "ISLE " << i << " ELITE: " << _elite_fitness[i] << std::endl;
 #endif
 
-            // Replace Lowest with Elite iff Lowest < Elite
+            /// Replace Lowest with Elite iff Lowest < Elite
             {
                 if (lowest_fitness[i] < _elite_fitness[i])
                 {
                     const uint32_t dev_lowest_idx = i * NUM_AGENTS + lowest_idx[i];
 
-                    //fitness[local_lowest_idx] = _elite_fitness[i];
-                    // Copy Elite Fitness -> Lowest Fitness
+                    ///fitness[local_lowest_idx] = _elite_fitness[i];
+                    /// Copy Elite Fitness -> Lowest Fitness
                     CudaSafeCall(cudaMemcpy(dev_fitness_array + dev_lowest_idx,
                                             lowest_fitness + i,
                                             sizeof(TFloat),
                                             cudaMemcpyHostToDevice));
 
-                    // Copy Elite Genome -> Lowest Genome
+                    /// Copy Elite Genome -> Lowest Genome
                     for(uint32_t j = 0; j < NUM_DIMENSIONS; ++j)
                     {
                         CudaSafeCall(cudaMemcpy(dev_data_array + i * NUM_AGENTS * NUM_DIMENSIONS
@@ -492,18 +505,18 @@ namespace locusta {
                 }
             }
 
-            // Update Elite iff Highest > Elite
+            /// Update Elite iff Highest > Elite
             {
                 if (highest_fitness[i] > _elite_fitness[i])
                 {
-                    // Copy Highest Fitness -> Elite Fitness
+                    /// Copy Highest Fitness -> Elite Fitness
                     const uint32_t dev_highest_idx = i * NUM_ISLES + highest_idx[i];
                     CudaSafeCall(cudaMemcpy(_elite_fitness + i,
                                             dev_fitness_array + dev_highest_idx,
                                             sizeof(TFloat),
                                             cudaMemcpyDeviceToHost));
 
-                    // Copy Highest Genome -> Elite Genome
+                    /// Copy Highest Genome -> Elite Genome
                     for(uint32_t j = 0; j < NUM_DIMENSIONS; ++j)
                     {
                         CudaSafeCall(cudaMemcpy(_elite_genomes + i * NUM_DIMENSIONS + j,
@@ -561,4 +574,4 @@ namespace locusta {
 
     }
 
-} // namespace locusta
+} /// namespace locusta

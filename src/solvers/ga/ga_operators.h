@@ -6,7 +6,7 @@
 
 namespace locusta {
 
-    //Interface for Genetic Algorithm Operators
+    ///Interface for Genetic Algorithm Operators
     template<typename TFloat>
         class ga_operators {
     public:
@@ -49,5 +49,5 @@ namespace locusta {
 
     };
 
-} // namespace locusta
+} /// namespace locusta
 #endif

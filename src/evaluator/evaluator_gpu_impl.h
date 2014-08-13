@@ -1,4 +1,4 @@
-//TODO: REMOVE
+///TODO: REMOVE
 #include <iostream>
 
 #include "cuda_common/cuda_helpers.h"
@@ -46,4 +46,4 @@ namespace locusta {
         return;
     }
 
-} // namespace locusta
+} /// namespace locusta

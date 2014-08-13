@@ -111,14 +111,14 @@ namespace locusta {
 
         uint32_t num_breed = NUM_AGENTS + NUM_AGENTS * NUM_DIMENSIONS;
 
-        //FIXME: PRNG == agents * eval_prngnumbers?
+        ///FIXME: PRNG == agents * eval_prngnumbers?
         uint32_t num_eval_prn = NUM_AGENTS * _evaluator->_num_eval_prnumbers;
 
         _prn_isle_offset = num_selection + num_breed + num_eval_prn;
 
         _bulk_size = _prn_isle_offset * NUM_ISLES;
 
-        // Memory resource allocation
+        /// Memory resource allocation
         _extended_upper_bounds = new TFloat[NUM_DIMENSIONS];
         _extended_lower_bounds = new TFloat[NUM_DIMENSIONS];
         _coupling_idxs = new uint32_t [NUM_AGENTS * NUM_ISLES];
@@ -135,7 +135,7 @@ namespace locusta {
         _elite_genomes = new TFloat [NUM_ISLES * NUM_DIMENSIONS];
         _elite_fitness = new TFloat [NUM_ISLES];
 
-        // Initializing Solver Values
+        /// Initializing Solver Values
         _generation_count = 0.0;
 
         for(uint32_t i = 0; i < NUM_ISLES; ++i)
@@ -147,10 +147,10 @@ namespace locusta {
         const TFloat * const upper_bounds = _population->_UPPER_BOUNDS;
         const TFloat * const lower_bounds = _population->_LOWER_BOUNDS;
 
-        // Extended bounds
+        /// Extended bounds
         for(uint32_t i = 0; i < NUM_DIMENSIONS; ++i)
         {
-            // Bound Checking
+            /// Bound Checking
             const TFloat range = variable_ranges[i];
             const TFloat extension = _range_extension_p == 0 ?
                 0 : range * _range_extension_p * 0.5;
@@ -284,6 +284,18 @@ namespace locusta {
     }
 
     template <typename TFloat>
+    void ga_solver_cpu<TFloat>::_generate_prngs()
+    {
+        _bulk_prn_generator->_generate(_bulk_size, _bulk_prnumbers);
+    }
+
+    template <typename TFloat>
+    void ga_solver_cpu<TFloat>::_evaluate_genomes()
+    {
+        _evaluator->evaluate(_population);
+    }
+
+    template <typename TFloat>
     void ga_solver_cpu<TFloat>::_advance_generation()
     {
         if(!_f_initialized)
@@ -293,19 +305,19 @@ namespace locusta {
             _initialize();
         }
 
-        // Renew Pseudo Random Numbers
-        _bulk_prn_generator->_generate(_bulk_size, _bulk_prnumbers);
+        /// Renew Pseudo Random Numbers
+        _generate_prngs();
 
-        // Evaluate Population's Fitness
-        _evaluator->evaluate(_population);
+        /// Evaluate Population's Fitness
+        _evaluate_genomes();
 
-        // Update Population Records
+        /// Update Population Records
         _population->_update_records();
 
-        // Replace Lowest Fitness with elite (Steady-State)
+        /// Replace Lowest Fitness with elite (Steady-State)
         _replace_update_elite();
 
-        // Population Migration between isles
+        /// Population Migration between isles
         if (this->_generation_count != 0 &&
             this->_migration_step != 0 &&
             this->_migration_size != 0 &&
@@ -314,16 +326,16 @@ namespace locusta {
             _migrate();
         }
 
-        // Parent Selection
+        /// Parent Selection
         _select();
 
-        // Offspring generation: Crossover and Mutation Operation
+        /// Offspring generation: Crossover and Mutation Operation
         _breed();
 
-        // Switch pointers Offspring Genomes <-> Data Genomes
+        /// Switch pointers Offspring Genomes <-> Data Genomes
         _population->_swap_data_sets();
 
-        // Advance Counter
+        /// Advance Counter
         _generation_count++;
     }
 
@@ -367,7 +379,7 @@ namespace locusta {
 #pragma omp parallel for schedule(static)
         for(uint32_t i = 0; i < NUM_ISLES; ++i)
         {
-            //const int nthread = omp_get_thread_num();
+            ///const int nthread = omp_get_thread_num();
             const uint32_t isle_var_offset = i * NUM_AGENTS * NUM_DIMENSIONS;
             const uint32_t isle_couple_offset = i * NUM_AGENTS;
 
@@ -393,7 +405,7 @@ namespace locusta {
     void ga_solver_cpu<TFloat>::_replace_update_elite()
     {
         const uint32_t NUM_ISLES = _population->_NUM_ISLES;
-        //const uint32_t NUM_AGENTS = _population->_NUM_AGENTS;
+        ///const uint32_t NUM_AGENTS = _population->_NUM_AGENTS;
         const uint32_t NUM_DIMENSIONS = _population->_NUM_DIMENSIONS;
 
         TFloat * const fitness = _population->_get_fitness_array();
@@ -405,20 +417,20 @@ namespace locusta {
         const uint32_t * const lowest_idx = _population->_get_lowest_idx_array();
         TFloat * const lowest_fitness = _population->_get_lowest_fitness_array();
 
-        // #pragma omp parallel for schedule(static)
+        /// #pragma omp parallel for schedule(static)
         for(uint32_t i = 0; i < NUM_ISLES; ++i)
         {
-            // Replace Lowest with Elite iff Lowest < Elite
+            /// Replace Lowest with Elite iff Lowest < Elite
             {
                 if (lowest_fitness[i] < _elite_fitness[i])
                 {
-                    // Copy Elite Fitness -> Lowest Fitness
-                    lowest_fitness[i] = _elite_fitness[i]; // TODO: CHECK idx
+                    /// Copy Elite Fitness -> Lowest Fitness
+                    lowest_fitness[i] = _elite_fitness[i]; /// TODO: CHECK idx
 
                     TFloat * const local_lowest_genome = data_array + lowest_idx[i] * NUM_DIMENSIONS;
                     TFloat * const local_elite_genome = _elite_genomes + i * NUM_DIMENSIONS;
 
-                    // Copy Elite Genome -> Lowest Genome
+                    /// Copy Elite Genome -> Lowest Genome
                     for(uint32_t k = 0; k < NUM_DIMENSIONS; ++k)
                     {
                         local_lowest_genome[k] = local_elite_genome[k];
@@ -426,17 +438,17 @@ namespace locusta {
                 }
             }
 
-            // Update Elite iff Highest > Elite
+            /// Update Elite iff Highest > Elite
             {
                 if (highest_fitness[i] > _elite_fitness[i])
                 {
-                    // Copy Highest Fitness -> Elite Fitness
+                    /// Copy Highest Fitness -> Elite Fitness
                     _elite_fitness[i] = fitness[highest_idx[i]];
 
                     TFloat * const local_highest_genome = data_array + highest_idx[i] * NUM_DIMENSIONS;
                     TFloat * const local_elite_genome = _elite_genomes + i * NUM_DIMENSIONS;
 
-                    // Copy Highest Genome -> Elite Genome
+                    /// Copy Highest Genome -> Elite Genome
                     for(uint32_t k = 0; k < NUM_DIMENSIONS; ++k)
                     {
                         local_elite_genome[k] = local_highest_genome[k];
@@ -456,7 +468,7 @@ namespace locusta {
         TFloat * const genomes = _population->_get_data_array();
         TFloat * const fitness_array = _population->_get_fitness_array();
 
-        // Migration Genome Exchange
+        /// Migration Genome Exchange
         _migration_function(NUM_ISLES,
                             NUM_AGENTS,
                             NUM_DIMENSIONS,
@@ -469,4 +481,4 @@ namespace locusta {
                             _bulk_prn_generator);
     }
 
-} // namespace locusta
+} /// namespace locusta

@@ -52,6 +52,10 @@ namespace locusta {
 
         virtual void _set_generation_target(uint32_t generation_target);
 
+        virtual void _generate_prngs();
+
+        virtual void _evaluate_genomes();
+
         virtual void _advance_generation();
 
     protected:
@@ -109,6 +113,6 @@ namespace locusta {
         TFloat * _dev_migration_buffer;
 
     };
-} // namespace locusta
+} /// namespace locusta
 #include "ga_solver_gpu_impl.h"
 #endif

@@ -2,7 +2,7 @@
 
 namespace locusta {
 
-    // Cuda Wrappers Forward Declarations
+    /// Cuda Wrappers Forward Declarations
     template <typename TFloat>
         void initialize_device_population_set_dispatch
         (const uint32_t NUM_ISLES,
@@ -37,14 +37,14 @@ namespace locusta {
                                  upper_bound,
                                  lower_bound)
     {
-        // Host Memory Allocation
+        /// Host Memory Allocation
         _var_ranges = new TFloat[NUM_DIMENSIONS];
         _highest_idx = new uint32_t[NUM_ISLES];
         _lowest_idx = new uint32_t[NUM_ISLES];
         _highest_fitness = new TFloat[NUM_ISLES];
         _lowest_fitness = new TFloat[NUM_ISLES];
 
-        // Device Memory Allocation
+        /// Device Memory Allocation
         CudaSafeCall(cudaMalloc((void **) &_dev_var_ranges, NUM_DIMENSIONS * sizeof(TFloat)));
         CudaSafeCall(cudaMalloc((void **) &_DEV_UPPER_BOUNDS, NUM_DIMENSIONS * sizeof(TFloat)));
         CudaSafeCall(cudaMalloc((void **) &_DEV_LOWER_BOUNDS, NUM_DIMENSIONS * sizeof(TFloat)));
@@ -91,7 +91,7 @@ namespace locusta {
     template <typename TFloat>
         void population_set_gpu<TFloat>::_initialize()
     {
-        // Value Initialization
+        /// Value Initialization
         for(uint32_t i = 0; i < _NUM_DIMENSIONS; ++i)
         {
             _var_ranges[i] = _UPPER_BOUNDS[i] - _LOWER_BOUNDS[i];
@@ -193,7 +193,7 @@ namespace locusta {
                                _dev_lowest_fitness,
                                _dev_fitness_array);
 
-        // Copy results to host memory
+        /// Copy results to host memory
         CudaSafeCall(cudaMemcpy(_highest_idx,
                                 _dev_highest_idx,
                                 sizeof(uint32_t) * _NUM_ISLES,
@@ -243,6 +243,48 @@ namespace locusta {
         const TFloat * population_set_gpu<TFloat>::_get_dev_lower_bounds()
     {
         return _DEV_LOWER_BOUNDS;
+    }
+
+    template <typename TFloat>
+        void population_set_gpu<TFloat>::_copy_dev_data_into_host(TFloat * const output_data_array)
+    {
+        CudaSafeCall(cudaMemcpy(output_data_array,
+                                _dev_data_array,
+                                sizeof(TFloat) * _NUM_ISLES * _NUM_AGENTS * _NUM_DIMENSIONS,
+                                cudaMemcpyDeviceToHost));
+
+        return;
+    }
+
+    template <typename TFloat>
+        void population_set_gpu<TFloat>::_copy_host_data_into_dev(const TFloat * const input_data_array)
+    {
+        CudaSafeCall(cudaMemcpy(_dev_data_array,
+                                input_data_array,
+                                sizeof(TFloat) * _NUM_ISLES * _NUM_AGENTS * _NUM_DIMENSIONS,
+                                cudaMemcpyHostToDevice));
+
+        return;
+    }
+
+    template <typename TFloat>
+        void population_set_gpu<TFloat>::_copy_dev_fitness_into_host(TFloat * const output_fitness_array)
+    {
+        CudaSafeCall(cudaMemcpy(output_fitness_array,
+                                _dev_fitness_array,
+                                sizeof(TFloat) * _NUM_ISLES * _NUM_AGENTS,
+                                cudaMemcpyDeviceToHost));
+        return;
+    }
+
+    template <typename TFloat>
+        void population_set_gpu<TFloat>::_copy_host_fitness_into_dev(const TFloat * const input_fitness_array)
+    {
+        CudaSafeCall(cudaMemcpy(_dev_fitness_array,
+                                input_fitness_array,
+                                sizeof(TFloat) * _NUM_ISLES * _NUM_AGENTS,
+                                cudaMemcpyHostToDevice));
+        return;
     }
 
 }
