@@ -8,8 +8,8 @@ namespace locusta {
     template<typename TFloat>
         __device__
         void bound_mapping(const uint32_t Bound_Mapping_Method,
-                           const TFloat u,
-                           const TFloat l,
+                           const TFloat &u,
+                           const TFloat &l,
                            TFloat &x)
     {
         if (x == x)

@@ -33,10 +33,10 @@ namespace locusta {
             {
                 TFloat x = agents_data[genome_base + i * gene_offset];
 
-                bound_mapping(bound_mapping_method,
-                              UPPER_BOUNDS[i],
-                              LOWER_BOUNDS[i],
-                              x);
+                const TFloat &u = UPPER_BOUNDS[i];
+                const TFloat &l = LOWER_BOUNDS[i];
+
+                bound_mapping(bound_mapping_method, u, l, x);
         
                 reduction_sum += x * x;
             }
