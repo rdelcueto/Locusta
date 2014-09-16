@@ -4,11 +4,10 @@ set(CUFILES
   benchmarks/kernel/benchmarks_gpu.cu
   )
 
-#source_group("CUDA Source Files" FILES ${CUFILES})
+#source_group("CUDA Source Files" FILES ${CUFILES}
 
-set(GENCODE_SM10 -gencode=arch=compute_10,code=sm_10 -gencode=arch=compute_10,code=compute_10)
-set(GENCODE_SM11 -gencode=arch=compute_11,code=sm_11 -gencode=arch=compute_11,code=compute_11)
-set(GENCODE_SM20 -gencode=arch=compute_20,code=sm_20 -gencode=arch=compute_20,code=compute_20)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
 
 if (CUDA_VERBOSE_PTXAS)
   set(VERBOSE_PTXAS --ptxas-options=-v)
