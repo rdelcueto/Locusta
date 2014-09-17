@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../prngenerator_gpu.h"
+#include "../prngenerator_gpu.hpp"
 
 #include "cuda_common/cuPrintf.cu"
 

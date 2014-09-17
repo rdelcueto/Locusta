@@ -1,5 +1,5 @@
-#include "../benchmarks_gpu.h"
-#include "evaluator/bound_mapping_gpu.h"
+#include "../benchmarks_gpu.hpp"
+#include "evaluator/bound_mapping_gpu.hpp"
 
 namespace locusta {
 

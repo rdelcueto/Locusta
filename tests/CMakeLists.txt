@@ -4,8 +4,6 @@ set(CUFILES
   benchmarks/kernel/benchmarks_gpu.cu
   )
 
-#source_group("CUDA Source Files" FILES ${CUFILES}
-
 LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
 LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
 
