@@ -4,9 +4,6 @@ set(CUFILES
   benchmarks/kernel/benchmarks_gpu.cu
   )
 
-LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
-LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
-
 if (CUDA_VERBOSE_PTXAS)
   set(VERBOSE_PTXAS --ptxas-options=-v)
 endif (CUDA_VERBOSE_PTXAS)

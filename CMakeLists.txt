@@ -26,6 +26,10 @@ endif()
 find_package(CUDA REQUIRED)
 find_cuda_helper_libs(curand)
 
+# CUDA Arch Target
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
+
 option(BUILD_SHARED_LIBS	
   "On to build shared libraries, off for static libraries."
   OFF
