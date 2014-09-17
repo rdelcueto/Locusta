@@ -2,12 +2,12 @@
 
 namespace locusta {
 
-    //// GPU Kernels Shared Memory Pointer.
+    /// GPU Kernels Shared Memory Pointer.
     extern __shared__ int ga_shared_memory[];
 
-    /// ----------------------
-    /// GPU Kernel definitions
-    /// ----------------------
+    // ----------------------
+    // GPU Kernel definitions
+    // ----------------------
   
     template<typename TFloat>
     __global__
@@ -25,8 +25,8 @@ namespace locusta {
         const uint32_t offset_size = NUM_ISLES * NUM_AGENTS;
         uint32_t * candidates = selection_array + idx;
 
-        ///Resevoir Sampling
-        /// Fill
+        //Resevoir Sampling
+        // Fill
         for (uint32_t j = 0; j < SELECTION_SIZE; ++j)
         {
             if (F_SELF_SELECTION)
@@ -38,12 +38,12 @@ namespace locusta {
                 candidates[j*offset_size] = j < threadIdx.x ? j : j + 1;
             }
         }
-        /// Replace
+        // Replace
         uint32_t random_idx;
         uint32_t iter_limit = F_SELF_SELECTION ? NUM_AGENTS : NUM_AGENTS - 1;
         uint32_t prn_idx = blockIdx.x * NUM_AGENTS + threadIdx.x;
 
-        /// NOTE: prnnumbers required for section: NUM_ISLES * NUM_AGENTS * (NUM_AGENTS - SELECTION_SIZE).
+        // NOTE: prnnumbers required for section: NUM_ISLES * NUM_AGENTS * (NUM_AGENTS - SELECTION_SIZE).
         for (uint32_t j = SELECTION_SIZE; j < iter_limit; ++j)
         {
             random_idx = (NUM_AGENTS - 1) * prnumbers_array[prn_idx];        
@@ -61,13 +61,13 @@ namespace locusta {
             }
         }
 
-        /// Tournament        
+        // Tournament        
         bool switch_flag;
         TFloat switch_p;
         TFloat candidate_fitness_array;
         TFloat best_fitness_array = fitness_array[candidates[0]];
 
-        /// NOTE: prnnumbers required for section: NUM_ISLES * NUM_AGENTS * (SELECTION_SIZE - 1) iff SELECTION_P.
+        // NOTE: prnnumbers required for section: NUM_ISLES * NUM_AGENTS * (SELECTION_SIZE - 1) iff SELECTION_P.
         for (uint32_t j = 1; j < SELECTION_SIZE; ++j)
         {
             candidate_fitness_array = fitness_array[candidates[j*offset_size]];
@@ -87,8 +87,8 @@ namespace locusta {
                 candidates[0] = candidates[j*offset_size];
             }
         }
-        ///std::cout << candidates[0] << " WON!" << std::endl;
-        /// TODO: Remove? Redundant with candidates[0]
+        //std::cout << candidates[0] << " WON!" << std::endl;
+        // TODO: Remove? Redundant with candidates[0]
         selection_array[idx] = candidates[0];
     }
 
@@ -133,7 +133,7 @@ namespace locusta {
 
             TFloat o;
         
-            /// Crossover
+            // Crossover
             if (co_f < CROSSOVER_RATE)
             {
                 o = 0.5 * (a + b);
@@ -143,8 +143,8 @@ namespace locusta {
                 o = a;
             }
 
-            /// Mutation
-            if (prnumbers_array[prn_idx] < MUTATION_RATE) /// TODO: Check PRN Addressing
+            // Mutation
+            if (prnumbers_array[prn_idx] < MUTATION_RATE) // TODO: Check PRN Addressing
             {
                 const TFloat & range = VAR_RANGES[i];
         
@@ -159,7 +159,7 @@ namespace locusta {
                 x *= DEVIATION * range;
                 x += o;
 
-                /// Bound Checking
+                // Bound Checking
                 const TFloat & u = UPPER_BOUNDS[i];
                 const TFloat & l = LOWER_BOUNDS[i];
 
@@ -196,7 +196,7 @@ namespace locusta {
      const uint32_t MIGRATION_SELECTION_SIZE,
      curandState * const local_generator)
     {
-        uint32_t * shr_reservoir = (uint32_t *) ga_shared_memory; /// TODO: Check for overflow case.
+        uint32_t * shr_reservoir = (uint32_t *) ga_shared_memory; // TODO: Check for overflow case.
         TFloat * shr_fitness = (TFloat *) &shr_reservoir[blockDim.x];
 
         curandState local_state = local_generator[threadIdx.x + blockIdx.x * MIGRATION_SELECTION_SIZE];
@@ -204,11 +204,11 @@ namespace locusta {
 
         for(uint32_t iteration = 0; iteration < MIGRATION_SIZE; ++iteration)
         {
-            /// Reservoir Sampling
-            /// Fill
+            // Reservoir Sampling
+            // Fill
             shr_reservoir[threadIdx.x] = threadIdx.x;
 
-            /// Replace
+            // Replace
             uint32_t local_rand;
             while(local_count < NUM_AGENTS)
             {
@@ -221,11 +221,11 @@ namespace locusta {
                 __syncthreads();
             }    
 
-            /// Get fitness value from Global Memory into Shared Memory
+            // Get fitness value from Global Memory into Shared Memory
             shr_fitness[threadIdx.x] = fitness_array[shr_reservoir[threadIdx.x] + blockIdx.x * NUM_AGENTS];
             __syncthreads();
         
-            /// Tournament
+            // Tournament
             TFloat a, b;
             int reduce_idx = 1;
     
@@ -251,11 +251,11 @@ namespace locusta {
                 reduce_idx >>= 1;
             }
 
-            /// Write Tournament Winner
+            // Write Tournament Winner
             if ( threadIdx.x == 0 )
             {
                 migrating_idxs[blockIdx.x + blockDim.x * iteration] = shr_reservoir[0];
-                ///printf("%d := %d, fitness = %f\n", blockIdx.x, shr_reservoir[0], fitness_array[shr_reservoir[0]]);
+                //printf("%d := %d, fitness = %f\n", blockIdx.x, shr_reservoir[0], fitness_array[shr_reservoir[0]]);
             }
         }
 
@@ -305,9 +305,9 @@ namespace locusta {
         }
     }
   
-    /// -------------
-    /// CUDA Wrappers
-    /// -------------
+    // -------------
+    // CUDA Wrappers
+    // -------------
   
     template<typename TFloat>
     void tournament_select_dispatch
@@ -418,9 +418,9 @@ namespace locusta {
         CudaCheckError();
     }
 
-    /// -------------------------------
-    /// Template Specialization (float)
-    /// -------------------------------
+    // -------------------------------
+    // Template Specialization (float)
+    // -------------------------------
   
     template
     void tournament_select_dispatch<float>
@@ -464,9 +464,9 @@ namespace locusta {
      const uint32_t MIGRATION_SELECTION_SIZE,
      prngenerator<float> * const local_generator);
 
-    /// --------------------------------
-    /// Template Specialization (double)
-    /// --------------------------------
+    // --------------------------------
+    // Template Specialization (double)
+    // --------------------------------
   
     template
     void tournament_select_dispatch<double>
@@ -510,4 +510,4 @@ namespace locusta {
      const uint32_t MIGRATION_SELECTION_SIZE,
      prngenerator<double> * const local_generator);
   
-} /// namespace locusta
+} // namespace locusta

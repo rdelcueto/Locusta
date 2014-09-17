@@ -61,7 +61,7 @@ namespace locusta {
   template<typename TFloat>
   TFloat prngenerator_gpu<TFloat>::_generate()
   {
-    /// NOT IMPLEMENTED
+    // NOT IMPLEMENTED
     return 0;
   }
 

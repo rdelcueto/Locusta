@@ -111,6 +111,6 @@ namespace locusta {
     TFloat * _dev_migration_buffer;
 
   };
-} /// namespace locusta
+} // namespace locusta
 #include "ga_solver_gpu_impl.hpp"
 #endif

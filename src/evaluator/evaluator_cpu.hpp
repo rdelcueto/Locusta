@@ -36,6 +36,6 @@ namespace locusta {
     cpu_evaluable_function _fitness_function;
   };
 
-} /// namespace locusta
+} // namespace locusta
 #include "evaluator_cpu.cpp"
 #endif

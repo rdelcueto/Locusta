@@ -1,4 +1,4 @@
-#include <iostream> /// TODO: REMOVE
+#include <iostream> // TODO: REMOVE
 
 namespace locusta {
 
@@ -38,4 +38,4 @@ namespace locusta {
     return;
   }
 
-} /// namespace locusta
+} // namespace locusta

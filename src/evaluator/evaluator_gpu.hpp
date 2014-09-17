@@ -37,6 +37,6 @@ namespace locusta {
     gpu_evaluable_function _fitness_function;
   };
 
-} /// namespace locusta
+} // namespace locusta
 #include "evaluator_gpu_impl.hpp"
 #endif

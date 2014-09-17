@@ -49,5 +49,5 @@ namespace locusta {
 
   };
 
-} /// namespace locusta
+} // namespace locusta
 #endif

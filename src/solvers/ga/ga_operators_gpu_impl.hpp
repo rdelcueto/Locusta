@@ -2,7 +2,7 @@
 
 namespace locusta {
 
-  /// Cuda Wrappers Forward Declarations
+  // Cuda Wrappers Forward Declarations
   template<typename TFloat>
   void
   tournament_select_dispatch
@@ -130,4 +130,4 @@ namespace locusta {
        local_generator);
   }
 
-} /// namespace locusta
+} // namespace locusta

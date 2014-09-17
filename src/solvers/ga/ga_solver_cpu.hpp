@@ -102,6 +102,6 @@ namespace locusta {
     using ga_solver<TFloat>::_generation_target;
 
   };
-} /// namespace locusta
+} // namespace locusta
 #include "ga_solver_cpu.cpp"
 #endif

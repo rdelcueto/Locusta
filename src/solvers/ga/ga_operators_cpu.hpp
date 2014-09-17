@@ -47,6 +47,6 @@ namespace locusta {
 
   };
 
-} /// namespace locusta
+} // namespace locusta
 #include "ga_operators_cpu.cpp"
 #endif
