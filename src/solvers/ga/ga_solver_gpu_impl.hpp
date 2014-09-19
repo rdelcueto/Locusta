@@ -24,7 +24,7 @@ namespace locusta {
     std::cout << "\nGenetic Algorithm Solver (GPU)"
               << "\nConfiguration:"
               << "\n\t * Isles / Agents / Dimensions: "
-              <<  _dev_population->_NUM_ISLES
+              << _dev_population->_NUM_ISLES
               << " / " <<  _dev_population->_NUM_AGENTS
               << " / " << _dev_population->_NUM_DIMENSIONS
               << "\n\t * Migration"
@@ -395,10 +395,6 @@ namespace locusta {
       1.0 : 1.0 - (_generation_count * 1.0f) / _generation_target * 1.0f;
     generational_ratio = generational_ratio > 0.1 ? generational_ratio : 0.1;
 
-#ifdef _DEBUG
-    std::cout << "GR: " << generational_ratio << std::endl;
-#endif
-
     _breeding_function(_crossover_rate,
                        _mutation_rate,
                        _distribution_iterations,
@@ -534,7 +530,54 @@ namespace locusta {
 
     delete [] _migrating_idxs;
 #endif
+  }
 
+  template <typename TFloat>
+  void ga_solver_gpu<TFloat>::_copy_dev_couples_into_host(uint32_t * const output_couples)
+  {
+    const uint32_t NUM_ISLES = _population->_NUM_ISLES;
+    const uint32_t NUM_AGENTS = _population->_NUM_AGENTS;
+
+    CudaSafeCall(cudaMemcpy(output_couples,
+                            _dev_coupling_idxs,
+                            sizeof(uint32_t) * NUM_ISLES * NUM_AGENTS,
+                            cudaMemcpyDeviceToHost));
+
+    return;
+  }
+
+  template <typename TFloat>
+  void ga_solver_gpu<TFloat>::_copy_host_couples_into_dev(uint32_t * const input_couples)
+  {
+    const uint32_t NUM_ISLES = _population->_NUM_ISLES;
+    const uint32_t NUM_AGENTS = _population->_NUM_AGENTS;
+
+    CudaSafeCall(cudaMemcpy(_dev_coupling_idxs,
+                            input_couples,
+                            sizeof(uint32_t) * NUM_ISLES * NUM_AGENTS,
+                            cudaMemcpyHostToDevice));
+
+    return;
+  }
+
+  template <typename TFloat>
+  void ga_solver_gpu<TFloat>::_set_couples_idx(uint32_t * const input_couples)
+  {
+    _copy_host_couples_into_dev(input_couples);
+  }
+
+  template <typename TFloat>
+  void ga_solver_gpu<TFloat>::_get_couples_idx(uint32_t * const output_couples)
+  {
+    _copy_dev_couples_into_host(output_couples);
   }
 
 } // namespace locusta
+
+
+
+
+
+
+
+

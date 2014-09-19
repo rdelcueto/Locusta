@@ -80,8 +80,6 @@ namespace locusta {
     /// Evolves the population through one generation step.
     virtual void _advance_generation() = 0;
 
-  protected:
-
     /// Runs parent selection routine.
     virtual void _select() = 0;
 
@@ -94,25 +92,33 @@ namespace locusta {
     /// Runs migration between isles.
     virtual void _migrate() = 0;
 
-    ///Defines the migration size.
+    /// Replaces the couple indexes.
+    virtual void _set_couples_idx(uint32_t * const input_couples) = 0;
+
+    /// Gets the couple indexes.
+    virtual void _get_couples_idx(uint32_t * const output_couples) = 0;
+
+  protected:
+
+    /// Defines the migration size.
     uint32_t _migration_step;
 
-    ///Defines the migration size.
+    /// Defines the migration size.
     uint32_t _migration_size;
 
-    ///Defines the migration selection window size.
+    /// Defines the migration selection window size.
     uint32_t _migration_selection_size;
 
-    ///Defines the parent selection window size.
+    /// Defines the parent selection window size.
     uint32_t _selection_size;
 
-    ///Defines parent selection stochastic threshold.
+    /// Defines parent selection stochastic threshold.
     TFloat _selection_p;
 
-    ///Defines the crossover (recombination) probability for each of the genomes.
+    /// Defines the crossover (recombination) probability for each of the genomes.
     TFloat _crossover_rate;
 
-    ///Defines the mutation probability for each gene.
+    /// Defines the mutation probability for each gene.
     TFloat _mutation_rate;
 
     /// Defines the distribution iterations when applying the mutation operator.

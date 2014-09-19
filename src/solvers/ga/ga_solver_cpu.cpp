@@ -338,10 +338,6 @@ namespace locusta {
       1.0 : 1.0 - (this->_generation_count * 1.0f) / this->_generation_target * 1.0f;
     generational_ratio = generational_ratio > 0.1 ? generational_ratio : 0.1;
 
-#ifdef _DEBUG
-    std::cout << "GR: " << generational_ratio << std::endl;
-#endif
-
 #pragma omp parallel for schedule(static)
     for(uint32_t i = 0; i < NUM_ISLES; ++i)
       {
@@ -445,6 +441,24 @@ namespace locusta {
                         _migration_size,
                         _migration_selection_size,
                         _bulk_prn_generator);
+  }
+
+  template <typename TFloat>
+  void ga_solver_cpu<TFloat>::_set_couples_idx(uint32_t * const input_couples)
+  {
+    const uint32_t NUM_ISLES = _population->_NUM_ISLES;
+    const uint32_t NUM_AGENTS = _population->_NUM_AGENTS;
+
+    memcpy(_coupling_idxs, input_couples, NUM_ISLES * NUM_AGENTS * sizeof(uint32_t) );
+  }
+
+  template <typename TFloat>
+  void ga_solver_cpu<TFloat>::_get_couples_idx(uint32_t * const output_couples)
+  {
+    const uint32_t NUM_ISLES = _population->_NUM_ISLES;
+    const uint32_t NUM_AGENTS = _population->_NUM_AGENTS;
+
+    memcpy(output_couples, _coupling_idxs, NUM_ISLES * NUM_AGENTS * sizeof(uint32_t) );
   }
 
 } // namespace locusta

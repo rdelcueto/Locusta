@@ -97,9 +97,50 @@ protected:
     upper_bounds = new float[DIMENSIONS];
     lower_bounds = new float[DIMENSIONS];
 
+    test_cpu_data = new float[ISLES * AGENTS * DIMENSIONS];
+    test_gpu_data = new float[ISLES * AGENTS * DIMENSIONS];
+
+    test_coupling = new uint32_t[ISLES * AGENTS];
+
     // Bounds definition
     std::fill(upper_bounds, upper_bounds+DIMENSIONS, 2.0f);
     std::fill(lower_bounds, lower_bounds+DIMENSIONS, 0.0f);
+
+// Test data definition
+    for (uint32_t i = 0; i < ISLES; ++i)
+      {
+        for(uint32_t j = 0; j < AGENTS; ++j)
+          {
+            test_coupling[i * AGENTS + j] = j < (AGENTS - 1) ? j + 1: 0;
+
+            for(uint32_t k = 0; k < DIMENSIONS; ++k)
+              {
+                uint32_t locus_offset = k * ISLES * AGENTS;
+                test_cpu_data[i * AGENTS * DIMENSIONS + j * DIMENSIONS + k] = test_gpu_data[locus_offset + i * AGENTS + j] = (k + 1) + (2 << (j + 1));
+              }
+          }
+      }
+
+#ifdef _DEBUG
+    std::cout << "\nTEST COUPLING DEFINITION\n";
+    for(uint32_t i = 0; i < ISLES * AGENTS; ++i)
+      {
+        std::cout << test_coupling[i] << ", ";
+      }
+
+    std::cout << "\nCPU TEST DATA DEFINITION\n";
+    for(uint32_t i = 0; i < ISLES * AGENTS * DIMENSIONS; ++i)
+      {
+        std::cout << test_cpu_data[i] << ", ";
+      }
+
+    std::cout << "\nGPU TEST DATA DEFINITION\n";
+    for(uint32_t i = 0; i < ISLES * AGENTS * DIMENSIONS; ++i)
+      {
+        std::cout << test_gpu_data[i] << ", ";
+      }
+    std::cout << std::endl;
+#endif
 
     setupCPU();
     setupGPU();
@@ -113,7 +154,6 @@ protected:
     const time_t elapsed_time = end_time - start_time;
 
     RecordProperty("Elapsed Time", elapsed_time);
-    EXPECT_TRUE(elapsed_time >= 0);
 
     delete cpu_population;
     delete cpu_generator;
@@ -146,9 +186,9 @@ protected:
 
   const uint64_t SEED = 1;
   const size_t GENERATIONS = 1e1;
-  const size_t ISLES = 2;
-  const size_t AGENTS = 2;
-  const size_t DIMENSIONS = 2;
+  const size_t ISLES = 1;
+  const size_t AGENTS = 4;
+  const size_t DIMENSIONS = 1;
 
   const size_t fitness_array_size = ISLES * AGENTS;
   const size_t data_array_size = fitness_array_size * DIMENSIONS;
@@ -158,6 +198,12 @@ protected:
 
   float * gpu_fitness_test_bridge;
   float * gpu_data_test_bridge;
+
+  float * test_cpu_data;
+  float * test_gpu_data;
+
+  uint32_t * test_coupling;
+  uint32_t * test_migration;
 
 };
 
@@ -185,8 +231,8 @@ class GATest : public LocustaTest {
                                       0.1 // Selection stochastic bias
                                       );
 
-    gpu_solver->_set_breeding_config(0.8, // Crossover rate
-                                     0.1  // Mutation rate
+    gpu_solver->_set_breeding_config(1.0, // Crossover rate
+                                     0.0  // Mutation rate
                                      );
 
     gpu_solver->_set_range_extension(0.1);
@@ -279,38 +325,37 @@ TEST_F(GATest, CPUInitFitnessValues) {
     }
 }
 
+// Run the GPU solver
+TEST_F(GATest, GpuSolverRun) {
 
-// // Run the GPU solver
-// TEST_F(GATest, GpuSolverRun) {
+    for(size_t g = 0; g < GENERATIONS; ++g)
+    {
+#ifdef _DEBUG
+        std::cout << "Generation: " << g << std::endl;
+#else
+        std::cout << "Generation: " << g << "\r";
+#endif
+        gpu_solver->_advance_generation();
+        //gpu_solver->_print_gpu_solver_elite();
+    }
+    gpu_solver->_print_solver_solution();
+}
 
-//     for(size_t g = 0; g < GENERATIONS; ++g)
-//     {
-// #ifdef _DEBUG
-//         std::cout << "Generation: " << g << std::endl;
-// #else
-//         std::cout << "Generation: " << g << "\r";
-// #endif
-//         gpu_solver->_advance_generation();
-//         //gpu_solver->_print_gpu_solver_elite();
-//     }
-//     gpu_solver->_print_solver_solution();
-// }
+// Run the CPU solver
+TEST_F(GATest, CpuSolverRun) {
 
-// // Run the CPU solver
-// TEST_F(GATest, CpuSolverRun) {
-
-//     for(size_t g = 0; g < GENERATIONS; ++g)
-//     {
-// #ifdef _DEBUG
-//         std::cout << "Generation: " << g << std::endl;
-// #else
-//         std::cout << "Generation: " << g << "\r";
-// #endif
-//         cpu_solver->_advance_generation();
-//         //cpu_solver->_print_cpu_solver_elite();
-//     }
-//     cpu_solver->_print_solver_solution();
-// }
+    for(size_t g = 0; g < GENERATIONS; ++g)
+    {
+#ifdef _DEBUG
+        std::cout << "Generation: " << g << std::endl;
+#else
+        std::cout << "Generation: " << g << "\r";
+#endif
+        cpu_solver->_advance_generation();
+        //cpu_solver->_print_cpu_solver_elite();
+    }
+    cpu_solver->_print_solver_solution();
+}
 
 // Test that CPU vs GPU evaluation values.
 TEST_F(GATest, CompareFitnessValues) {
@@ -341,8 +386,101 @@ TEST_F(GATest, CompareFitnessValues) {
 
   for (uint32_t i = 0; i < fitness_array_size; ++i)
     {
-      const float diff = gpu_fitness_test_bridge[i] - cpu_fitness_test_bridge[i];
       const float tolerance = 1e-4f;
-      EXPECT_LE(diff, tolerance);
+      const float cpu_fitness = cpu_fitness_test_bridge[i];
+      const float gpu_fitness = gpu_fitness_test_bridge[i];
+      EXPECT_NEAR(cpu_fitness, gpu_fitness, tolerance);
+    }
+}
+
+// Compare predefined fitness
+TEST_F(GATest, ComparePredefinedFitness) {
+  // Sync implementation data
+  float * cpu_genomes = cpu_population->_get_data_array();
+
+  // Copy CPU test data
+  memcpy(cpu_genomes, test_cpu_data, sizeof(float) * ISLES * AGENTS * DIMENSIONS);
+  // Copy GPU test data
+  gpu_population->_copy_host_data_into_dev(test_gpu_data);
+
+  // Evaluate Genomes
+  gpu_solver->_evaluate_genomes();
+  cpu_solver->_evaluate_genomes();
+
+  // Compare Fitness Evaluation
+  gpu_population->_copy_dev_fitness_into_host(gpu_fitness_test_bridge);
+  float * cpu_fitness_test_bridge = cpu_population->_get_fitness_array();
+
+  for (uint32_t i = 0; i < fitness_array_size; ++i)
+    {
+      const float tolerance = 1e-4f;
+      const float cpu_fitness = cpu_fitness_test_bridge[i];
+      const float gpu_fitness = gpu_fitness_test_bridge[i];
+      EXPECT_NEAR(cpu_fitness, gpu_fitness, tolerance);
+    }
+
+  gpu_solver->_set_couples_idx(test_coupling);
+  cpu_solver->_set_couples_idx(test_coupling);
+
+  gpu_solver->_breed();
+  cpu_solver->_breed();  
+
+  for (uint32_t i = 0; i < ISLES; ++i)
+    {
+      for(uint32_t j = 0; j < AGENTS; ++j)
+        {
+          for(uint32_t k = 0; k < DIMENSIONS; ++k)
+            {
+              uint32_t locus_offset = k * ISLES * AGENTS;
+
+              std::cout << test_cpu_data[i * AGENTS * DIMENSIONS + j * DIMENSIONS + k] << " : "
+                        << test_gpu_data[locus_offset + i * AGENTS + j] << ", ";
+            }
+          std::cout << " || ";
+        }
+    }
+
+  std::cout << std::endl;
+
+  // Compare Offspring Genomes
+  gpu_population->_swap_data_sets();
+  cpu_population->_swap_data_sets();
+
+  gpu_population->_copy_dev_data_into_host(test_gpu_data);
+
+  cpu_genomes = cpu_population->_get_data_array();
+  memcpy(test_cpu_data, cpu_genomes, sizeof(float) * ISLES * AGENTS * DIMENSIONS);
+
+  for (uint32_t i = 0; i < ISLES; ++i)
+    {
+      for(uint32_t j = 0; j < AGENTS; ++j)
+        {
+          for(uint32_t k = 0; k < DIMENSIONS; ++k)
+            {
+              uint32_t locus_offset = k * ISLES * AGENTS;
+
+              std::cout << test_cpu_data[i * AGENTS * DIMENSIONS + j * DIMENSIONS + k] << " : "
+                        << test_gpu_data[locus_offset + i * AGENTS + j] << ", ";
+            }
+          std::cout << " || ";
+        }
+    }
+
+  std::cout << std::endl;
+
+  for (uint32_t i = 0; i < ISLES; ++i)
+    {
+      for(uint32_t j = 0; j < AGENTS; ++j)
+        {
+          for(uint32_t k = 0; k < DIMENSIONS; ++k)
+            {
+              uint32_t locus_offset = k * ISLES * AGENTS;
+
+              const float tolerance = 1e-4f;
+              const float cpu_gene = test_cpu_data[i * AGENTS * DIMENSIONS + j * DIMENSIONS + k];
+              const float gpu_gene = test_gpu_data[locus_offset + i * AGENTS + j];
+              EXPECT_NEAR(cpu_gene, gpu_gene, tolerance);
+            }
+        }
     }
 }

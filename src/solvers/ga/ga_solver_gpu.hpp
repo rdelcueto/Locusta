@@ -56,16 +56,24 @@ namespace locusta {
 
     virtual void _advance_generation();
 
-  protected:
-
     virtual void _select();
     virtual void _breed();
     virtual void _replace_update_elite();
     virtual void _migrate();
 
+    virtual void _set_couples_idx(uint32_t * const input_couples);
+    virtual void _get_couples_idx(uint32_t * const output_couples);
+
+    virtual void _copy_dev_couples_into_host(uint32_t * const output_couples);
+    virtual void _copy_host_couples_into_dev(uint32_t * const input_couples);
+
+  protected:
+
     using ga_solver<TFloat>::_f_initialized;
 
     using ga_solver<TFloat>::_population;
+
+    /// GPU Population
     population_set_gpu<TFloat> * _dev_population;
 
     using ga_solver<TFloat>::_evaluator;
@@ -102,12 +110,17 @@ namespace locusta {
     using ga_solver<TFloat>::_generation_count;
     using ga_solver<TFloat>::_generation_target;
 
+    /// GPU Pseudo random numbers array
     TFloat * _dev_bulk_prnumbers;
-
+    /// GPU Upper Bounds
     TFloat * _dev_extended_upper_bounds;
+    /// GPU Lower Bounds
     TFloat * _dev_extended_lower_bounds;
+    /// GPU Coupling indexes
     uint32_t * _dev_coupling_idxs;
+    /// GPU Migration indexes
     uint32_t * _dev_migrating_idxs;
+    /// GPU Migration buffer
     TFloat * _dev_migration_buffer;
 
   };

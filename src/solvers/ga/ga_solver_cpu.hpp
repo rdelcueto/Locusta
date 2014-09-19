@@ -56,12 +56,15 @@ namespace locusta {
 
     virtual void _advance_generation();
 
-  protected:
-
     virtual void _select();
     virtual void _breed();
     virtual void _replace_update_elite();
     virtual void _migrate();
+
+    virtual void _set_couples_idx(uint32_t * const input_couples);
+    virtual void _get_couples_idx(uint32_t * const output_couples);
+
+  protected:
 
     using ga_solver<TFloat>::_f_initialized;
 
