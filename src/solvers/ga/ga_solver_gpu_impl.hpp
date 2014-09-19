@@ -319,10 +319,6 @@ namespace locusta {
     // Replace Lowest Fitness with elite (Steady-State)
     _replace_update_elite();
 
-#ifdef _DEBUG
-    _dev_population->_print_data();
-#endif
-
     // Population Migration between isles
     if (_generation_count != 0 &&
         _migration_step != 0 &&
@@ -362,21 +358,21 @@ namespace locusta {
                         _dev_coupling_idxs,
                         _prn_sets[SELECTION_PRNS_OFFSET]);
 
-#ifdef _DEBUG
-    _coupling_idxs = new uint32_t [NUM_AGENTS];
-    CudaSafeCall(cudaMemcpy(_coupling_idxs,
-                            _dev_coupling_idxs,
-                            NUM_AGENTS * sizeof(uint32_t),
-                            cudaMemcpyDeviceToHost));
+// #ifdef _DEBUG
+//     _coupling_idxs = new uint32_t [NUM_AGENTS];
+//     CudaSafeCall(cudaMemcpy(_coupling_idxs,
+//                             _dev_coupling_idxs,
+//                             NUM_AGENTS * sizeof(uint32_t),
+//                             cudaMemcpyDeviceToHost));
 
-    std::cout << "Selection\n";
-    for(uint32_t i = 0; i < NUM_AGENTS; ++i)
-      {
-        std::cout << _coupling_idxs[i] << std::endl;
-      }
-    std::cout << std::endl;
-    delete [] _coupling_idxs;
-#endif
+//     std::cout << "Selection\n";
+//     for(uint32_t i = 0; i < NUM_AGENTS; ++i)
+//       {
+//         std::cout << _coupling_idxs[i] << std::endl;
+//       }
+//     std::cout << std::endl;
+//     delete [] _coupling_idxs;
+// #endif
 
   }
 
@@ -432,11 +428,11 @@ namespace locusta {
     for(uint32_t i = 0; i < NUM_ISLES; ++i)
       {
 
-#ifdef _DEBUG
-        std::cout << "ISLE " << i << " LOWEST: " << lowest_fitness[i] << std::endl;
-        std::cout << "ISLE " << i << " HIGHEST: " << highest_fitness[i] << std::endl;
-        std::cout << "ISLE " << i << " ELITE: " << _elite_fitness[i] << std::endl;
-#endif
+// #ifdef _DEBUG
+//         std::cout << "ISLE " << i << " LOWEST: " << lowest_fitness[i] << std::endl;
+//         std::cout << "ISLE " << i << " HIGHEST: " << highest_fitness[i] << std::endl;
+//         std::cout << "ISLE " << i << " ELITE: " << _elite_fitness[i] << std::endl;
+// #endif
 
         // Replace Lowest with Elite iff Lowest < Elite
         {
@@ -511,25 +507,25 @@ namespace locusta {
                         _migration_selection_size,
                         _bulk_prn_generator);
 
-#ifdef _DEBUG
-    _migrating_idxs = new uint32_t [NUM_ISLES * _migration_size];
-    CudaSafeCall(cudaMemcpy(_migrating_idxs,
-                            _dev_migrating_idxs,
-                            NUM_ISLES * _migration_size * sizeof(uint32_t),
-                            cudaMemcpyDeviceToHost));
+// #ifdef _DEBUG
+//     _migrating_idxs = new uint32_t [NUM_ISLES * _migration_size];
+//     CudaSafeCall(cudaMemcpy(_migrating_idxs,
+//                             _dev_migrating_idxs,
+//                             NUM_ISLES * _migration_size * sizeof(uint32_t),
+//                             cudaMemcpyDeviceToHost));
 
-    std::cout << "Migration Selection\n";
-    for(uint32_t i = 0; i < NUM_ISLES; ++i)
-      {
-        for(uint32_t j = 0; j < _migration_size; ++j)
-          {
-            std::cout << _migrating_idxs[i * _migration_size + j] << std::endl;
-          }
-      }
-    std::cout << std::endl;
+//     std::cout << "Migration Selection\n";
+//     for(uint32_t i = 0; i < NUM_ISLES; ++i)
+//       {
+//         for(uint32_t j = 0; j < _migration_size; ++j)
+//           {
+//             std::cout << _migrating_idxs[i * _migration_size + j] << std::endl;
+//           }
+//       }
+//     std::cout << std::endl;
 
-    delete [] _migrating_idxs;
-#endif
+//     delete [] _migrating_idxs;
+// #endif
   }
 
   template <typename TFloat>

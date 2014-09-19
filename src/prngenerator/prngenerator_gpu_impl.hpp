@@ -49,10 +49,10 @@ namespace locusta {
   template<typename TFloat>
   void prngenerator_gpu<TFloat>::_generate(const uint32_t n, TFloat * output)
   {
-#ifdef _DEBUG
-    __cudaCheckMemory();
-    std::cout << "Generating " << n << " numbers." << std::endl;
-#endif
+// #ifdef _DEBUG
+//     __cudaCheckMemory();
+//     std::cout << "Generating " << n << " numbers." << std::endl;
+// #endif
     CurandSafeCall(curandGenerateUniform (_bulk_prng_engine,
                                           output,
                                           n));
