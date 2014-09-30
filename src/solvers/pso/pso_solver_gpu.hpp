@@ -85,11 +85,6 @@ namespace locusta {
     using pso_solver<TFloat>::_cognitive_factor;
     using pso_solver<TFloat>::_social_factor;
 
-    using pso_solver<TFloat>::_range_extension_p;
-
-    using pso_solver<TFloat>::_extended_upper_bounds;
-    using pso_solver<TFloat>::_extended_lower_bounds;
-
     using pso_solver<TFloat>::_migrating_idxs;
     using pso_solver<TFloat>::_migration_buffer;
     using pso_solver<TFloat>::_best_fitness;

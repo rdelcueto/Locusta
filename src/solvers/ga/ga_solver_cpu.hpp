@@ -91,9 +91,12 @@ namespace locusta {
 
     using ga_solver<TFloat>::_extended_upper_bounds;
     using ga_solver<TFloat>::_extended_lower_bounds;
+
     using ga_solver<TFloat>::_coupling_idxs;
+
     using ga_solver<TFloat>::_migrating_idxs;
     using ga_solver<TFloat>::_migration_buffer;
+
     using ga_solver<TFloat>::_elite_fitness;
     using ga_solver<TFloat>::_elite_genomes;
 

@@ -1,9 +1,9 @@
 namespace locusta {
 
   template <typename TFloat>
-  ga_solver_cpu<TFloat>::ga_solver_cpu (population_set_cpu<TFloat> * population,
-                                        evaluator_cpu<TFloat> * evaluator,
-                                        prngenerator_cpu<TFloat> * prn_generator)
+  ga_solver_cpu<TFloat>::ga_solver_cpu(population_set_cpu<TFloat> * population,
+                                       evaluator_cpu<TFloat> * evaluator,
+                                       prngenerator_cpu<TFloat> * prn_generator)
     : ga_solver<TFloat>(population,
                         evaluator,
                         prn_generator)
@@ -111,7 +111,7 @@ namespace locusta {
 
     uint32_t num_breed = NUM_AGENTS + NUM_AGENTS * NUM_DIMENSIONS;
 
-    //FIXME: PRNG == agents * eval_prngnumbers?
+    //TODO: Check if PRNG == agents * eval_prngnumbers?
     uint32_t num_eval_prn = NUM_AGENTS * _evaluator->_num_eval_prnumbers;
 
     _prn_isle_offset = num_selection + num_breed + num_eval_prn;

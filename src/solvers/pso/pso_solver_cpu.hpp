@@ -44,8 +44,6 @@ namespace locusta {
     virtual void _set_velocity_limit_config(TFloat max_velocity,
                                             TFloat min_velocity);
 
-    virtual void _set_range_extension(TFloat range_multiplier);
-
     virtual void _set_generation_target(uint32_t generation_target);
 
     virtual void _generate_prngs();
@@ -88,13 +86,17 @@ namespace locusta {
     using pso_solver<TFloat>::_extended_upper_bounds;
     using pso_solver<TFloat>::_extended_lower_bounds;
 
+    using pso_solver<TFloat>::_velocities;
+    using pso_solver<TFloat>::_best_positions;
+
     using pso_solver<TFloat>::_migrating_idxs;
     using pso_solver<TFloat>::_migration_buffer;
-    using pso_solver<TFloat>::_best_fitness;
-    using pso_solver<TFloat>::_best_genomes;
 
-    using pso_solver<TFloat>::_update_position;
-    using pso_solver<TFloat>::_update_velocity;
+    using pso_solver<TFloat>::_elite_fitness;
+    using pso_solver<TFloat>::_elite_genomes;
+
+    using pso_solver<TFloat>::_position_function;
+    using pso_solver<TFloat>::_velocity_function;
     using pso_solver<TFloat>::_migration_function;
 
     using pso_solver<TFloat>::_generation_count;

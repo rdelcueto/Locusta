@@ -65,9 +65,6 @@ namespace locusta {
     virtual void _set_velocity_limit_config(TFloat max_velocity,
                                             TFloat min_velocity) = 0;
 
-    /// Sets the variable range extension multiplier.
-    virtual void _set_range_extension(TFloat range_multiplier) = 0;
-
     /// Sets the generation target for the solver.
     virtual void _set_generation_target(uint32_t generation_target) = 0;
 
@@ -118,26 +115,17 @@ namespace locusta {
     /// Defines the weight of the neighborhood social information. 
     TFloat _social_factor;
 
-    ///Defines the domain range percent extension.
-    TFloat _range_extension_p;
-
-    /// Stores extended domain's upper bounds.
-    TFloat * _extended_upper_bounds;
-
-    /// Stores extended domain's lower bounds.
-    TFloat * _extended_lower_bounds;
-
     /// Describes the migration selection indexes.
     uint32_t * _migrating_idxs;
 
     /// Stores the temporal migration genomes to be migrated.
     TFloat * _migration_buffer;
 
-    /// Describes the fitness value of the isle's best agents.
-    TFloat * _best_fitness;
+    /// Describes the fitness value of the isle's elite agents.
+    TFloat * _elite_fitness;
 
-    /// Describes the genomes of the isle's best agents.
-    TFloat * _best_genomes;
+    /// Describes the genomes of the isle's elite agents.
+    TFloat * _elite_genomes;
 
     /// Describes the location of each pseudo random number set within a single isle.
     TFloat * _prn_sets[3];
@@ -146,10 +134,10 @@ namespace locusta {
     size_t _prn_isle_offset;
 
     /// Function pointer to the position update method.
-    typename pso_operators<TFloat>::position_func _update_position;
+    typename pso_operators<TFloat>::position_func _position_function;
 
     /// Function pointer to the velocity update method.
-    typename pso_operators<TFloat>::velocity_func _update_velocity;
+    typename pso_operators<TFloat>::velocity_func _velocity_function;
 
     /// Function pointer to the migration method.
     typename pso_operators<TFloat>::migrate_func _migration_function;
