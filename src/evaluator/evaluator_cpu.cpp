@@ -21,20 +21,20 @@ namespace locusta {
   }
 
   template<typename TFloat>
-  void evaluator_cpu<TFloat>::evaluate(population_set<TFloat> * population)
+  void evaluator_cpu<TFloat>::evaluate(population_set<TFloat> * population,
+                                       const TFloat * UPPER_BOUNDS,
+                                       const TFloat * LOWER_BOUNDS)
   {
-    const TFloat * const data_array = population->_get_data_array();
-    TFloat * const fitness_array = population->_get_fitness_array();
 
-    _fitness_function(population->_UPPER_BOUNDS,
-                      population->_LOWER_BOUNDS,
-                      population->_NUM_ISLES,
-                      population->_NUM_AGENTS,
-                      population->_NUM_DIMENSIONS,
+    _fitness_function(UPPER_BOUNDS,
+                      LOWER_BOUNDS,
+                      population->_ISLES,
+                      population->_AGENTS,
+                      population->_DIMENSIONS,
                       _bounding_mapping_method,
                       _f_negate,
-                      data_array,
-                      fitness_array);
+                      population->_data_array,
+                      population->_fitness_array);
     return;
   }
 

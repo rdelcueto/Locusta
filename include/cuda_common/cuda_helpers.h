@@ -92,9 +92,6 @@ namespace locusta {
 
     struct cudaDeviceProp properties;
 
-#ifdef _DEBUG
-    std::cout << "Checking for CUDA Device support... ";
-#endif
     cudaError_t e = cudaGetDeviceCount(&deviceCount);
 
     if (e != cudaSuccess)
@@ -122,7 +119,7 @@ namespace locusta {
         CudaSafeCall(cudaGetDeviceProperties(&prop, 0));
 
 #ifdef _DEBUG
-        std::cout << "Using " << prop.name;
+        std::cout << "Using " << prop.name << std::endl;
 #endif
       }
 
