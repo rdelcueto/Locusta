@@ -22,9 +22,9 @@ namespace locusta {
         _migration_step = 0;
         _migration_size = 1;
         _migration_selection_size = 2;
-        _inertia_factor = 0.9;
-        _cognitive_factor = 1.0;
-        _social_factor = 1.0;
+        _inertia_factor = 0.8;
+        _cognitive_factor = 2.0;
+        _social_factor = 2.0;
 
         _bulk_size = 2 * _population->_TOTAL_GENES;
         // Memory allocation
@@ -48,21 +48,14 @@ namespace locusta {
     template<typename TFloat>
     void pso_solver<TFloat>::setup_solver()
     {
-        if( !_population->_f_initialized ) {
-           evolutionary_solver<TFloat>::initialize_population();
-        }
+        evolutionary_solver<TFloat>::setup_solver();
 
-        if( _f_initialized ) {
-            teardown_solver();
-        }
+        // Initialize best particle position with random positions.
+        evolutionary_solver<TFloat>::initialize_vector(_cognitive_position_vector, _velocity_vector);
 
-        const size_t TOTAL_GENES = _population->_TOTAL_GENES;
-
-        // Initialize best particle position with current position.
-        memcpy(_cognitive_position_vector, _population->_data_array, TOTAL_GENES * sizeof(TFloat));
-
-        // Initialize Velocity
-        _bulk_prn_generator->_generate(TOTAL_GENES, _velocity_vector);
+        // Initialize Velocity to 0
+        const size_t vec_size = _population->_TOTAL_GENES;
+        std::fill(_velocity_vector, _velocity_vector + vec_size, 0);
     }
 
     template<typename TFloat>

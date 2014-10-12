@@ -95,7 +95,7 @@ protected:
 
     // Population
     const uint64_t SEED = 1;
-    const size_t GENERATIONS = 2e0;
+    const size_t GENERATIONS = 1e2;
     const size_t ISLES = 1;
     const size_t AGENTS = 128;
     const size_t DIMENSIONS = 128;
@@ -136,5 +136,6 @@ TEST_F(ParticleSwarmTest, BasicTest)
     pso_solver_ptr->setup_solver();
     pso_solver_ptr->setup_operators(new CanonicalSpeedUpdate<float>(),
                                     new CanonicalPositionUpdate<float>());
-        pso_solver_ptr->run();
+    pso_solver_ptr->run();
+    //pso_solver_ptr->print_solutions();
 }

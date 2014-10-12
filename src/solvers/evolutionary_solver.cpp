@@ -38,9 +38,48 @@ namespace locusta {
     }
 
     template<typename TFloat>
+    void evolutionary_solver<TFloat>::setup_solver()
+    {
+        // Initialize Population
+        if( !_population->_f_initialized ) {
+            initialize_vector(_population->_data_array, _population->_transformed_data_array);
+            _population->_f_initialized = true;
+        }
+
+        if( _f_initialized ) {
+            teardown_solver();
+        }
+
+        // Initialize solver records
+        const TFloat * data_array = const_cast<TFloat *>(_population->_data_array);
+        for(uint32_t i = 0; i < _ISLES; ++i) {
+            for(uint32_t j = 0; j < _AGENTS; ++j) {
+                // Initialize best genomes
+                for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
+                    const uint32_t data_idx =
+                        i * _AGENTS * _DIMENSIONS +
+                        0 * _DIMENSIONS +
+                        k;
+
+                    _best_genome[k] = data_array[data_idx];
+                }
+                _best_genome_fitness[i] = -std::numeric_limits<TFloat>::infinity();
+            }
+        }
+
+        // Initialize fitness, evaluating initialization data.
+        evaluate_genomes();
+
+        // Update solver records
+        update_records();
+    }
+
+
+    template<typename TFloat>
     void evolutionary_solver<TFloat>::advance()
     {
         transform();
+        crop_vector(_population->_transformed_data_array);
 
         _population->swap_data_sets();
 
@@ -55,7 +94,7 @@ namespace locusta {
     void evolutionary_solver<TFloat>::run()
     {
         do {
-            //print_solutions();
+            print_solutions();
             advance();
         } while(_generation_count % _generation_target != 0);
     }
@@ -111,17 +150,10 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::initialize_population()
+    void evolutionary_solver<TFloat>::crop_vector(TFloat * vec)
     {
-        // Initialize population data, within given bounds.
-        const uint32_t pop_size = _population->_TOTAL_GENES;
-
-        TFloat * const transformed_data_array = _population->_transformed_data_array;
-
-        _bulk_prn_generator->_generate(pop_size, transformed_data_array);
-
-        TFloat * const data_array = _population->_data_array;
-        TFloat * const fitness_array = _population->_fitness_array;
+        // Initialize vector data, within given bounds.
+        const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
 
         for(uint32_t i = 0; i < _ISLES; ++i) {
             for(uint32_t j = 0; j < _AGENTS; ++j) {
@@ -132,33 +164,46 @@ namespace locusta {
                         j * _DIMENSIONS +
                         k;
 
-                    data_array[data_idx] = _LOWER_BOUNDS[k] + (_VAR_RANGES[k] * transformed_data_array[data_idx]);
-                    // Initialize Transformed Data Array with infinity values.
-                    transformed_data_array[data_idx] = -std::numeric_limits<TFloat>::infinity();
+                    // TODO: Flexible bound crop method
+                    TFloat c_value = vec[data_idx];
+                    const TFloat value = c_value;
+                    const TFloat low_bound = _LOWER_BOUNDS[k];
+                    const TFloat high_bound = _UPPER_BOUNDS[k];
+
+                    c_value = c_value < low_bound ? low_bound : c_value;
+                    c_value = c_value > high_bound ? high_bound : c_value;
+
+                    if(value != c_value) {
+                        // Crop
+                        vec[data_idx] = c_value;
+                    }
                 }
-
-                // Initialize Fitness Values
-                const uint32_t fitness_idx = i * _AGENTS + j;
-                fitness_array[fitness_idx] = -std::numeric_limits<TFloat>::infinity();
             }
-
-            // Initialize best genomes
-            for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
-                const uint32_t data_idx =
-                    i * _AGENTS * _DIMENSIONS +
-                    0 * _DIMENSIONS +
-                    k;
-
-                _best_genome[k] = data_array[data_idx];
-            }
-            _best_genome_fitness[i] = -std::numeric_limits<TFloat>::infinity();
         }
+    }
 
-        // Evaluate current data
-        evaluate_genomes();
+    template<typename TFloat>
+    void evolutionary_solver<TFloat>::initialize_vector(TFloat * dst_vec, TFloat * tmp_vec)
+    {
+        // Initialize vector data, within given bounds.
+        const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
 
-        // Update solver records
-        update_records();
+        _bulk_prn_generator->_generate(vec_size, tmp_vec);
+
+        for(uint32_t i = 0; i < _ISLES; ++i) {
+            for(uint32_t j = 0; j < _AGENTS; ++j) {
+                for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
+                    // Initialize Data Array
+                    const uint32_t data_idx =
+                        i * _AGENTS * _DIMENSIONS +
+                        j * _DIMENSIONS +
+                        k;
+
+                    dst_vec[data_idx] = _LOWER_BOUNDS[k] +
+                        (_VAR_RANGES[k] * tmp_vec[data_idx]);
+                }
+            }
+        }
     }
 
     template<typename TFloat>
