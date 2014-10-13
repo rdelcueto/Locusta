@@ -1,7 +1,7 @@
 #ifndef _BENCHMARKS_CPU_H_
 #define _BENCHMARKS_CPU_H_
 
-#include "evaluator/evaluable_function.hpp"
+#include "evaluator/evaluator.hpp"
 
 namespace locusta {
 
@@ -19,9 +19,18 @@ namespace locusta {
                 const uint32_t AGENTS = solver->_AGENTS;
                 const uint32_t DIMENSIONS = solver->_DIMENSIONS;
 
-                const bool f_negate = true;
+                const bool f_negate = solver->_evaluator->_f_negate;
+                const BoundMapKind bound_mapping_method = solver->_evaluator->_bound_mapping_method;
 
-                hyper_sphere(data, evaluation_array, ISLES, AGENTS, DIMENSIONS, UPPER_BOUNDS, LOWER_BOUNDS, f_negate);
+               hyper_sphere(data,
+                            evaluation_array,
+                            ISLES,
+                            AGENTS,
+                            DIMENSIONS,
+                            UPPER_BOUNDS,
+                            LOWER_BOUNDS,
+                            bound_mapping_method,
+                            f_negate);
             }
 
         void hyper_sphere(const TFloat * const data,
@@ -31,6 +40,7 @@ namespace locusta {
                           const uint32_t DIMENSIONS,
                           const TFloat * const UPPER_BOUNDS,
                           const TFloat * const LOWER_BOUNDS,
+                          BoundMapKind bound_mapping_method,
                           const bool f_negate)
             {
                 const uint32_t REPETITIONS = 1e2;
@@ -52,7 +62,8 @@ namespace locusta {
                                                 k];
                                 const TFloat &u = UPPER_BOUNDS[k];
                                 const TFloat &l = LOWER_BOUNDS[k];
-                                //bound_mapping<TFloat>(bound_mapping_method, u, l, x);
+
+                                evaluator<TFloat>::bound_map(bound_mapping_method, u, l, x);
                                 reduction_sum += x * x;
                             }
                         }

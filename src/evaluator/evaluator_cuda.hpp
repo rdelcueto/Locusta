@@ -25,7 +25,13 @@ namespace locusta {
         /// Evaluate the solver's population data set.
         virtual void evaluate(evolutionary_solver_cuda<TFloat> * solver);
 
-        /// Flag describing whether the evaluator will the fitness value or its negative.
+        /// Bound mapping implementation
+        static void bound_map(BoundMapKind bound_mapping_method,
+                              const TFloat &u,
+                              const TFloat &l,
+                              TFloat &x);
+
+       /// Flag describing whether the evaluator will the fitness value or its negative.
         const bool _f_negate;
 
         /// Specified the bounding map method.
@@ -39,6 +45,8 @@ namespace locusta {
 
         /// Evaluation dispatch functor
         EvaluationCudaFunctor<TFloat> * _evaluation_functor;
+
+
 
     };
 
