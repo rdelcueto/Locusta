@@ -1,5 +1,5 @@
-#ifndef LOCUSTA_POPULATION_SET_GPU_H_
-#define LOCUSTA_POPULATION_SET_GPU_H_
+#ifndef LOCUSTA_POPULATION_SET_CUDA_H_
+#define LOCUSTA_POPULATION_SET_CUDA_H_
 
 #include <iostream>
 #include <limits>
@@ -9,16 +9,16 @@
 #include "population_set.hpp"
 
 namespace locusta {
-    enum class GenomeCopyKind;
+    enum class GenomeCopyKind { GencpyHostToHost, GencpyHostToDevice, GencpyDeviceToHost, GencpyDeviceToDevice };
 
     template <typename TFloat>
-    struct population_set_gpu : population_set<TFloat> {
+    struct population_set_cuda : population_set<TFloat> {
 
-        population_set_gpu(const uint32_t ISLES,
+        population_set_cuda(const uint32_t ISLES,
                            const uint32_t AGENTS,
                            const uint32_t DIMENSIONS);
 
-        virtual ~population_set_gpu();
+        virtual ~population_set_cuda();
 
         /// Wrapper to call swap_dev_data_sets.
         virtual void swap_data_sets();
@@ -40,16 +40,16 @@ namespace locusta {
         using population_set<TFloat>::_TOTAL_GENES;
         using population_set<TFloat>::_f_initialized;
 
-        /// GPU Genomes array.
+        /// CUDA Genomes array.
         TFloat * _dev_data_array;
-        /// GPU Transformed Genomes array.
+        /// CUDA Transformed Genomes array.
         TFloat * _dev_transformed_data_array;
-        /// GPU Genome Fitness array.
+        /// CUDA Genome Fitness array.
         TFloat * _dev_fitness_array;
 
     };
 }
 
-#include "population_set_gpu_impl.hpp"
+#include "population_set_cuda.cpp"
 
-#endif /* LOCUSTA_POPULATION_SET_GPU_H_ */
+#endif /* LOCUSTA_POPULATION_SET_CUDA_H_ */

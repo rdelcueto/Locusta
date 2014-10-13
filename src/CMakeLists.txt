@@ -3,14 +3,12 @@ set(HPPFILES
   population/population_set.hpp
   evaluator/evaluator.hpp
   solvers/evolutionary_solver.hpp
-  solvers/ga/ga_solver.hpp
-  solvers/ga/ga_operators.hpp
   )
 
 set(CUFILES
-  prngenerator/kernel/prngenerator_gpu.cu
-#  population/kernel/population_set_gpu.cu
-#  solvers/ga/kernel/ga_operators_gpu.cu
+  prngenerator/kernel/prngenerator_cuda.cu
+#  population/kernel/population_set_cuda.cu
+#  solvers/ga/kernel/ga_operators_cuda.cu
   )
 
 source_group("CUDA Source Files" FILES ${CUFILES})

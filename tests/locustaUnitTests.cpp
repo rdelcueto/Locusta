@@ -4,21 +4,15 @@
 #include <algorithm>
 #include <time.h>
 
-#include "benchmarks/benchmarks_cpu.hpp"
-#include "benchmarks/benchmarks_gpu.hpp"
-
-#include "prngenerator/prngenerator_cpu.hpp"
-#include "prngenerator/prngenerator_gpu.hpp"
-
-#include "population/population_set.hpp"
-#include "population/population_set_gpu.hpp"
-
-#include "evaluator/evaluator_cpu.hpp"
-#include "evaluator/evaluator_gpu.hpp"
+#include "./benchmarks/benchmarks_cpu.hpp"
 
 #include "solvers/pso/pso_solver.hpp"
 #include "solvers/pso/pso_operators/pso_std_operators.hpp"
 
+#include "evaluator/evaluator.hpp"
+#include "prngenerator/prngenerator_cpu.hpp"
+
+#include "solvers/evolutionary_solver_cuda.hpp"
 #include "cuda_runtime.h"
 
 using namespace locusta;
@@ -36,24 +30,21 @@ protected:
             // Init timer
             start_time = time(NULL);
 
+            EvaluationFunctor<float> * evaluation_functor_cpu_ptr = new BenchmarkFunctor<float>();
+
+            evaluator_cpu_ptr = new evaluator<float>(evaluation_functor_cpu_ptr,
+                                                     true,
+                                                     BoundMapKind::CropBounds,
+                                                     DIMENSIONS);
+
             prngenerator_cpu_ptr = new prngenerator_cpu<float>(ISLES * AGENTS);
             prngenerator_cpu_ptr->_initialize_engines(SEED);
 
-            prngenerator_gpu_ptr = new prngenerator_gpu<float>(ISLES * AGENTS);
-            prngenerator_gpu_ptr->_initialize_engines(SEED);
-
-            evaluator_cpu_ptr = new evaluator_cpu<float>(true,
-                                                         evaluator_cpu<float>::IGNORE_BOUNDS,
-                                                         0,
-                                                         benchmark_cpu_func_1<float>);
-
-            evaluator_gpu_ptr = new evaluator_gpu<float>(true,
-                                                         evaluator_gpu<float>::IGNORE_BOUNDS,
-                                                         0,
-                                                         benchmark_gpu_func_1<float>);
+            prngenerator_cuda_ptr = new prngenerator_cuda<float>(ISLES * AGENTS);
+            prngenerator_cuda_ptr->_initialize_engines(SEED);
 
             population_cpu_ptr = new population_set<float>(ISLES, AGENTS, DIMENSIONS);
-            population_gpu_ptr = new population_set_gpu<float>(ISLES, AGENTS, DIMENSIONS);
+            population_cuda_ptr = new population_set_cuda<float>(ISLES, AGENTS, DIMENSIONS);
 
             upper_bounds_ptr = new float[DIMENSIONS];
             lower_bounds_ptr = new float[DIMENSIONS];
@@ -72,13 +63,13 @@ protected:
             delete [] upper_bounds_ptr;
 
             delete population_cpu_ptr;
-            delete population_gpu_ptr;
+            delete population_cuda_ptr;
 
             delete evaluator_cpu_ptr;
-            delete evaluator_gpu_ptr;
+            delete evaluator_cuda_ptr;
 
             delete prngenerator_cpu_ptr;
-            delete prngenerator_gpu_ptr;
+            delete prngenerator_cuda_ptr;
 
             RecordProperty("Elapsed Time", elapsed_time);
         }
@@ -86,22 +77,22 @@ protected:
     time_t start_time;
 
     // Pseudo Random Number Generators
-    prngenerator_cpu<float> * prngenerator_cpu_ptr;
-    prngenerator_gpu<float> * prngenerator_gpu_ptr;
+    prngenerator<float> * prngenerator_cpu_ptr;
+    prngenerator_cuda<float> * prngenerator_cuda_ptr;
 
     // Evaluator
-    evaluator_cpu<float> * evaluator_cpu_ptr;
-    evaluator_gpu<float> * evaluator_gpu_ptr;
+    evaluator<float> * evaluator_cpu_ptr;
+    evaluator_cuda<float> * evaluator_cuda_ptr;
 
     // Population
     const uint64_t SEED = 1;
-    const size_t GENERATIONS = 1e2;
-    const size_t ISLES = 1;
-    const size_t AGENTS = 128;
-    const size_t DIMENSIONS = 128;
+    const uint32_t GENERATIONS = 1e2;
+    const uint32_t ISLES = 1;
+    const uint32_t AGENTS = 128;
+    const uint32_t DIMENSIONS = 128;
 
     population_set<float> * population_cpu_ptr;
-    population_set_gpu<float> * population_gpu_ptr;
+    population_set_cuda<float> * population_cuda_ptr;
 
     float * upper_bounds_ptr;
     float * lower_bounds_ptr;

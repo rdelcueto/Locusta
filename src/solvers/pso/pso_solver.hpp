@@ -4,7 +4,6 @@
 #include "../evolutionary_solver.hpp"
 #include "../../prngenerator/prngenerator.hpp"
 #include "./pso_operators/pso_operators.hpp"
-//#include "pso_operators.hpp"
 
 namespace locusta {
 

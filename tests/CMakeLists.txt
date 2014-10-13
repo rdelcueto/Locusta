@@ -1,7 +1,7 @@
 include_directories(${CMAKE_SOURCE_DIR}/src/)
 
 set(CUFILES
-  benchmarks/kernel/benchmarks_gpu.cu
+  benchmarks/kernel/benchmarks_cuda.cu
   )
 
 if (CUDA_VERBOSE_PTXAS)

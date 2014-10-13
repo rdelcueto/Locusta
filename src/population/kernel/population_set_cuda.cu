@@ -1,4 +1,4 @@
-#include "../population_set_gpu.hpp"
+#include "../population_set_cuda.hpp"
 
 namespace locusta {
 
@@ -22,7 +22,7 @@ namespace locusta {
             blockIdx.x * NUM_AGENTS;
 
         for(uint32_t i = 0; i < NUM_DIMENSIONS; ++i)
-        {        
+        {
             // Expects transformed_data_array to have uniform pseudo random numbers [0-1)
             data_array[idx + i * NUM_ISLES * NUM_AGENTS] = LOWER_BOUNDS[i] + (VAR_RANGES[i] * transformed_data_array[idx + i * NUM_ISLES * NUM_AGENTS]);
             // Resets transformed_data_array values
@@ -30,7 +30,7 @@ namespace locusta {
         }
         fitness_array[idx] = -(CUDART_INF_F);
     }
-  
+
     template <typename TFloat>
     __global__
     void update_records_kernel
@@ -48,7 +48,7 @@ namespace locusta {
         TFloat *min_eval_reduction = (TFloat *) &max_eval_reduction[blockDim.x];
 
         TFloat a, b;
-    
+
         // Initialize per thread fitness values
         max_eval_reduction[threadIdx.x] = min_eval_reduction[threadIdx.x] =
             fitness_array[blockIdx.x * blockDim.x + threadIdx.x];
@@ -146,9 +146,9 @@ namespace locusta {
              fitness_array);
         CudaCheckError();
     }
-  
+
     // Template Specialization (float)
-  
+
     template
     void initialize_device_population_set_dispatch<float>
     (const uint32_t NUM_ISLES,
@@ -159,7 +159,7 @@ namespace locusta {
      float * const data_array,
      float * const transformed_data_array,
      float * const fitness_array);
-  
+
     template
     void update_records_dispatch<float>
     (const uint32_t NUM_ISLES,
@@ -171,7 +171,7 @@ namespace locusta {
      float * const fitness_array);
 
     // Template Specialization (double)
-  
+
     template
     void initialize_device_population_set_dispatch<double>
     (const uint32_t NUM_ISLES,
@@ -182,7 +182,7 @@ namespace locusta {
      double * const data_array,
      double * const transformed_data_array,
      double * const fitness_array);
-  
+
     template
     void update_records_dispatch<double>
     (const uint32_t NUM_ISLES,

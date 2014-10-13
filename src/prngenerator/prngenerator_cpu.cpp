@@ -3,13 +3,13 @@ namespace locusta {
   template<typename TFloat>
   prngenerator_cpu<TFloat>::prngenerator_cpu() : prngenerator<TFloat>::prngenerator(1)
   {
-    _prng_engines = new mersenne_twister[_NUM_GENERATORS];
+    _prng_engines = new mersenne_twister[_NUM_ENGINES];
   }
 
   template<typename TFloat>
-  prngenerator_cpu<TFloat>::prngenerator_cpu(uint32_t num_generators) : prngenerator<TFloat>::prngenerator(num_generators)
+  prngenerator_cpu<TFloat>::prngenerator_cpu(uint32_t num_engines) : prngenerator<TFloat>::prngenerator(num_engines)
   {
-    _prng_engines = new mersenne_twister[_NUM_GENERATORS];
+    _prng_engines = new mersenne_twister[_NUM_ENGINES];
   }
 
   template<typename TFloat>
@@ -27,7 +27,7 @@ namespace locusta {
       }
 
     std::minstd_rand0 seeder(seed);
-    for(uint32_t i = 0; i < _NUM_GENERATORS; ++i)
+    for(uint32_t i = 0; i < _NUM_ENGINES; ++i)
       {
         TFloat local_seed = seeder();
         this->_prng_engines[i].seed(local_seed);
@@ -37,9 +37,9 @@ namespace locusta {
   template<typename TFloat>
   void prngenerator_cpu<TFloat>::_generate(const uint32_t n, TFloat * output)
   {
-    const uint32_t chunk_size = n/_NUM_GENERATORS;
+    const uint32_t chunk_size = n/_NUM_ENGINES;
 
-#pragma omp parallel num_threads(_NUM_GENERATORS) default(shared)
+#pragma omp parallel num_threads(_NUM_ENGINES) default(shared)
     {
       const int nthread = omp_get_thread_num();
       uni_real_dist real_dist;

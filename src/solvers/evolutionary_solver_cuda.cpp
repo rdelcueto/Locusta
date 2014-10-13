@@ -1,15 +1,14 @@
-
 namespace locusta {
 
     template<typename TFloat>
-    evolutionary_solver<TFloat>::evolutionary_solver(population_set<TFloat> * population,
-                                                     evaluator<TFloat> * evaluator,
-                                                     prngenerator<TFloat> * prn_generator,
-                                                     uint32_t generation_target,
-                                                     TFloat * upper_bounds,
-                                                     TFloat * lower_bounds)
-        : _population(population),
-          _evaluator(evaluator),
+    evolutionary_solver_cuda<TFloat>::evolutionary_solver_cuda(population_set_cuda<TFloat> * population,
+                                                               evaluator_cuda<TFloat> * evaluator,
+                                                               prngenerator_cuda<TFloat> * prn_generator,
+                                                               uint32_t generation_target,
+                                                               TFloat * upper_bounds,
+                                                               TFloat * lower_bounds)
+    : _population(population),
+        _evaluator(evaluator),
         _bulk_prn_generator(prn_generator),
         _generation_target(generation_target),
         _generation_count(0),
@@ -30,7 +29,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    evolutionary_solver<TFloat>::~evolutionary_solver()
+    evolutionary_solver_cuda<TFloat>::~evolutionary_solver_cuda()
     {
         delete [] _UPPER_BOUNDS;
         delete [] _LOWER_BOUNDS;
@@ -38,7 +37,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::setup_solver()
+    void evolutionary_solver_cuda<TFloat>::setup_solver_cuda()
     {
         // Initialize Population
         if( !_population->_f_initialized ) {
@@ -47,7 +46,7 @@ namespace locusta {
         }
 
         if( _f_initialized ) {
-            teardown_solver();
+            teardown_solver_cuda();
         }
 
         // Initialize solver records
@@ -76,7 +75,7 @@ namespace locusta {
 
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::advance()
+    void evolutionary_solver_cuda<TFloat>::advance()
     {
         transform();
         crop_vector(_population->_transformed_data_array);
@@ -91,7 +90,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::run()
+    void evolutionary_solver_cuda<TFloat>::run()
     {
         do {
             print_solutions();
@@ -100,13 +99,13 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::evaluate_genomes()
+    void evolutionary_solver_cuda<TFloat>::evaluate_genomes()
     {
         _evaluator->evaluate(this);
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::update_records()
+    void evolutionary_solver_cuda<TFloat>::update_records()
     {
 
         TFloat * genomes = _population->_data_array;
@@ -142,13 +141,13 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::regenerate_prnumbers()
+    void evolutionary_solver_cuda<TFloat>::regenerate_prnumbers()
     {
         _bulk_prn_generator->_generate(_bulk_size, _bulk_prnumbers);
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::crop_vector(TFloat * vec)
+    void evolutionary_solver_cuda<TFloat>::crop_vector(TFloat * vec)
     {
         // Initialize vector data, within given bounds.
         const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
@@ -181,7 +180,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::initialize_vector(TFloat * dst_vec, TFloat * tmp_vec)
+    void evolutionary_solver_cuda<TFloat>::initialize_vector(TFloat * dst_vec, TFloat * tmp_vec)
     {
         // Initialize vector data, within given bounds.
         const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
@@ -205,7 +204,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::print_population()
+    void evolutionary_solver_cuda<TFloat>::print_population()
     {
         TFloat * fitness = _population->_fitness_array;
         TFloat * genomes = _population->_data_array;
@@ -228,7 +227,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver<TFloat>::print_solutions()
+    void evolutionary_solver_cuda<TFloat>::print_solutions()
     {
         std::cout << "Solutions @ " << (_generation_count)+1 << " / " << _generation_target << std::endl;
         for(uint32_t i = 0; i < _ISLES; i++) {

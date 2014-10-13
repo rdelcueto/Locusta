@@ -1,15 +1,15 @@
-#include "../benchmarks_gpu.hpp"
-#include "evaluator/bound_mapping_gpu.hpp"
+#include "cuda_common/cuda_helpers.h"
+#include "../benchmarks_cuda.hpp"
 
 namespace locusta {
 
     /// GPU Kernels Shared Memory Pointer.
     extern __shared__ int evaluator_shared_memory[];
     const uint32_t REPETITIONS = 1e2;
-  
+
     template <typename TFloat>
     __global__
-    void benchmark_gpu_func_1_kernel(const TFloat * const UPPER_BOUNDS,
+    void benchmark_cuda_func_1_kernel(const TFloat * const UPPER_BOUNDS,
                                      const TFloat * const LOWER_BOUNDS,
                                      const uint32_t NUM_ISLES,
                                      const uint32_t NUM_AGENTS,
@@ -36,8 +36,8 @@ namespace locusta {
                 const TFloat &u = UPPER_BOUNDS[i];
                 const TFloat &l = LOWER_BOUNDS[i];
 
-                bound_mapping(bound_mapping_method, u, l, x);
-        
+                //bound_mapping(bound_mapping_method, u, l, x);
+
                 reduction_sum += x * x;
             }
         }
@@ -49,7 +49,7 @@ namespace locusta {
     }
 
     template <typename TFloat>
-    void benchmark_gpu_func_1
+    void benchmark_cuda_func_1
     (const TFloat * const UPPER_BOUNDS,
      const TFloat * const LOWER_BOUNDS,
      const uint32_t NUM_ISLES,
@@ -60,7 +60,7 @@ namespace locusta {
      const TFloat * const agents_data,
      TFloat * const agents_fitness)
     {
-        benchmark_gpu_func_1_kernel
+        benchmark_cuda_func_1_kernel
             <<<NUM_ISLES, NUM_AGENTS>>>
             (UPPER_BOUNDS,
              LOWER_BOUNDS,
@@ -77,7 +77,7 @@ namespace locusta {
     // Template Specialization (float)
 
     template
-    void benchmark_gpu_func_1<float>
+    void benchmark_cuda_func_1<float>
     (const float * const UPPER_BOUNDS,
      const float * const LOWER_BOUNDS,
      const uint32_t NUM_ISLES,
@@ -91,7 +91,7 @@ namespace locusta {
     // Template Specialization (double)
 
     template
-    void benchmark_gpu_func_1<double>
+    void benchmark_cuda_func_1<double>
     (const double * const UPPER_BOUNDS,
      const double * const LOWER_BOUNDS,
      const uint32_t NUM_ISLES,

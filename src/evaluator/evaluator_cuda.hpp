@@ -1,29 +1,29 @@
-#ifndef LOCUSTA_EVALUATOR_H
-#define LOCUSTA_EVALUATOR_H
+#ifndef LOCUSTA_EVALUATOR_CUDA_H
+#define LOCUSTA_EVALUATOR_CUDA_H
 
 #include <functional>
 
-#include "evaluable_function.hpp"
+#include "cuda_common/cuda_helpers.h"
+
+#include "evaluator.hpp"
+#include "evaluable_function_cuda.hpp"
 
 namespace locusta {
 
     template<typename TFloat>
-    struct evolutionary_solver;
-
-    enum class BoundMapKind : uint8_t { IgnoreBounds,
-            CropBounds, MirrorBounds };
+    struct evolutionary_solver_cuda;
 
     template<typename TFloat>
-    struct evaluator {
-        evaluator(EvaluationFunctor<TFloat> * eval_functor,
-                  bool f_negate,
-                  BoundMapKind bound_mapping,
-                  uint32_t prn_numbers);
+    struct evaluator_cuda : evaluator<TFloat> {
+        evaluator_cuda(EvaluationCudaFunctor<TFloat> * eval_functor,
+                       bool f_negate,
+                       BoundMapKind bound_mapping,
+                       uint32_t prn_numbers);
 
-        virtual ~evaluator();
+        virtual ~evaluator_cuda();
 
         /// Evaluate the solver's population data set.
-        virtual void evaluate(evolutionary_solver<TFloat> * solver);
+        virtual void evaluate(evolutionary_solver_cuda<TFloat> * solver);
 
         /// Flag describing whether the evaluator will the fitness value or its negative.
         const bool _f_negate;
@@ -38,12 +38,10 @@ namespace locusta {
         TFloat * _eval_prn_numbers;
 
         /// Evaluation dispatch functor
-        EvaluationFunctor<TFloat> * _evaluation_functor;
+        EvaluationCudaFunctor<TFloat> * _evaluation_functor;
 
     };
 
 } // namespace locusta
-
-#include "evaluator.cpp"
 
 #endif
