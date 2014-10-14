@@ -35,6 +35,9 @@ namespace locusta {
         delete [] _UPPER_BOUNDS;
         delete [] _LOWER_BOUNDS;
         delete [] _VAR_RANGES;
+
+        delete [] _best_genome;
+        delete [] _best_genome_fitness;
     }
 
     template<typename TFloat>

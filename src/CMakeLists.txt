@@ -1,14 +1,18 @@
 set(HPPFILES
   prngenerator/prngenerator.hpp
+  prngenerator/prngenerator_cuda.hpp
   population/population_set.hpp
-  evaluator/evaluator.hpp
-  solvers/evolutionary_solver.hpp
+  population/population_set_cuda.hpp
+  evaluator/evaluator_cpu.hpp
+  evaluator/evaluator_cuda.hpp
+  solvers/pso/pso_solver.hpp
+  solvers/pso/pso_solver_cuda.hpp
   )
 
 set(CUFILES
   prngenerator/kernel/prngenerator_cuda.cu
-#  population/kernel/population_set_cuda.cu
-#  solvers/ga/kernel/ga_operators_cuda.cu
+  population/kernel/population_set_cuda.cu
+#  solvers/pso/kernel/pso_std_operators_cuda.cu
   )
 
 source_group("CUDA Source Files" FILES ${CUFILES})

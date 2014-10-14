@@ -5,14 +5,20 @@
 #include <time.h>
 
 #include "./benchmarks/benchmarks_cpu.hpp"
+#include "evaluator/evaluator.hpp"
+
+//#include "./benchmarks/benchmarks_cuda.hpp"
+#include "evaluator/evaluator_cuda.hpp"
+
+#include "prngenerator/prngenerator_cpu.hpp"
+#include "prngenerator/prngenerator_cuda.hpp"
 
 #include "solvers/pso/pso_solver.hpp"
 #include "solvers/pso/pso_operators/pso_std_operators.hpp"
 
-#include "evaluator/evaluator.hpp"
-#include "prngenerator/prngenerator_cpu.hpp"
+#include "solvers/pso/pso_solver_cuda.hpp"
+#include "solvers/pso/pso_operators/pso_std_operators_cuda.hpp"
 
-#include "solvers/evolutionary_solver_cuda.hpp"
 #include "cuda_runtime.h"
 
 using namespace locusta;
@@ -86,10 +92,10 @@ protected:
 
     // Population
     const uint64_t SEED = 1;
-    const uint32_t GENERATIONS = 1e2;
+    const uint32_t GENERATIONS = 2e0;
     const uint32_t ISLES = 1;
-    const uint32_t AGENTS = 128;
-    const uint32_t DIMENSIONS = 128;
+    const uint32_t AGENTS = 32;
+    const uint32_t DIMENSIONS = 32;
 
     population_set<float> * population_cpu_ptr;
     population_set_cuda<float> * population_cuda_ptr;
@@ -109,16 +115,26 @@ class ParticleSwarmTest : public LocustaTest {
                                                    GENERATIONS,
                                                    upper_bounds_ptr,
                                                    lower_bounds_ptr);
+
+            pso_solver_cuda_ptr = new pso_solver_cuda<float>(population_cuda_ptr,
+                                                             evaluator_cuda_ptr,
+                                                             prngenerator_cuda_ptr,
+                                                             GENERATIONS,
+                                                             upper_bounds_ptr,
+                                                             lower_bounds_ptr);
+
         }
 
     virtual void TearDown()
         {
             delete pso_solver_ptr;
+            delete pso_solver_cuda_ptr;
             LocustaTest::TearDown();
         }
 
 public:
     pso_solver<float> * pso_solver_ptr;
+    pso_solver_cuda<float> * pso_solver_cuda_ptr;
 
 };
 
@@ -129,4 +145,13 @@ TEST_F(ParticleSwarmTest, BasicTest)
                                     new CanonicalPositionUpdate<float>());
     pso_solver_ptr->run();
     //pso_solver_ptr->print_solutions();
+}
+
+TEST_F(ParticleSwarmTest, BasicCudaTest)
+{
+    // pso_solver_cuda_ptr->setup_solver();
+    //pso_solver_cuda_ptr->setup_operators(new CanonicalSpeedCudaUpdate<float>(),
+    //                                new CanonicalPositionCudaUpdate<float>());
+    //pso_solver_cuda_ptr->run();
+    //pso_solver_cuda_ptr->print_solutions();
 }

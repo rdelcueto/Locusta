@@ -3,6 +3,8 @@
 
 #include <limits>
 
+#include "cuda_common/cuda_helpers.h"
+
 #include "../prngenerator/prngenerator_cuda.hpp"
 #include "../evaluator/evaluator_cuda.hpp"
 #include "../population/population_set_cuda.hpp"
@@ -27,10 +29,10 @@ namespace locusta {
         virtual ~evolutionary_solver_cuda();
 
         /// Initializes and allocates solver_cuda's runtime resources.
-        virtual void setup_solver_cuda();
+        virtual void setup_solver();
 
         /// Terminates and deallocates solver_cuda's runtime resources.
-        virtual void teardown_solver_cuda() = 0;
+        virtual void teardown_solver() = 0;
 
         /// Applies solver_cuda's population transformation.
         virtual void transform() = 0;
@@ -62,61 +64,78 @@ namespace locusta {
         /// Prints solver_cuda's current best found solutions and their fitness.
         virtual void print_solutions();
 
-        /// Evaluator
-        evaluator_cuda<TFloat> * const _evaluator;
+        /// Specialized device pointers
+        evaluator_cuda<TFloat> * _dev_evaluator;
+        population_set_cuda<TFloat> * _dev_population;
+        prngenerator_cuda<TFloat> * _dev_bulk_prn_generator;
 
-        /// Bulk Pseudo Random Number Generator
-        prngenerator_cuda<TFloat> * const _bulk_prn_generator;
+        /// Genes Variable Bounds (DEVICE COPY)
+        TFloat * _DEV_UPPER_BOUNDS;
+        TFloat * _DEV_LOWER_BOUNDS;
 
-        /// Population Set
-        population_set_cuda<TFloat> * const _population;
+        /// Variable Ranges (DEVICE COPY)
+        TFloat * _DEV_VAR_RANGES;
 
-        /// Populations Configuration
-        const uint32_t _ISLES;
-        const uint32_t _AGENTS;
-        const uint32_t _DIMENSIONS;
+        /// Stores best genome found, per isle. (DEVICE COPY)
+        TFloat * _dev_best_genome;
 
-        /// Genes Variable Bounds
-        TFloat * _UPPER_BOUNDS;
-        TFloat * _LOWER_BOUNDS;
+        /// Stores best genome found fitness, per isle. (DEVICE COPY)
+        TFloat * _dev_best_genome_fitness;
 
-        /// Variable Ranges
-        TFloat * _VAR_RANGES;
-
-        /// Stores best genome found, per isle.
-        TFloat * _best_genome;
-
-        /// Stores best genome found, per isle.
-        TFloat * _best_genome_fitness;
-
-        /// Defines the migration size.
-        uint32_t _migration_step;
-
-        /// Defines the migration size.
-        uint32_t _migration_size;
-
-        /// Defines the migration selection window size.
-        uint32_t _migration_selection_size;
-
-        /// Describes the migration selection indexes.
-        uint32_t * _migrating_idxs;
+        /// Describes the migration selection indexes. (DEVICE COPY)
+        uint32_t * _dev_migration_idxs;
 
         /// Stores the temporal migration genomes to be migrated.
-        TFloat * _migration_buffer;
+        TFloat * _dev_migration_buffer;
 
         /// Bulk Pseudo Random Number array
-        TFloat * _bulk_prnumbers;
+        TFloat * _dev_bulk_prnumbers;
+
+        /// Evaluator
+        using evolutionary_solver<TFloat>::_evaluator;
+        /// Population Set
+        using evolutionary_solver<TFloat>::_population;
+        /// Bulk Pseudo Random Number Generator
+        using evolutionary_solver<TFloat>::_bulk_prn_generator;
+
+        /// Populations Configuration
+        using evolutionary_solver<TFloat>::_ISLES;
+        using evolutionary_solver<TFloat>::_AGENTS;
+        using evolutionary_solver<TFloat>::_DIMENSIONS;
+
+        /// Genes Variable Bounds (HOST COPY)
+        using evolutionary_solver<TFloat> ::_UPPER_BOUNDS;
+        using evolutionary_solver<TFloat> ::_LOWER_BOUNDS;
+
+        /// Variable Ranges (HOST COPY)
+        using evolutionary_solver<TFloat> ::_VAR_RANGES;
+        /// Stores best genome found, per isle. (HOST COPY)
+        using evolutionary_solver<TFloat> ::_best_genome;
+        /// Stores best genome found fitness, per isle. (HOST COPY)
+        using evolutionary_solver<TFloat> ::_best_genome_fitness;
+
+        /// Defines the migration size.
+        using evolutionary_solver<TFloat> ::_migration_step;
+
+        /// Defines the migration size.
+        using evolutionary_solver<TFloat> ::_migration_size;
+
+        /// Defines the migration selection window size.
+        using evolutionary_solver<TFloat> ::_migration_selection_size;
+
+        /// Describes the migration selection indexes. (HOST COPY)
+        using evolutionary_solver<TFloat> ::_migrating_idxs;
 
         /// Describes the size of the _bulk_prnumbers array.
-        std::size_t _bulk_size;
+        using evolutionary_solver<TFloat> ::_bulk_size;
 
         /// Counter describing the solver_cuda's current generation.
-        std::size_t _generation_count;
+        using evolutionary_solver<TFloat> ::_generation_count;
 
         /// Defines the solver_cuda's target generation.
-        std::size_t _generation_target;
+        using evolutionary_solver<TFloat> ::_generation_target;
 
-        uint8_t _f_initialized;
+        using evolutionary_solver<TFloat> ::_f_initialized;
 
     };
 

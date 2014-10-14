@@ -7,64 +7,87 @@ namespace locusta {
                                                                uint32_t generation_target,
                                                                TFloat * upper_bounds,
                                                                TFloat * lower_bounds)
-    : _population(population),
-        _evaluator(evaluator),
-        _bulk_prn_generator(prn_generator),
-        _generation_target(generation_target),
-        _generation_count(0),
-        _ISLES(population->_ISLES),
-        _AGENTS(population->_AGENTS),
-        _DIMENSIONS(population->_DIMENSIONS),
-        _UPPER_BOUNDS(new TFloat[_DIMENSIONS]),
-        _LOWER_BOUNDS(new TFloat[_DIMENSIONS]),
-        _VAR_RANGES(new TFloat[_DIMENSIONS]),
-        _best_genome(new TFloat[_ISLES * _DIMENSIONS]),
-        _best_genome_fitness(new TFloat[_ISLES])
+    : evolutionary_solver<TFloat>(population,
+                                  evaluator,
+                                  prn_generator,
+                                  generation_target,
+                                  upper_bounds,
+                                  lower_bounds),
+        _dev_population(static_cast<population_set_cuda<TFloat> *>(_population)),
+        _dev_evaluator(static_cast<evaluator_cuda<TFloat> *>(_evaluator)),
+        _dev_bulk_prn_generator(static_cast<prngenerator_cuda<TFloat> *>(prn_generator))
     {
-        for (uint32_t i = 0; i < _DIMENSIONS; i++) {
-            _UPPER_BOUNDS[i] = upper_bounds[i];
-            _LOWER_BOUNDS[i] = lower_bounds[i];
-            _VAR_RANGES[i] = upper_bounds[i] - lower_bounds[i];
-        }
+        // Allocate Device Memory
+        CudaSafeCall(cudaMalloc((void **) &(_DEV_UPPER_BOUNDS), _DIMENSIONS * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_DEV_LOWER_BOUNDS), _DIMENSIONS * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_DEV_VAR_RANGES), _DIMENSIONS * sizeof(TFloat)));
+
+        CudaSafeCall(cudaMalloc((void **) &(_dev_best_genome), _ISLES * _DIMENSIONS * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_dev_best_genome_fitness), _ISLES * sizeof(TFloat)));
+
+        CudaCheckError();
+
+        // Copy values into device
+        CudaSafeCall(cudaMemcpy(_DEV_UPPER_BOUNDS, _UPPER_BOUNDS, _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_DEV_LOWER_BOUNDS, _LOWER_BOUNDS, _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_DEV_VAR_RANGES, _VAR_RANGES, _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
+
+        CudaCheckError();
     }
 
     template<typename TFloat>
     evolutionary_solver_cuda<TFloat>::~evolutionary_solver_cuda()
     {
-        delete [] _UPPER_BOUNDS;
-        delete [] _LOWER_BOUNDS;
-        delete [] _VAR_RANGES;
+        // Free Device memory
+        CudaSafeCall(cudaFree(_DEV_UPPER_BOUNDS));
+        CudaSafeCall(cudaFree(_DEV_LOWER_BOUNDS));
+        CudaSafeCall(cudaFree(_DEV_VAR_RANGES));
+
+        CudaSafeCall(cudaFree(_dev_best_genome));
+        CudaSafeCall(cudaFree(_dev_best_genome_fitness));
+
+        CudaCheckError();
+
+        // Free host memory
+        //delete [] _UPPER_BOUNDS;
+        //delete [] _LOWER_BOUNDS;
+        //delete [] _VAR_RANGES;
+
+        //delete [] _best_genome;
+        //delete [] _best_genome_fitness;
     }
 
     template<typename TFloat>
-    void evolutionary_solver_cuda<TFloat>::setup_solver_cuda()
+    void evolutionary_solver_cuda<TFloat>::setup_solver()
     {
         // Initialize Population
         if( !_population->_f_initialized ) {
-            initialize_vector(_population->_data_array, _population->_transformed_data_array);
+            initialize_vector(_dev_population->_dev_data_array, _dev_population->_dev_transformed_data_array);
             _population->_f_initialized = true;
         }
 
         if( _f_initialized ) {
-            teardown_solver_cuda();
+            teardown_solver();
         }
 
         // Initialize solver records
         const TFloat * data_array = const_cast<TFloat *>(_population->_data_array);
         for(uint32_t i = 0; i < _ISLES; ++i) {
-            for(uint32_t j = 0; j < _AGENTS; ++j) {
-                // Initialize best genomes
-                for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
-                    const uint32_t data_idx =
-                        i * _AGENTS * _DIMENSIONS +
-                        0 * _DIMENSIONS +
-                        k;
+            // Initialize best genomes
+            for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
+                const uint32_t data_idx =
+                    i * _AGENTS * _DIMENSIONS +
+                    0 * _DIMENSIONS +
+                    k;
 
-                    _best_genome[k] = data_array[data_idx];
-                }
-                _best_genome_fitness[i] = -std::numeric_limits<TFloat>::infinity();
+                _best_genome[k] = -std::numeric_limits<TFloat>::infinity();
             }
+            _best_genome_fitness[i] = -std::numeric_limits<TFloat>::infinity();
         }
+
+        // Copy initialized values into device.
+        CudaSafeCall(cudaMemcpy(_dev_best_genome, _best_genome, _ISLES * _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_dev_best_genome_fitness, _dev_best_genome_fitness, _ISLES * sizeof(TFloat), cudaMemcpyHostToDevice));
 
         // Initialize fitness, evaluating initialization data.
         evaluate_genomes();
@@ -108,104 +131,32 @@ namespace locusta {
     void evolutionary_solver_cuda<TFloat>::update_records()
     {
 
-        TFloat * genomes = _population->_data_array;
-        TFloat * fitness = _population->_fitness_array;
-
-        for(uint32_t i = 0; i < _ISLES; i++) {
-
-            uint32_t isle_max_idx = 0;
-            TFloat isle_max_fitness = fitness[i * _AGENTS];
-
-            for(uint32_t j = 1; j < _AGENTS; j++) {
-
-                const TFloat candidate_fitness = fitness[i * _AGENTS + j];
-                if (candidate_fitness > isle_max_fitness) {
-                    isle_max_fitness = candidate_fitness;
-                    isle_max_idx = j;
-                }
-            }
-
-            // Update isle record
-            const TFloat current_isle_best = _best_genome_fitness[i];
-
-            if(isle_max_fitness > current_isle_best) {
-                _best_genome_fitness[i] = isle_max_fitness;
-                TFloat * candidate_genome = _best_genome + i * _DIMENSIONS;
-                const uint32_t genomes_offset = i * _AGENTS * _DIMENSIONS + isle_max_idx * _DIMENSIONS;
-
-                for(uint32_t k = 0; k < _DIMENSIONS; k++) {
-                    candidate_genome[k] = genomes[genomes_offset + k];
-                }
-            }
-        }
+        // TODO: CUDA update_records_kernel dispatch.
     }
 
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::regenerate_prnumbers()
     {
-        _bulk_prn_generator->_generate(_bulk_size, _bulk_prnumbers);
+        _bulk_prn_generator->_generate(_bulk_size, _dev_bulk_prnumbers);
     }
 
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::crop_vector(TFloat * vec)
     {
-        // Initialize vector data, within given bounds.
-        const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
-
-        for(uint32_t i = 0; i < _ISLES; ++i) {
-            for(uint32_t j = 0; j < _AGENTS; ++j) {
-                for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
-                    // Initialize Data Array
-                    const uint32_t data_idx =
-                        i * _AGENTS * _DIMENSIONS +
-                        j * _DIMENSIONS +
-                        k;
-
-                    // TODO: Flexible bound crop method
-                    TFloat c_value = vec[data_idx];
-                    const TFloat value = c_value;
-                    const TFloat low_bound = _LOWER_BOUNDS[k];
-                    const TFloat high_bound = _UPPER_BOUNDS[k];
-
-                    c_value = c_value < low_bound ? low_bound : c_value;
-                    c_value = c_value > high_bound ? high_bound : c_value;
-
-                    if(value != c_value) {
-                        // Crop
-                        vec[data_idx] = c_value;
-                    }
-                }
-            }
-        }
+        // TODO: CUDA crop_vector_kernel dispatch.
     }
 
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::initialize_vector(TFloat * dst_vec, TFloat * tmp_vec)
     {
-        // Initialize vector data, within given bounds.
-        const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
-
-        _bulk_prn_generator->_generate(vec_size, tmp_vec);
-
-        for(uint32_t i = 0; i < _ISLES; ++i) {
-            for(uint32_t j = 0; j < _AGENTS; ++j) {
-                for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
-                    // Initialize Data Array
-                    const uint32_t data_idx =
-                        i * _AGENTS * _DIMENSIONS +
-                        j * _DIMENSIONS +
-                        k;
-
-                    dst_vec[data_idx] = _LOWER_BOUNDS[k] +
-                        (_VAR_RANGES[k] * tmp_vec[data_idx]);
-                }
-            }
-        }
+        // TODO: initialize_vector_kernel dispatch
     }
 
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::print_population()
     {
+        // TODO: Copy & rmap device genomes into host memory
+
         TFloat * fitness = _population->_fitness_array;
         TFloat * genomes = _population->_data_array;
 
@@ -229,6 +180,8 @@ namespace locusta {
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::print_solutions()
     {
+        // TODO: Copy & rmap device genomes into host memory
+
         std::cout << "Solutions @ " << (_generation_count)+1 << " / " << _generation_target << std::endl;
         for(uint32_t i = 0; i < _ISLES; i++) {
             std::cout << _best_genome_fitness[i] << " : [";
