@@ -14,7 +14,6 @@ namespace locusta {
           _TOTAL_GENES(_TOTAL_AGENTS * DIMENSIONS),
           _f_initialized(0)
     {
-
         // Host Memory allocation
         _data_array = new TFloat[_TOTAL_GENES];
         _transformed_data_array = new TFloat[_TOTAL_GENES];

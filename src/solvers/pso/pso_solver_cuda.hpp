@@ -3,6 +3,7 @@
 
 #include "../evolutionary_solver_cuda.hpp"
 #include "../../prngenerator/prngenerator_cuda.hpp"
+
 #include "./pso_operators/pso_operators_cuda.hpp"
 
 namespace locusta {
@@ -14,11 +15,11 @@ namespace locusta {
         enum class PRN_OFFSETS : uint8_t { COGNITIVE_OFFSET = 0, SOCIAL_OFFSET = 1 };
 
         pso_solver_cuda(population_set_cuda<TFloat> * population,
-                   evaluator_cuda<TFloat> * evaluator,
-                   prngenerator_cuda<TFloat> * prn_generator,
-                   uint32_t generation_target,
-                   TFloat * upper_bounds,
-                   TFloat * lower_bounds);
+                        evaluator_cuda<TFloat> * evaluator,
+                        prngenerator_cuda<TFloat> * prn_generator,
+                        uint32_t generation_target,
+                        TFloat * upper_bounds,
+                        TFloat * lower_bounds);
 
         virtual ~pso_solver_cuda();
 
@@ -112,5 +113,5 @@ namespace locusta {
     };
 
 } // namespace locusta
-#include "pso_solver_cuda.cpp"
+#include "pso_solver_cuda_impl.hpp"
 #endif

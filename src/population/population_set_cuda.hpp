@@ -9,14 +9,14 @@
 #include "population_set.hpp"
 
 namespace locusta {
-    enum class GenomeCopyKind { GencpyHostToHost, GencpyHostToDevice, GencpyDeviceToHost, GencpyDeviceToDevice };
+    enum GenomeCopyKind { GencpyHostToHost, GencpyHostToDevice, GencpyDeviceToHost, GencpyDeviceToDevice };
 
     template <typename TFloat>
     struct population_set_cuda : population_set<TFloat> {
 
         population_set_cuda(const uint32_t ISLES,
-                           const uint32_t AGENTS,
-                           const uint32_t DIMENSIONS);
+                            const uint32_t AGENTS,
+                            const uint32_t DIMENSIONS);
 
         virtual ~population_set_cuda();
 
@@ -50,6 +50,6 @@ namespace locusta {
     };
 }
 
-#include "population_set_cuda.cpp"
+#include "population_set_cuda_impl.hpp"
 
 #endif /* LOCUSTA_POPULATION_SET_CUDA_H_ */

@@ -1,7 +1,7 @@
 #ifndef _BENCHMARKS_CPU_H_
 #define _BENCHMARKS_CPU_H_
 
-#include "evaluator/evaluator.hpp"
+#include "evaluator/evaluator_cpu.hpp"
 
 namespace locusta {
 
@@ -63,7 +63,7 @@ namespace locusta {
                                 const TFloat &u = UPPER_BOUNDS[k];
                                 const TFloat &l = LOWER_BOUNDS[k];
 
-                                evaluator<TFloat>::bound_map(bound_mapping_method, u, l, x);
+                                //evaluator<TFloat>::bound_map(bound_mapping_method, u, l, x);
                                 reduction_sum += x * x;
                             }
                         }

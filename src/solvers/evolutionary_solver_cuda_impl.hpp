@@ -47,14 +47,6 @@ namespace locusta {
         CudaSafeCall(cudaFree(_dev_best_genome_fitness));
 
         CudaCheckError();
-
-        // Free host memory
-        //delete [] _UPPER_BOUNDS;
-        //delete [] _LOWER_BOUNDS;
-        //delete [] _VAR_RANGES;
-
-        //delete [] _best_genome;
-        //delete [] _best_genome_fitness;
     }
 
     template<typename TFloat>

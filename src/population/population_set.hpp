@@ -42,5 +42,5 @@ namespace locusta {
 
     };
 }
-#include "population_set.cpp"
+#include "population_set_impl.hpp"
 #endif /* LOCUSTA_POPULATION_SET_H_ */

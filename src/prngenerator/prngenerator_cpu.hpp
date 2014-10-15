@@ -35,5 +35,5 @@ namespace locusta {
         mersenne_twister *_prng_engines;
     };
 }
-#include "prngenerator_cpu.cpp"
+#include "prngenerator_cpu_impl.hpp"
 #endif /* _PRNGENERATOR_CPU_H_ */

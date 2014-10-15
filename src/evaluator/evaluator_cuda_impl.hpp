@@ -1,3 +1,5 @@
+#include "evaluator_cuda.hpp"
+
 namespace locusta {
 
     template<typename TFloat>
@@ -5,10 +7,10 @@ namespace locusta {
                                            bool f_negate,
                                            BoundMapKind bound_mapping_method,
                                            uint32_t prn_numbers) :
-        _evaluation_functor(eval_functor),
-        _f_negate(f_negate),
-        _bound_mapping_method(bound_mapping_method),
-        _eval_prn_numbers(prn_numbers)
+        evaluator<TFloat>(eval_functor,
+                          f_negate,
+                          bound_mapping_method,
+                          prn_numbers)
     {
         // Device Memory Allocation
         CudaSafeCall(cudaMalloc((void **) &_eval_prn_numbers, _eval_prn_size * sizeof(TFloat)));
@@ -22,9 +24,9 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evaluator_cuda<TFloat>::evaluate(evolutionary_solver_cuda * solver)
+    void evaluator_cuda<TFloat>::evaluate(evolutionary_solver<TFloat> * solver)
     {
-        (*eval_functor)(solver);
+        (*_evaluation_functor)(dynamic_cast<evolutionary_solver_cuda<TFloat> *>(solver));
     }
 
 
@@ -39,17 +41,13 @@ namespace locusta {
         {
             switch (bound_mapping_method)
             {
-            case BoundMapKind::CropBounds: /// Out of bounds Crop
+            case CropBounds: /// Out of bounds Crop
                 x = x > u ? u : x < l ? l : x;
                 break;
-            case BoundMapKind::MirrorBounds: /// Out of bounds Mirror
+            case MirrorBounds: /// Out of bounds Mirror
                 x = x > u ? (2*u - x) : x < l ? (2*l - x) : x;
                 break;
-            case BoundMapKind::IgnoreBounds: /// Out of bounds Error
-                if ( x > u || x < l )
-                {
-                    x = CUDART_NAN_F;
-                }
+            case IgnoreBounds: /// Out of bounds Error
                 break;
             }
         }

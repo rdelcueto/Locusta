@@ -7,7 +7,7 @@ namespace locusta {
 
     template<typename TFloat>
     struct CanonicalSpeedCudaUpdate : UpdateSpeedCudaFunctor<TFloat> {
-        void operator()(pso_solver<TFloat> * solver)
+        void operator()(pso_solver_cuda<TFloat> * solver)
             {
                 const uint32_t ISLES = solver->_ISLES;
                 const uint32_t AGENTS = solver->_AGENTS;
@@ -38,7 +38,7 @@ namespace locusta {
 
     template<typename TFloat>
     struct CanonicalPositionCudaUpdate : UpdatePositionCudaFunctor<TFloat> {
-        void operator()(pso_solver<TFloat> * solver)
+        void operator()(pso_solver_cuda<TFloat> * solver)
             {
                 const uint32_t ISLES = solver->_ISLES;
                 const uint32_t AGENTS = solver->_AGENTS;

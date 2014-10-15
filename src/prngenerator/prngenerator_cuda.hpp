@@ -42,5 +42,5 @@ namespace locusta {
 
 }
 
-#include "prngenerator_cuda.cpp"
+#include "prngenerator_cuda_impl.hpp"
 #endif /* _PRNGENERATOR_CUDA_H_ */

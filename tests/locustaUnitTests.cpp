@@ -5,19 +5,19 @@
 #include <time.h>
 
 #include "./benchmarks/benchmarks_cpu.hpp"
-#include "evaluator/evaluator.hpp"
+#include "./benchmarks/benchmarks_cuda.hpp"
 
-//#include "./benchmarks/benchmarks_cuda.hpp"
+#include "evaluator/evaluator_cpu.hpp"
 #include "evaluator/evaluator_cuda.hpp"
 
 #include "prngenerator/prngenerator_cpu.hpp"
 #include "prngenerator/prngenerator_cuda.hpp"
 
-#include "solvers/pso/pso_solver.hpp"
-#include "solvers/pso/pso_operators/pso_std_operators.hpp"
-
+#include "solvers/pso/pso_solver_cpu.hpp"
 #include "solvers/pso/pso_solver_cuda.hpp"
-#include "solvers/pso/pso_operators/pso_std_operators_cuda.hpp"
+
+#include "solvers/pso/pso_operators/pso_std_operators_cpu_impl.hpp"
+#include "solvers/pso/pso_operators/pso_std_operators_cuda_impl.hpp"
 
 #include "cuda_runtime.h"
 
@@ -38,10 +38,10 @@ protected:
 
             EvaluationFunctor<float> * evaluation_functor_cpu_ptr = new BenchmarkFunctor<float>();
 
-            evaluator_cpu_ptr = new evaluator<float>(evaluation_functor_cpu_ptr,
-                                                     true,
-                                                     BoundMapKind::CropBounds,
-                                                     DIMENSIONS);
+            evaluator_cpu_ptr = new evaluator_cpu<float>(evaluation_functor_cpu_ptr,
+                                                         true,
+                                                         BoundMapKind::CropBounds,
+                                                         DIMENSIONS);
 
             prngenerator_cpu_ptr = new prngenerator_cpu<float>(ISLES * AGENTS);
             prngenerator_cpu_ptr->_initialize_engines(SEED);
@@ -49,7 +49,7 @@ protected:
             prngenerator_cuda_ptr = new prngenerator_cuda<float>(ISLES * AGENTS);
             prngenerator_cuda_ptr->_initialize_engines(SEED);
 
-            population_cpu_ptr = new population_set<float>(ISLES, AGENTS, DIMENSIONS);
+            population_cpu_ptr = new population_set_cpu<float>(ISLES, AGENTS, DIMENSIONS);
             population_cuda_ptr = new population_set_cuda<float>(ISLES, AGENTS, DIMENSIONS);
 
             upper_bounds_ptr = new float[DIMENSIONS];
@@ -83,11 +83,11 @@ protected:
     time_t start_time;
 
     // Pseudo Random Number Generators
-    prngenerator<float> * prngenerator_cpu_ptr;
+    prngenerator_cpu<float> * prngenerator_cpu_ptr;
     prngenerator_cuda<float> * prngenerator_cuda_ptr;
 
     // Evaluator
-    evaluator<float> * evaluator_cpu_ptr;
+    evaluator_cpu<float> * evaluator_cpu_ptr;
     evaluator_cuda<float> * evaluator_cuda_ptr;
 
     // Population
@@ -97,7 +97,7 @@ protected:
     const uint32_t AGENTS = 32;
     const uint32_t DIMENSIONS = 32;
 
-    population_set<float> * population_cpu_ptr;
+    population_set_cpu<float> * population_cpu_ptr;
     population_set_cuda<float> * population_cuda_ptr;
 
     float * upper_bounds_ptr;
@@ -109,12 +109,12 @@ class ParticleSwarmTest : public LocustaTest {
     virtual void SetUp()
         {
             LocustaTest::SetUp();
-            pso_solver_ptr = new pso_solver<float>(population_cpu_ptr,
-                                                   evaluator_cpu_ptr,
-                                                   prngenerator_cpu_ptr,
-                                                   GENERATIONS,
-                                                   upper_bounds_ptr,
-                                                   lower_bounds_ptr);
+            pso_solver_cpu_ptr = new pso_solver_cpu<float>(population_cpu_ptr,
+                                                           evaluator_cpu_ptr,
+                                                           prngenerator_cpu_ptr,
+                                                           GENERATIONS,
+                                                           upper_bounds_ptr,
+                                                           lower_bounds_ptr);
 
             pso_solver_cuda_ptr = new pso_solver_cuda<float>(population_cuda_ptr,
                                                              evaluator_cuda_ptr,
@@ -127,29 +127,29 @@ class ParticleSwarmTest : public LocustaTest {
 
     virtual void TearDown()
         {
-            delete pso_solver_ptr;
+            delete pso_solver_cpu_ptr;
             delete pso_solver_cuda_ptr;
             LocustaTest::TearDown();
         }
 
 public:
-    pso_solver<float> * pso_solver_ptr;
+    pso_solver_cpu<float> * pso_solver_cpu_ptr;
     pso_solver_cuda<float> * pso_solver_cuda_ptr;
 
 };
 
 TEST_F(ParticleSwarmTest, BasicTest)
 {
-    pso_solver_ptr->setup_solver();
-    pso_solver_ptr->setup_operators(new CanonicalSpeedUpdate<float>(),
-                                    new CanonicalPositionUpdate<float>());
-    pso_solver_ptr->run();
+    pso_solver_cpu_ptr->setup_solver();
+    pso_solver_cpu_ptr->setup_operators(new CanonicalSpeedUpdate<float>(),
+                                        new CanonicalPositionUpdate<float>());
+    pso_solver_cpu_ptr->run();
     //pso_solver_ptr->print_solutions();
 }
 
 TEST_F(ParticleSwarmTest, BasicCudaTest)
 {
-    // pso_solver_cuda_ptr->setup_solver();
+    pso_solver_cuda_ptr->setup_solver();
     //pso_solver_cuda_ptr->setup_operators(new CanonicalSpeedCudaUpdate<float>(),
     //                                new CanonicalPositionCudaUpdate<float>());
     //pso_solver_cuda_ptr->run();

@@ -4,16 +4,16 @@
 namespace locusta {
 
     template<typename TFloat>
-    struct pso_solver;
+    struct pso_solver_cpu;
 
     template<typename TFloat>
     struct UpdateSpeedFunctor {
-        virtual void operator()(pso_solver<TFloat> * solver) {};
+        virtual void operator()(pso_solver_cpu<TFloat> * solver) {};
     };
 
     template<typename TFloat>
     struct UpdatePositionFunctor {
-        virtual void operator()(pso_solver<TFloat> * solver) {};
+        virtual void operator()(pso_solver_cpu<TFloat> * solver) {};
     };
 }
 

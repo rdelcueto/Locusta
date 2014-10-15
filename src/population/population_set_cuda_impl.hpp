@@ -1,7 +1,7 @@
 #include "cuda_common/cuda_helpers.h"
+#include "population_set_cuda.hpp"
 
 namespace locusta {
-
 
     template <typename TFloat>
     population_set_cuda<TFloat>::population_set_cuda
@@ -40,13 +40,13 @@ namespace locusta {
 
         switch(copy_type)
         {
-        case GenomeCopyKind::GencpyHostToHost:
+        case GencpyHostToHost:
             memcpy(dst_data, src_data, bytes_2_copy);
             break;
-        case GenomeCopyKind::GencpyDeviceToDevice:
+        case GencpyDeviceToDevice:
             cudaMemcpy(dst_data, src_data, bytes_2_copy, cudaMemcpyDeviceToDevice);
             break;
-        case GenomeCopyKind::GencpyDeviceToHost:
+        case GencpyDeviceToHost:
             store_buffer = new TFloat[bytes_2_copy];
             // Copy data from CUDA into temporal buffer.
             cudaMemcpy(store_buffer, src_data, bytes_2_copy, cudaMemcpyDeviceToHost);
@@ -67,7 +67,7 @@ namespace locusta {
 
             delete [] store_buffer;
             break;
-        case GenomeCopyKind::GencpyHostToDevice:
+        case GencpyHostToDevice:
             store_buffer = new TFloat[bytes_2_copy];
             // Rearange genomes into CUDA scheme in temporal buffer.
             for (uint32_t i = 0; i < _ISLES; ++i)

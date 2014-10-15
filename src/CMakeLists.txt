@@ -1,11 +1,17 @@
 set(HPPFILES
   prngenerator/prngenerator.hpp
+  prngenerator/prngenerator_cpu.hpp
   prngenerator/prngenerator_cuda.hpp
   population/population_set.hpp
+  population/population_set_cpu.hpp
   population/population_set_cuda.hpp
+  evaluator/evaluator.hpp
   evaluator/evaluator_cpu.hpp
   evaluator/evaluator_cuda.hpp
-  solvers/pso/pso_solver.hpp
+  solvers/evolutionary_solver.hpp
+  solvers/evolutionary_solver_cpu.hpp
+  solvers/evolutionary_solver_cuda.hpp
+  solvers/pso/pso_solver_cpu.hpp
   solvers/pso/pso_solver_cuda.hpp
   )
 

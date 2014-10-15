@@ -2,6 +2,7 @@
 #define LOCUSTA_EVALUATOR_H
 
 #include <functional>
+#include <stdint.h>
 
 #include "evaluable_function.hpp"
 
@@ -10,26 +11,30 @@ namespace locusta {
     template<typename TFloat>
     struct evolutionary_solver;
 
-    enum class BoundMapKind : uint8_t { IgnoreBounds,
-            CropBounds, MirrorBounds };
+    enum BoundMapKind { IgnoreBounds,
+                        CropBounds, MirrorBounds };
 
     template<typename TFloat>
     struct evaluator {
         evaluator(EvaluationFunctor<TFloat> * eval_functor,
                   bool f_negate,
                   BoundMapKind bound_mapping_method,
-                  uint32_t prn_numbers);
+                  uint32_t prn_numbers)
+            : _evaluation_functor(eval_functor),
+              _f_negate(f_negate),
+              _bound_mapping_method(bound_mapping_method),
+              _eval_prn_size(prn_numbers) {}
 
-        virtual ~evaluator();
+        virtual ~evaluator() {}
 
         /// Evaluate the solver's population data set.
-        virtual void evaluate(evolutionary_solver<TFloat> * solver);
+        virtual void evaluate(evolutionary_solver<TFloat> * solver) = 0;
 
         /// Bound mapping implementation
-        static void bound_map(BoundMapKind bound_mapping_method,
+        virtual void bound_map(BoundMapKind bound_mapping_method,
                               const TFloat &u,
                               const TFloat &l,
-                              TFloat &x);
+                              TFloat &x) = 0;
 
         /// Flag describing whether the evaluator will the fitness value or its negative.
         const bool _f_negate;
@@ -46,10 +51,8 @@ namespace locusta {
         /// Evaluation dispatch functor
         EvaluationFunctor<TFloat> * _evaluation_functor;
 
-   };
+    };
 
 } // namespace locusta
-
-#include "evaluator.cpp"
 
 #endif

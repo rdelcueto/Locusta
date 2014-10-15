@@ -1,3 +1,4 @@
+#include "evolutionary_solver.hpp"
 
 namespace locusta {
 

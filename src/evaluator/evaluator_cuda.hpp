@@ -22,34 +22,21 @@ namespace locusta {
 
         virtual ~evaluator_cuda();
 
-        /// Evaluate the solver's population data set.
-        virtual void evaluate(evolutionary_solver_cuda<TFloat> * solver);
+        virtual void evaluate(evolutionary_solver<TFloat> * solver);
 
-        /// Bound mapping implementation
-        static void bound_map(BoundMapKind bound_mapping_method,
+        virtual void bound_map(BoundMapKind bound_mapping_method,
                               const TFloat &u,
                               const TFloat &l,
                               TFloat &x);
 
-       /// Flag describing whether the evaluator will the fitness value or its negative.
-        const bool _f_negate;
-
-        /// Specified the bounding map method.
-        const BoundMapKind _bound_mapping;
-
-        /// Number of pseudo random numbers needed per evaluation.
-        const size_t _eval_prn_size;
-
-        /// Evaluation random numbers array.
-        TFloat * _eval_prn_numbers;
-
-        /// Evaluation dispatch functor
-        EvaluationCudaFunctor<TFloat> * _evaluation_functor;
-
-
+        using evaluator<TFloat>::_f_negate;
+        using evaluator<TFloat>::_bound_mapping_method;
+        using evaluator<TFloat>::_eval_prn_size;
+        using evaluator<TFloat>::_eval_prn_numbers;
+        using evaluator<TFloat>::_evaluation_functor;
 
     };
 
 } // namespace locusta
-
+#include "evaluator_cuda_impl.hpp"
 #endif

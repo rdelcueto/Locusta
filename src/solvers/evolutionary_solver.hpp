@@ -121,5 +121,5 @@ namespace locusta {
     };
 
 } // namespace locusta
-#include "evolutionary_solver.cpp"
+#include "evolutionary_solver_impl.hpp"
 #endif

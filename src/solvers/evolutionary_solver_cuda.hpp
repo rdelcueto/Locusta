@@ -2,6 +2,7 @@
 #define LOCUSTA_EVOLUTIONARY_SOLVER_CUDA_H
 
 #include <limits>
+#include <iostream>
 
 #include "cuda_common/cuda_helpers.h"
 
@@ -9,7 +10,7 @@
 #include "../evaluator/evaluator_cuda.hpp"
 #include "../population/population_set_cuda.hpp"
 
-#include <iostream>
+#include "evolutionary_solver.hpp"
 
 namespace locusta {
 
@@ -140,5 +141,5 @@ namespace locusta {
     };
 
 } // namespace locusta
-#include "evolutionary_solver_cuda.cpp"
+#include "evolutionary_solver_cuda_impl.hpp"
 #endif

@@ -1,3 +1,5 @@
+#include "prngenerator_cpu.hpp"
+
 namespace locusta {
 
   template<typename TFloat>
