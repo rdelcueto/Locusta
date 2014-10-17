@@ -41,6 +41,7 @@ namespace locusta {
     template<typename TFloat>
     pso_solver_cuda<TFloat>::~pso_solver_cuda()
     {
+        CudaSafeCall(cudaFree(_dev_bulk_prnumbers));
         CudaSafeCall(cudaFree(_dev_cognitive_position_vector));
         CudaSafeCall(cudaFree(_dev_velocity_vector));
     }
@@ -49,11 +50,12 @@ namespace locusta {
     void pso_solver_cuda<TFloat>::setup_solver()
     {
         evolutionary_solver_cuda<TFloat>::setup_solver();
-
         // Initialize best particle position with random positions.
-// evolutionary_solver_cuda<TFloat>::initialize_vector(_dev_cognitive_position_vector, _dev_velocity_vector);
+        evolutionary_solver_cuda<TFloat>::initialize_vector(_dev_cognitive_position_vector, _dev_velocity_vector);
 
-        // TODO: Set fill_velocities_kernel dispatch
+        // Set fill_velocities_kernel dispatch
+        const uint32_t TOTAL_GENES = _dev_population->_TOTAL_GENES;
+        CudaSafeCall(cudaMemset(_dev_velocity_vector, 0, TOTAL_GENES * sizeof(TFloat)));
     }
 
     template<typename TFloat>

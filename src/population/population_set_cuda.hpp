@@ -23,9 +23,6 @@ namespace locusta {
         /// Wrapper to call swap_dev_data_sets.
         virtual void swap_data_sets();
 
-        /// Swaps pointers between device data set and device transformed data set.
-        virtual void swap_dev_data_sets();
-
         /// Copies genomes between populations.
         virtual void gen_cpy(TFloat * dst_data,
                              const TFloat * src_data,

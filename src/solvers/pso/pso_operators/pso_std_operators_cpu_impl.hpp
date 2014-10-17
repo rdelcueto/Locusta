@@ -64,9 +64,10 @@ namespace locusta {
                 const uint32_t AGENTS = solver->_AGENTS;
                 const uint32_t DIMENSIONS = solver->_DIMENSIONS;
 
-                TFloat * new_positions = solver->_population->_transformed_data_array;
-                const TFloat * positions = const_cast<TFloat *>(solver->_population->_data_array);
                 const TFloat * velocities = const_cast<TFloat *>(solver->_velocity_vector);
+                const TFloat * positions = const_cast<TFloat *>(solver->_population->_data_array);
+
+                TFloat * new_positions = solver->_population->_transformed_data_array;
 
                 for(uint32_t i = 0; i < ISLES; i++) {
                     for(uint32_t j = 0; j < AGENTS; j++) {

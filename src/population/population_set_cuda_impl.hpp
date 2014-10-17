@@ -88,17 +88,11 @@ namespace locusta {
     }
 
     template <typename TFloat>
-    void population_set_cuda<TFloat>::swap_dev_data_sets()
-    {
-        TFloat * const swapped_ptr = _dev_data_array;
-        _dev_data_array = _dev_transformed_data_array;
-        _dev_transformed_data_array = swapped_ptr;
-    }
-
-    template <typename TFloat>
     void population_set_cuda<TFloat>::swap_data_sets()
     {
-        swap_dev_data_sets();
+        TFloat * swapped_ptr = _dev_data_array;
+        _dev_data_array = _dev_transformed_data_array;
+        _dev_transformed_data_array = swapped_ptr;
     }
 
 }

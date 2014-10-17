@@ -65,7 +65,7 @@ namespace locusta {
                         0 * _DIMENSIONS +
                         k;
 
-                    _best_genome[k] = data_array[data_idx];
+                    _best_genome[i * _DIMENSIONS + k] = data_array[data_idx];
                 }
                 _best_genome_fitness[i] = -std::numeric_limits<TFloat>::infinity();
             }
@@ -73,11 +73,11 @@ namespace locusta {
 
         // Initialize fitness, evaluating initialization data.
         evaluate_genomes();
-
-        // Update solver records
+        // Update solver records.
         update_records();
+        // Initialize random numbers.
+        regenerate_prnumbers();
     }
-
 
     template<typename TFloat>
     void evolutionary_solver<TFloat>::advance()
@@ -99,6 +99,7 @@ namespace locusta {
     {
         do {
             print_solutions();
+            //print_transformation_diff();
             advance();
         } while(_generation_count % _generation_target != 0);
     }
@@ -202,6 +203,31 @@ namespace locusta {
                     dst_vec[data_idx] = _LOWER_BOUNDS[k] +
                         (_VAR_RANGES[k] * tmp_vec[data_idx]);
                 }
+            }
+        }
+    }
+
+    template<typename TFloat>
+    void evolutionary_solver<TFloat>::print_transformation_diff()
+    {
+        TFloat * fitness = _population->_fitness_array;
+        TFloat * genomes = _population->_data_array;
+        TFloat * transformed_genomes = _population->_transformed_data_array;
+
+        for(uint32_t i = 0; i < _ISLES; i++) {
+            for(uint32_t j = 0; j < _AGENTS; j++) {
+                std::cout << fitness[i * _AGENTS + j] << ", [" << i << ", " << j << "] : ";
+                TFloat * a = genomes + i * _AGENTS * _DIMENSIONS + j * _DIMENSIONS;
+                TFloat * b = transformed_genomes + i * _AGENTS * _DIMENSIONS + j * _DIMENSIONS;
+                for(uint32_t k = 0; k < _DIMENSIONS; k++) {
+                    std::cout << (a[k] - b[k]);
+                    if (k == _DIMENSIONS - 1) {
+                        std::cout << "]\n";
+                    } else {
+                        std::cout << ", ";
+                    }
+                }
+
             }
         }
     }

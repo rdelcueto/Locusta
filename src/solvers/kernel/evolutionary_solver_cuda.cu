@@ -9,10 +9,10 @@ namespace locusta {
     template<typename TFloat>
     __global__
     void update_records_kernel(const uint32_t DIMENSIONS,
-                               const TFloat * data_array,
-                               const TFloat * fitness_array,
-                               TFloat * best_genomes,
-                               TFloat * best_genomes_fitness) {
+                               const TFloat * __restrict__ data_array,
+                               const TFloat * __restrict__ fitness_array,
+                               TFloat * __restrict__ best_genomes,
+                               TFloat * __restrict__ best_genomes_fitness) {
         const uint32_t i = blockIdx.x;
         const uint32_t j = threadIdx.x;
 
@@ -25,8 +25,8 @@ namespace locusta {
 
         // Initialize per thread fitness values
         TFloat a, b;
-        max_idx_reduction[j] = j;
-        max_eval_reduction[j] = fitness_array[i * AGENTS + j];
+        max_idx_reduction[j] = AGENTS * i + j;
+        max_eval_reduction[j] = fitness_array[max_idx_reduction[j]] ;
 
         int reduction_idx = 1;
         const int reduction_limit = AGENTS;
@@ -40,8 +40,8 @@ namespace locusta {
         // Parallel reduction
         while(reduction_idx != 0)
         {
-            if(j < reduction_idx &&
-               j + reduction_idx < reduction_limit)
+            if(j + reduction_idx < reduction_limit &&
+               j < reduction_idx)
             {
                 a = max_eval_reduction[j];
                 b = max_eval_reduction[j + reduction_idx];
@@ -56,14 +56,19 @@ namespace locusta {
         }
 
         if (j == 0) {
-            // Update isle's record fitness.
-            best_genomes_fitness[i] = max_eval_reduction[0];
-            const uint32_t best_fitness_idx = max_idx_reduction[0];
-            // Copy genome into best_genomes
-            for(uint32_t k = 0; k < DIMENSIONS; k++) {
-                best_genomes[i + ISLES * k];
+            // Update only if it has better fitness.
+            TFloat curr_best = best_genomes_fitness[i];
+            if (curr_best < max_eval_reduction[0]) {
+                // Update isle's record fitness.
+                const uint32_t best_fitness_idx = max_idx_reduction[0];
+                best_genomes_fitness[i] = max_eval_reduction[0];
+                // Copy genome into best_genomes
+                for(uint32_t k = 0; k < DIMENSIONS; k++) {
+                    best_genomes[i + ISLES * k] =
+                        data_array[best_fitness_idx + k * AGENTS * ISLES];
+                }
             }
-        }
+       }
     }
 
     template<typename TFloat>
@@ -74,7 +79,6 @@ namespace locusta {
                                  const TFloat * fitness_array,
                                  TFloat * best_genomes,
                                  TFloat * best_genomes_fitness) {
-        std::cout << "UPDATE RECORDS DISPATCH!" << std::endl;
         update_records_kernel
             <<<ISLES, AGENTS, AGENTS * (sizeof(uint32_t) + sizeof(TFloat))>>>
             (DIMENSIONS,
@@ -136,9 +140,6 @@ namespace locusta {
                                     const TFloat * VAR_RANGES,
                                     const TFloat * tmp_vec,
                                     TFloat * dst_vec) {
-
-        std::cout << "INITIALIZING DISPATCH!" << std::endl;
-
         initialize_vector_kernel
             <<<ISLES, AGENTS>>>
             (DIMENSIONS,
@@ -204,8 +205,6 @@ namespace locusta {
                               const TFloat * UPPER_BOUNDS,
                               const TFloat * LOWER_BOUNDS,
                               TFloat * vec) {
-
-        std::cout << "CROP DISPATCH!" << std::endl;
         crop_vector_kernel
             <<<ISLES, AGENTS>>>
             (DIMENSIONS,

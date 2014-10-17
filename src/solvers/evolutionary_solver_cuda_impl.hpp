@@ -92,22 +92,21 @@ namespace locusta {
                     i * _AGENTS * _DIMENSIONS +
                     0 * _DIMENSIONS +
                     k;
-
-                _best_genome[k] = -std::numeric_limits<TFloat>::infinity();
+                _best_genome[i + k * _ISLES] = -std::numeric_limits<TFloat>::infinity();
             }
             _best_genome_fitness[i] = -std::numeric_limits<TFloat>::infinity();
         }
 
         CudaSafeCall(cudaMemcpy(_dev_best_genome, _best_genome, _ISLES * _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
-        CudaSafeCall(cudaMemcpy(_dev_best_genome_fitness, _dev_best_genome_fitness, _ISLES * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_dev_best_genome_fitness, _best_genome_fitness, _ISLES * sizeof(TFloat), cudaMemcpyHostToDevice));
 
         // Initialize fitness, evaluating initialization data.
         evaluate_genomes();
-
-        // Update solver records
+        // Update solver records.
         update_records();
+        // Initialize random numbers.
+        regenerate_prnumbers();
     }
-
 
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::advance()
@@ -129,6 +128,8 @@ namespace locusta {
     {
         do {
             print_solutions();
+            //print_transformation_diff();
+            //print_population();
             advance();
         } while(_generation_count % _generation_target != 0);
     }
@@ -174,7 +175,10 @@ namespace locusta {
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::initialize_vector(TFloat * dst_vec, TFloat * tmp_vec)
     {
-        _dev_bulk_prn_generator->_generate(_bulk_size, _dev_bulk_prnumbers);
+        // Initialize vector data, within given bounds.
+        const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
+
+        _dev_bulk_prn_generator->_generate(vec_size, tmp_vec);
 
         initialize_vector_dispatch(_ISLES,
                                    _AGENTS,
@@ -183,6 +187,45 @@ namespace locusta {
                                    _DEV_VAR_RANGES,
                                    tmp_vec,
                                    dst_vec);
+    }
+
+    template<typename TFloat>
+    void evolutionary_solver_cuda<TFloat>::print_transformation_diff()
+    {
+        // Copy population into host
+        const uint32_t genes = _dev_population->_TOTAL_GENES;
+        const TFloat * const device_data = _dev_population->_dev_data_array;
+        TFloat * const host_data = _dev_population->_data_array;
+
+        _dev_population->gen_cpy(host_data,
+                                 device_data,
+                                 genes,
+                                 GencpyDeviceToHost);
+
+        const TFloat * const transformed_data = _dev_population->_dev_transformed_data_array;
+        TFloat * const host_transformed_data = _dev_population->_transformed_data_array;
+
+        _dev_population->gen_cpy(host_transformed_data,
+                                 transformed_data,
+                                 genes,
+                                 GencpyDeviceToHost);
+
+        for(uint32_t i = 0; i < _ISLES; i++) {
+            for(uint32_t j = 0; j < _AGENTS; j++) {
+                std::cout << "[" << i << ", " << j << "] : ";
+                TFloat * a = host_data + i * _AGENTS * _DIMENSIONS + j * _DIMENSIONS;
+                TFloat * b = host_transformed_data + i * _AGENTS * _DIMENSIONS + j * _DIMENSIONS;
+                for(uint32_t k = 0; k < _DIMENSIONS; k++) {
+                    std::cout << (a[k] - b[k]);
+                    if (k == _DIMENSIONS - 1) {
+                        std::cout << "]\n";
+                    } else {
+                        std::cout << ", ";
+                    }
+                }
+
+            }
+        }
     }
 
     template<typename TFloat>

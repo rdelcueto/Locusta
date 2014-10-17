@@ -62,7 +62,6 @@ namespace locusta {
      const TFloat * data,
      TFloat * evaluation_array)
     {
-        std::cout << "EVAL DISPATCH!" << std::endl;
         hyper_sphere_kernel
             <<<ISLES, AGENTS>>>
             (DIMENSIONS,

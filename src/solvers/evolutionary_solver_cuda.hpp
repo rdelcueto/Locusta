@@ -62,6 +62,9 @@ namespace locusta {
         /// Prints all current genomes and their fitness.
         virtual void print_population();
 
+        /// Prints last transformation diff.
+        virtual void print_transformation_diff();
+
         /// Prints solver_cuda's current best found solutions and their fitness.
         virtual void print_solutions();
 
