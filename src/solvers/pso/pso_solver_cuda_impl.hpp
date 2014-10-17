@@ -56,6 +56,7 @@ namespace locusta {
         // Set fill_velocities_kernel dispatch
         const uint32_t TOTAL_GENES = _dev_population->_TOTAL_GENES;
         CudaSafeCall(cudaMemset(_dev_velocity_vector, 0, TOTAL_GENES * sizeof(TFloat)));
+
     }
 
     template<typename TFloat>

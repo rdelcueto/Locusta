@@ -48,10 +48,10 @@ namespace locusta {
         UpdatePositionFunctor<TFloat> * _position_updater_ptr;
 
         /// Defines the PSO cognitive factor.
-        uint32_t _inertia_factor;
+        TFloat _inertia_factor;
 
         /// Defines the PSO cognitive factor.
-        uint32_t _cognitive_factor;
+        TFloat _cognitive_factor;
 
         /// Defines the PSO social factor.
         TFloat _social_factor;

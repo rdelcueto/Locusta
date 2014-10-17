@@ -100,7 +100,7 @@ protected:
 
     // Population
     const uint64_t SEED = 1;
-    const uint32_t GENERATIONS = 1e2;
+    const uint32_t GENERATIONS = 3e1;
     const uint32_t ISLES = 1;
     const uint32_t AGENTS = 32;
     const uint32_t DIMENSIONS = 32;
