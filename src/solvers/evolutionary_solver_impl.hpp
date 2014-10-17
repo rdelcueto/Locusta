@@ -155,8 +155,6 @@ namespace locusta {
     void evolutionary_solver<TFloat>::crop_vector(TFloat * vec)
     {
         // Initialize vector data, within given bounds.
-        const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
-
         for(uint32_t i = 0; i < _ISLES; ++i) {
             for(uint32_t j = 0; j < _AGENTS; ++j) {
                 for(uint32_t k = 0; k < _DIMENSIONS; ++k) {

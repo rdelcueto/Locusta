@@ -1,6 +1,8 @@
 #ifndef LOCUSTA_PSO_OPERATORS_H
 #define LOCUSTA_PSO_OPERATORS_H
 
+#include <inttypes.h>
+
 namespace locusta {
 
     template<typename TFloat>

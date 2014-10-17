@@ -18,7 +18,8 @@ set(HPPFILES
 set(CUFILES
   prngenerator/kernel/prngenerator_cuda.cu
   population/kernel/population_set_cuda.cu
-#  solvers/pso/kernel/pso_std_operators_cuda.cu
+  solvers/kernel/evolutionary_solver_cuda.cu
+  solvers/pso/pso_operators/kernel/pso_std_operators_cuda.cu
   )
 
 source_group("CUDA Source Files" FILES ${CUFILES})

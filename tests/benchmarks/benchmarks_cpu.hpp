@@ -9,39 +9,36 @@ namespace locusta {
     struct BenchmarkFunctor : EvaluationFunctor<TFloat> {
         virtual void operator()(evolutionary_solver<TFloat> * solver)
             {
-                const TFloat * const data = const_cast<TFloat *> (solver->_population->_data_array);
-                TFloat * const evaluation_array = solver->_population->_fitness_array;
-
-                const TFloat * const UPPER_BOUNDS = const_cast<TFloat *>(solver->_UPPER_BOUNDS);
-                const TFloat * const LOWER_BOUNDS = const_cast<TFloat *>(solver->_LOWER_BOUNDS);
-
                 const uint32_t ISLES = solver->_ISLES;
                 const uint32_t AGENTS = solver->_AGENTS;
                 const uint32_t DIMENSIONS = solver->_DIMENSIONS;
-
-                const bool f_negate = solver->_evaluator->_f_negate;
+                const TFloat * UPPER_BOUNDS = const_cast<TFloat *>(solver->_UPPER_BOUNDS);
+                const TFloat * LOWER_BOUNDS = const_cast<TFloat *>(solver->_LOWER_BOUNDS);
                 const BoundMapKind bound_mapping_method = solver->_evaluator->_bound_mapping_method;
+                const bool f_negate = solver->_evaluator->_f_negate;
+                const TFloat * data = const_cast<TFloat *> (solver->_population->_data_array);
+                TFloat * evaluation_array = solver->_population->_fitness_array;
 
-               hyper_sphere(data,
-                            evaluation_array,
-                            ISLES,
-                            AGENTS,
-                            DIMENSIONS,
-                            UPPER_BOUNDS,
-                            LOWER_BOUNDS,
-                            bound_mapping_method,
-                            f_negate);
+                hyper_sphere(ISLES,
+                             AGENTS,
+                             DIMENSIONS,
+                             UPPER_BOUNDS,
+                             LOWER_BOUNDS,
+                             bound_mapping_method,
+                             f_negate,
+                             data,
+                             evaluation_array);
             }
 
-        void hyper_sphere(const TFloat * const data,
-                          TFloat * const evaluation_array,
-                          const uint32_t ISLES,
+        void hyper_sphere(const uint32_t ISLES,
                           const uint32_t AGENTS,
                           const uint32_t DIMENSIONS,
-                          const TFloat * const UPPER_BOUNDS,
-                          const TFloat * const LOWER_BOUNDS,
+                          const TFloat * UPPER_BOUNDS,
+                          const TFloat * LOWER_BOUNDS,
                           BoundMapKind bound_mapping_method,
-                          const bool f_negate)
+                          const bool f_negate,
+                          const TFloat * data,
+                          TFloat * evaluation_array)
             {
                 const uint32_t REPETITIONS = 1e2;
 

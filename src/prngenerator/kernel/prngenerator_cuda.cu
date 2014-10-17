@@ -28,9 +28,9 @@ namespace locusta {
                                    curandState *curand_states,
                                    uint32_t num_engines)
     {
-        uint32_t blocks = 32;
-        gpu_setup_curand<TFloat> <<<32, 32>>>
-            (seed, curand_states, num_engines);
+        gpu_setup_curand<TFloat>
+                     <<<32, 32>>>
+                     (seed, curand_states, num_engines);
         CudaCheckError();
     }
 

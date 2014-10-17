@@ -36,8 +36,6 @@ namespace locusta {
 
         CudaSafeCall(cudaMalloc((void **) &(_dev_cognitive_position_vector), TOTAL_GENES * sizeof(TFloat)));
         CudaSafeCall(cudaMalloc((void **) &(_dev_velocity_vector), TOTAL_GENES * sizeof(TFloat)));
-
-        CudaCheckError();
     }
 
     template<typename TFloat>
@@ -45,7 +43,6 @@ namespace locusta {
     {
         CudaSafeCall(cudaFree(_dev_cognitive_position_vector));
         CudaSafeCall(cudaFree(_dev_velocity_vector));
-        CudaCheckError();
     }
 
     template<typename TFloat>
@@ -54,7 +51,7 @@ namespace locusta {
         evolutionary_solver_cuda<TFloat>::setup_solver();
 
         // Initialize best particle position with random positions.
-        evolutionary_solver_cuda<TFloat>::initialize_vector(_dev_cognitive_position_vector, _dev_velocity_vector);
+// evolutionary_solver_cuda<TFloat>::initialize_vector(_dev_cognitive_position_vector, _dev_velocity_vector);
 
         // TODO: Set fill_velocities_kernel dispatch
     }

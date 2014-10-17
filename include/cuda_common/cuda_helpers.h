@@ -1,6 +1,7 @@
 #ifndef _CUDA_HELPERS_H_
 #define _CUDA_HELPERS_H_
 
+#include <stdint.h>
 #include <iostream>
 #include <cuda_runtime.h>
 

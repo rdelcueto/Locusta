@@ -29,7 +29,7 @@ namespace locusta {
         /// Copies genomes between populations.
         virtual void gen_cpy(TFloat * dst_data,
                              const TFloat * src_data,
-                             size_t size,
+                             size_t elements,
                              GenomeCopyKind copy_kind);
 
         using population_set<TFloat>::_ISLES;

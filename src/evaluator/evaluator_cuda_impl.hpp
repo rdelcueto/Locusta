@@ -14,7 +14,6 @@ namespace locusta {
     {
         // Device Memory Allocation
         CudaSafeCall(cudaMalloc((void **) &_eval_prn_numbers, _eval_prn_size * sizeof(TFloat)));
-        CudaCheckError();
     }
 
     template<typename TFloat>
@@ -29,13 +28,12 @@ namespace locusta {
         (*_evaluation_functor)(dynamic_cast<evolutionary_solver_cuda<TFloat> *>(solver));
     }
 
-
     template<typename TFloat>
     __device__
-    inline void bound_mapp(BoundMapKind bound_mapping_method,
-                           const TFloat &u,
-                           const TFloat &l,
-                           TFloat &x)
+    inline void evaluator_cuda<TFloat>::bound_map(BoundMapKind bound_mapping_method,
+                                                  const TFloat &u,
+                                                  const TFloat &l,
+                                                  TFloat &x)
     {
         if (x == x)
         {

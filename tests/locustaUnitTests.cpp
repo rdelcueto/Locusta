@@ -36,12 +36,17 @@ protected:
             // Init timer
             start_time = time(NULL);
 
-            EvaluationFunctor<float> * evaluation_functor_cpu_ptr = new BenchmarkFunctor<float>();
-
+            evaluation_functor_cpu_ptr = new BenchmarkFunctor<float>();
             evaluator_cpu_ptr = new evaluator_cpu<float>(evaluation_functor_cpu_ptr,
                                                          true,
                                                          BoundMapKind::CropBounds,
                                                          DIMENSIONS);
+
+            evaluation_functor_cuda_ptr = new BenchmarkCudaFunctor<float>();
+            evaluator_cuda_ptr = new evaluator_cuda<float>(evaluation_functor_cuda_ptr,
+                                                           true,
+                                                           BoundMapKind::CropBounds,
+                                                           DIMENSIONS);
 
             prngenerator_cpu_ptr = new prngenerator_cpu<float>(ISLES * AGENTS);
             prngenerator_cpu_ptr->_initialize_engines(SEED);
@@ -84,7 +89,10 @@ protected:
 
     // Pseudo Random Number Generators
     prngenerator_cpu<float> * prngenerator_cpu_ptr;
+    EvaluationFunctor<float> * evaluation_functor_cpu_ptr;
+
     prngenerator_cuda<float> * prngenerator_cuda_ptr;
+    EvaluationCudaFunctor<float> * evaluation_functor_cuda_ptr;
 
     // Evaluator
     evaluator_cpu<float> * evaluator_cpu_ptr;
@@ -150,8 +158,8 @@ TEST_F(ParticleSwarmTest, BasicTest)
 TEST_F(ParticleSwarmTest, BasicCudaTest)
 {
     pso_solver_cuda_ptr->setup_solver();
-    //pso_solver_cuda_ptr->setup_operators(new CanonicalSpeedCudaUpdate<float>(),
-    //                                new CanonicalPositionCudaUpdate<float>());
-    //pso_solver_cuda_ptr->run();
+    pso_solver_cuda_ptr->setup_operators(new CanonicalSpeedUpdateCuda<float>(),
+                                         new CanonicalPositionUpdateCuda<float>());
+    pso_solver_cuda_ptr->run();
     //pso_solver_cuda_ptr->print_solutions();
 }

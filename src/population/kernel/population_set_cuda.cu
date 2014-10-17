@@ -115,7 +115,8 @@ namespace locusta {
      TFloat * const transformed_data_array,
      TFloat * const fitness_array)
     {
-        initialize_device_population_set_kernel<<<NUM_ISLES, NUM_AGENTS>>>
+        initialize_device_population_set_kernel
+            <<<NUM_ISLES, NUM_AGENTS>>>
             (NUM_ISLES,
              NUM_AGENTS,
              NUM_DIMENSIONS,

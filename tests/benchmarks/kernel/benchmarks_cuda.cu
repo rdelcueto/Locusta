@@ -9,32 +9,34 @@ namespace locusta {
 
     template <typename TFloat>
     __global__
-    void benchmark_cuda_func_1_kernel(const TFloat * const UPPER_BOUNDS,
-                                     const TFloat * const LOWER_BOUNDS,
-                                     const uint32_t NUM_ISLES,
-                                     const uint32_t NUM_AGENTS,
-                                     const uint32_t NUM_DIMENSIONS,
-                                     const uint32_t bound_mapping_method,
-                                     const bool f_negate,
-                                     const TFloat * const agents_data,
-                                     TFloat * const agents_fitness)
+    void hyper_sphere_kernel
+    (const uint32_t DIMENSIONS,
+     const TFloat * __restrict__ UPPER_BOUNDS,
+     const TFloat * __restrict__ LOWER_BOUNDS,
+     BoundMapKind bound_mapping_method,
+     const bool f_negate,
+     const TFloat * __restrict__ data,
+     TFloat * __restrict__ evaluation_array)
     {
         const uint32_t isle = blockIdx.x;
         const uint32_t agent = threadIdx.x;
 
-        const uint32_t genome_base = isle * NUM_AGENTS + agent;
-        const uint32_t gene_offset = NUM_ISLES * NUM_AGENTS;
+        const uint32_t ISLES = gridDim.x;
+        const uint32_t AGENTS = blockDim.x;
+
+        const uint32_t genome_base = isle * AGENTS + agent;
+        const uint32_t gene_offset = ISLES * AGENTS;
 
         TFloat reduction_sum;
         for(uint32_t r = 0; r < REPETITIONS; ++r)
         {
             reduction_sum = 0;
-            for(uint32_t i = 0; i < NUM_DIMENSIONS; ++i)
+            for(uint32_t i = 0; i < DIMENSIONS; ++i)
             {
-                TFloat x = agents_data[genome_base + i * gene_offset];
+                TFloat x = data[genome_base + i * gene_offset];
 
-                const TFloat &u = UPPER_BOUNDS[i];
-                const TFloat &l = LOWER_BOUNDS[i];
+                // const TFloat &u = UPPER_BOUNDS[i];
+                // const TFloat &l = LOWER_BOUNDS[i];
 
                 //bound_mapping(bound_mapping_method, u, l, x);
 
@@ -42,63 +44,61 @@ namespace locusta {
             }
         }
 
-        const uint32_t fitness_idx = isle * NUM_AGENTS + agent;
-        agents_fitness[fitness_idx] = f_negate ?
+        const uint32_t fitness_idx = isle * AGENTS + agent;
+        evaluation_array[fitness_idx] = f_negate ?
             -reduction_sum :
             reduction_sum;
     }
 
     template <typename TFloat>
-    void benchmark_cuda_func_1
-    (const TFloat * const UPPER_BOUNDS,
-     const TFloat * const LOWER_BOUNDS,
-     const uint32_t NUM_ISLES,
-     const uint32_t NUM_AGENTS,
-     const uint32_t NUM_DIMENSIONS,
-     const uint32_t bound_mapping_method,
+    void hyper_sphere_dispatch
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const TFloat * UPPER_BOUNDS,
+     const TFloat * LOWER_BOUNDS,
+     BoundMapKind bound_mapping_method,
      const bool f_negate,
-     const TFloat * const agents_data,
-     TFloat * const agents_fitness)
+     const TFloat * data,
+     TFloat * evaluation_array)
     {
-        benchmark_cuda_func_1_kernel
-            <<<NUM_ISLES, NUM_AGENTS>>>
-            (UPPER_BOUNDS,
+        std::cout << "EVAL DISPATCH!" << std::endl;
+        hyper_sphere_kernel
+            <<<ISLES, AGENTS>>>
+            (DIMENSIONS,
+             UPPER_BOUNDS,
              LOWER_BOUNDS,
-             NUM_ISLES,
-             NUM_AGENTS,
-             NUM_DIMENSIONS,
              bound_mapping_method,
              f_negate,
-             agents_data,
-             agents_fitness);
+             data,
+             evaluation_array);
         CudaCheckError();
     }
 
     // Template Specialization (float)
-
     template
-    void benchmark_cuda_func_1<float>
-    (const float * const UPPER_BOUNDS,
-     const float * const LOWER_BOUNDS,
-     const uint32_t NUM_ISLES,
-     const uint32_t NUM_AGENTS,
-     const uint32_t NUM_DIMENSIONS,
-     const uint32_t bound_mapping_method,
+    void hyper_sphere_dispatch<float>
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const float * UPPER_BOUNDS,
+     const float * LOWER_BOUNDS,
+     BoundMapKind bound_mapping_method,
      const bool f_negate,
-     const float * const agents_data,
-     float * const agents_fitness);
+     const float * data,
+     float * evaluation_array);
 
     // Template Specialization (double)
-
     template
-    void benchmark_cuda_func_1<double>
-    (const double * const UPPER_BOUNDS,
-     const double * const LOWER_BOUNDS,
-     const uint32_t NUM_ISLES,
-     const uint32_t NUM_AGENTS,
-     const uint32_t NUM_DIMENSIONS,
-     const uint32_t bound_mapping_method,
+    void hyper_sphere_dispatch<double>
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const double * UPPER_BOUNDS,
+     const double * LOWER_BOUNDS,
+     BoundMapKind bound_mapping_method,
      const bool f_negate,
-     const double * const agents_data,
-     double * const agents_fitness);
+     const double * data,
+     double * evaluation_array);
+
 }

@@ -34,7 +34,6 @@ namespace locusta {
         using evaluator<TFloat>::_eval_prn_size;
         using evaluator<TFloat>::_eval_prn_numbers;
         using evaluator<TFloat>::_evaluation_functor;
-
     };
 
 } // namespace locusta

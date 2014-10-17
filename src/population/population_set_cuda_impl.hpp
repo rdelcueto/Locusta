@@ -14,8 +14,6 @@ namespace locusta {
         CudaSafeCall(cudaMalloc((void **) &_dev_data_array, _TOTAL_GENES * sizeof(TFloat)));
         CudaSafeCall(cudaMalloc((void **) &_dev_transformed_data_array, _TOTAL_GENES * sizeof(TFloat)));
         CudaSafeCall(cudaMalloc((void **) &_dev_fitness_array, _TOTAL_AGENTS * sizeof(TFloat)));
-
-        CudaCheckError();
     }
 
     template <typename TFloat>
@@ -24,17 +22,15 @@ namespace locusta {
         CudaSafeCall(cudaFree(_dev_data_array));
         CudaSafeCall(cudaFree(_dev_transformed_data_array));
         CudaSafeCall(cudaFree(_dev_fitness_array));
-
-        CudaCheckError();
     }
 
     template <typename TFloat>
     void population_set_cuda<TFloat>::gen_cpy(TFloat * dst_data,
-                                             const TFloat * src_data,
-                                             size_t genes,
-                                             GenomeCopyKind copy_type)
+                                              const TFloat * src_data,
+                                              size_t elements,
+                                              GenomeCopyKind copy_type)
     {
-        const size_t bytes_2_copy = genes * sizeof(TFloat);
+        const size_t bytes_2_copy = elements * sizeof(TFloat);
 
         TFloat * store_buffer;
 
@@ -44,12 +40,12 @@ namespace locusta {
             memcpy(dst_data, src_data, bytes_2_copy);
             break;
         case GencpyDeviceToDevice:
-            cudaMemcpy(dst_data, src_data, bytes_2_copy, cudaMemcpyDeviceToDevice);
+            CudaSafeCall(cudaMemcpy(dst_data, src_data, bytes_2_copy, cudaMemcpyDeviceToDevice));
             break;
         case GencpyDeviceToHost:
             store_buffer = new TFloat[bytes_2_copy];
             // Copy data from CUDA into temporal buffer.
-            cudaMemcpy(store_buffer, src_data, bytes_2_copy, cudaMemcpyDeviceToHost);
+            CudaSafeCall(cudaMemcpy(store_buffer, src_data, bytes_2_copy, cudaMemcpyDeviceToHost));
             // Rearange genomes into CPU scheme.
             for (uint32_t i = 0; i < _ISLES; ++i)
             {
@@ -84,7 +80,8 @@ namespace locusta {
                 }
             }
             // Copy rearranged buffer into CUDA
-            cudaMemcpy(dst_data, store_buffer, bytes_2_copy, cudaMemcpyHostToDevice);
+            CudaSafeCall(cudaMemcpy(dst_data, store_buffer, bytes_2_copy, cudaMemcpyHostToDevice));
+
             delete [] store_buffer;
             break;
         }
