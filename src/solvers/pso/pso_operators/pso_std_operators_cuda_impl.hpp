@@ -24,8 +24,8 @@ namespace locusta {
      const TFloat cognitive_factor,
      const TFloat social_factor,
      const TFloat * positions,
-     const TFloat * best_particle_vectors,
-     const TFloat * best_isle_vectors,
+     const TFloat * record_positions,
+     const TFloat * isle_record_positions,
      const TFloat * prng_vector,
      TFloat * velocities);
 
@@ -79,10 +79,10 @@ namespace locusta {
                 // Solver state
                 const TFloat * positions = const_cast<TFloat *>(solver->_dev_population->_dev_data_array); // Current
                 // particle position.
-                const TFloat * best_particle_vectors = const_cast<TFloat *>(solver->_dev_cognitive_position_vector); // (Cognitive)
+                const TFloat * record_positions = const_cast<TFloat *>(solver->_dev_cognitive_position_vector); // (Cognitive)
                 // Particle's
                 // records
-                const TFloat * best_isle_vectors = const_cast<TFloat *>(solver->_dev_best_genome); // (Social)
+                const TFloat * isle_record_positions = const_cast<TFloat *>(solver->_dev_best_genome); // (Social)
                 // Isle's
                 // records
                 const TFloat * prng_vector = const_cast<TFloat *>(solver->_dev_bulk_prnumbers); // PRNGs
@@ -97,8 +97,8 @@ namespace locusta {
                                                 cognitive_factor,
                                                 social_factor,
                                                 positions,
-                                                best_particle_vectors,
-                                                best_isle_vectors,
+                                                record_positions,
+                                                isle_record_positions,
                                                 prng_vector,
                                                 velocities);
 

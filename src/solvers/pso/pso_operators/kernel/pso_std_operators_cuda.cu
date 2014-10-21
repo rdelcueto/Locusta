@@ -35,8 +35,6 @@ namespace locusta {
                 record_positions[particle_gene_idx] = positions[particle_gene_idx];
             }
         }
-
-
     }
 
     template <typename TFloat>
@@ -90,8 +88,8 @@ namespace locusta {
      const TFloat cognitive_factor,
      const TFloat social_factor,
      const TFloat * __restrict__ positions,
-     const TFloat * __restrict__ best_particle_vectors,
-     const TFloat * __restrict__ best_isle_vectors,
+     const TFloat * __restrict__ record_positions,
+     const TFloat * __restrict__ isle_record_positions,
      const TFloat * __restrict__ prng_vector,
      TFloat * __restrict__ velocities)
     {
@@ -106,10 +104,10 @@ namespace locusta {
 
         // Each thread iterates over a single particle.
         for(uint32_t k = 0; k < DIMENSIONS; k++) {
-            const uint32_t best_isle_vectors_idx = k * ISLES + i;
+            const uint32_t isle_record_positions_idx = k * ISLES + i;
             const uint32_t particle_gene_idx = k * ISLES * AGENTS + locus_offset;
 
-            const TFloat p_i = best_particle_vectors[particle_gene_idx];
+            const TFloat p_i = record_positions[particle_gene_idx];
             const TFloat x_i = positions[particle_gene_idx];
 
             const TFloat v_i = velocities[particle_gene_idx];
@@ -118,7 +116,7 @@ namespace locusta {
             const TFloat s_rnd = prng_vector[particle_gene_idx + prng_offset];
 
             // TODO: Move to Shared memory
-            const TFloat p_g = best_isle_vectors[best_isle_vectors_idx];
+            const TFloat p_g = isle_record_positions[isle_record_positions_idx];
 
             velocities[particle_gene_idx] =
                 inertia_factor * v_i +
@@ -136,8 +134,8 @@ namespace locusta {
      const TFloat cognitive_factor,
      const TFloat social_factor,
      const TFloat * positions,
-     const TFloat * best_particle_vectors,
-     const TFloat * best_isle_vectors,
+     const TFloat * record_positions,
+     const TFloat * isle_record_positions,
      const TFloat * prng_vector,
      TFloat * velocities)
     {
@@ -148,8 +146,8 @@ namespace locusta {
                       cognitive_factor,
                       social_factor,
                       positions,
-                      best_particle_vectors,
-                      best_isle_vectors,
+                      record_positions,
+                      isle_record_positions,
                       prng_vector,
                       velocities);
         CudaCheckError();
@@ -165,8 +163,8 @@ namespace locusta {
      const float cognitive_factor,
      const float social_factor,
      const float * positions,
-     const float * best_particle_vectors,
-     const float * best_isle_vectors,
+     const float * record_positions,
+     const float * isle_record_positions,
      const float * prng_vector,
      float * velocities);
 
@@ -180,8 +178,8 @@ namespace locusta {
      const double cognitive_factor,
      const double social_factor,
      const double * positions,
-     const double * best_particle_vectors,
-     const double * best_isle_vectors,
+     const double * record_positions,
+     const double * isle_record_positions,
      const double * prng_vector,
      double * velocities);
 
