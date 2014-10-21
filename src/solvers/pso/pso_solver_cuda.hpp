@@ -30,8 +30,9 @@ namespace locusta {
         virtual void transform();
 
         /// Set Particle Swarm Optimization solver operators.
-        virtual void setup_operators(UpdateSpeedCudaFunctor<TFloat> * speed_functor_ptr,
-                                     UpdatePositionCudaFunctor<TFloat> * update_functor_ptr);
+        virtual void setup_operators(UpdateParticleRecordCudaFunctor<TFloat> * update_particle_record_functor_ptr,
+                                     UpdateSpeedCudaFunctor<TFloat> * update_speed_functor_ptr,
+                                     UpdatePositionCudaFunctor<TFloat> * update_position_functor_ptr);
 
         /// Sets up the solver's configuration
         virtual void set_migration_config(uint32_t migration_step,
@@ -40,6 +41,9 @@ namespace locusta {
                                           TFloat inertia_factor,
                                           TFloat cognitive_factor,
                                           TFloat social_factor);
+
+        /// Particle position update operator function pointer.
+        UpdateParticleRecordCudaFunctor<TFloat> * _particle_record_updater_ptr;
 
         /// Particle speed update operator function pointer.
         UpdateSpeedCudaFunctor<TFloat> * _speed_updater_ptr;
@@ -58,6 +62,9 @@ namespace locusta {
 
         /// Describes the best position found per particle.
         TFloat * _dev_cognitive_position_vector;
+
+        /// Describes the best position's fitness per particle.
+        TFloat * _dev_cognitive_fitness_vector;
 
         /// Describes the velocity vector of each particle.
         TFloat * _dev_velocity_vector;

@@ -99,6 +99,7 @@ namespace locusta {
     {
         do {
             print_solutions();
+            //print_population();
             //print_transformation_diff();
             advance();
         } while(_generation_count % _generation_target != 0);

@@ -32,8 +32,10 @@ namespace locusta {
 
         // Allocate PSO resources
         const size_t TOTAL_GENES = _population->_TOTAL_GENES;
+        const size_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
 
         _cognitive_position_vector = new TFloat[TOTAL_GENES];
+        _cognitive_fitness_vector = new TFloat[TOTAL_AGENTS];
         _velocity_vector = new TFloat[TOTAL_GENES];
     }
 
@@ -42,20 +44,43 @@ namespace locusta {
     {
         delete [] _bulk_prnumbers;
         delete [] _cognitive_position_vector;
+        delete [] _cognitive_fitness_vector;
         delete [] _velocity_vector;
     }
 
     template<typename TFloat>
     void pso_solver_cpu<TFloat>::setup_solver()
     {
-        evolutionary_solver_cpu<TFloat>::setup_solver();
-
         // Initialize best particle position with random positions.
-        evolutionary_solver_cpu<TFloat>::initialize_vector(_cognitive_position_vector, _velocity_vector);
+        TFloat * temporal_data = _population->_transformed_data_array;
+        TFloat * temporal_data_fitness = _population->_fitness_array;
+
+        const uint32_t TOTAL_GENES = _population->_TOTAL_GENES;
+        const uint32_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
+
+        evolutionary_solver_cpu<TFloat>::initialize_vector(temporal_data,
+                                                           _velocity_vector);
+
+        // Evaluate cognitive vector fitness.
+        _population->swap_data_sets();
+        evolutionary_solver<TFloat>::evaluate_genomes();
+        _population->swap_data_sets();
+
+        // Copy evaluation values.
+        memcpy(_cognitive_fitness_vector,
+               temporal_data_fitness,
+               TOTAL_AGENTS * sizeof(TFloat));
+
+        // Copy data values into cognitive vector.
+        memcpy(_cognitive_position_vector,
+               temporal_data,
+               TOTAL_GENES * sizeof(TFloat));
 
         // Initialize Velocity to 0
         const size_t vec_size = _population->_TOTAL_GENES;
         std::fill(_velocity_vector, _velocity_vector + vec_size, 0);
+
+        evolutionary_solver_cpu<TFloat>::setup_solver();
     }
 
     template<typename TFloat>
@@ -65,11 +90,13 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void pso_solver_cpu<TFloat>::setup_operators(UpdateSpeedFunctor<TFloat> * speed_functor_ptr,
-                                                 UpdatePositionFunctor<TFloat> * position_functor_ptr)
+    void pso_solver_cpu<TFloat>::setup_operators(UpdateParticleRecordFunctor<TFloat > * update_particle_record_functor_ptr,
+                                                 UpdateSpeedFunctor<TFloat> * update_speed_functor_ptr,
+                                                 UpdatePositionFunctor<TFloat> * update_position_functor_ptr)
     {
-        _speed_updater_ptr = speed_functor_ptr;
-        _position_updater_ptr = position_functor_ptr;
+        _particle_record_updater_ptr = update_particle_record_functor_ptr;
+        _speed_updater_ptr = update_speed_functor_ptr;
+        _position_updater_ptr = update_position_functor_ptr;
     }
 
     template<typename TFloat>
@@ -91,6 +118,7 @@ namespace locusta {
     template<typename TFloat>
     void pso_solver_cpu<TFloat>::transform()
     {
+        (*_particle_record_updater_ptr)(this);
         (*_speed_updater_ptr)(this);
         (*_position_updater_ptr)(this);
     }

@@ -14,6 +14,11 @@ namespace locusta {
     };
 
     template<typename TFloat>
+    struct UpdateParticleRecordFunctor {
+        virtual void operator()(pso_solver_cpu<TFloat> * solver) {};
+    };
+
+    template<typename TFloat>
     struct UpdatePositionFunctor {
         virtual void operator()(pso_solver_cpu<TFloat> * solver) {};
     };

@@ -9,14 +9,89 @@ namespace locusta {
 
     template <typename TFloat>
     __global__
+    void canonical_particle_record_update_kernel
+    (const uint32_t DIMENSIONS,
+     const TFloat * __restrict__ positions,
+     const TFloat * __restrict__ fitness,
+     TFloat * __restrict__ record_positions,
+     TFloat * __restrict__ record_fitness)
+    {
+        const uint32_t i = blockIdx.x; // ISLE
+        const uint32_t j = threadIdx.x; // AGENT
+
+        const uint32_t ISLES = gridDim.x;
+        const uint32_t AGENTS = blockDim.x;
+
+        const uint32_t locus_offset = i * AGENTS + j;
+
+        const TFloat curr_fitness = fitness[locus_offset];
+        const TFloat candidate_fitness = record_fitness[locus_offset];
+
+        if (curr_fitness > candidate_fitness) {
+            record_fitness[locus_offset] = curr_fitness;
+            // Each thread iterates over a single particle.
+            for(uint32_t k = 0; k < DIMENSIONS; k++) {
+                const uint32_t particle_gene_idx = k * ISLES * AGENTS + locus_offset;
+                record_positions[particle_gene_idx] = positions[particle_gene_idx];
+            }
+        }
+
+
+    }
+
+    template <typename TFloat>
+    void canonical_particle_update_dispatch
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const TFloat * positions,
+     const TFloat * fitness,
+     TFloat * record_positions,
+     TFloat * record_fitness)
+    {
+        canonical_particle_record_update_kernel
+            <<<ISLES, AGENTS>>>
+            (DIMENSIONS,
+             positions,
+             fitness,
+             record_positions,
+             record_fitness);
+
+        CudaCheckError();
+    }
+
+    // Template Specialization (float)
+    template
+    void canonical_particle_update_dispatch<float>
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const float * positions,
+     const float * fitness,
+     float * record_positions,
+     float * record_fitness);
+
+    // Template Specialization (double)
+    template
+    void canonical_particle_update_dispatch<double>
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const double * positions,
+     const double * fitness,
+     double * record_positions,
+     double * record_fitness);
+
+    template <typename TFloat>
+    __global__
     void canonical_speed_update_kernel
     (const uint32_t DIMENSIONS,
      const TFloat inertia_factor,
      const TFloat cognitive_factor,
      const TFloat social_factor,
      const TFloat * __restrict__ positions,
-     const TFloat * __restrict__ best_positions,
-     const TFloat * __restrict__ isle_best_positions,
+     const TFloat * __restrict__ best_particle_vectors,
+     const TFloat * __restrict__ best_isle_vectors,
      const TFloat * __restrict__ prng_vector,
      TFloat * __restrict__ velocities)
     {
@@ -31,10 +106,10 @@ namespace locusta {
 
         // Each thread iterates over a single particle.
         for(uint32_t k = 0; k < DIMENSIONS; k++) {
-            const uint32_t isle_best_positions_idx = k * ISLES + i;
+            const uint32_t best_isle_vectors_idx = k * ISLES + i;
             const uint32_t particle_gene_idx = k * ISLES * AGENTS + locus_offset;
 
-            const TFloat p_i = best_positions[particle_gene_idx];
+            const TFloat p_i = best_particle_vectors[particle_gene_idx];
             const TFloat x_i = positions[particle_gene_idx];
 
             const TFloat v_i = velocities[particle_gene_idx];
@@ -43,7 +118,7 @@ namespace locusta {
             const TFloat s_rnd = prng_vector[particle_gene_idx + prng_offset];
 
             // TODO: Move to Shared memory
-            const TFloat p_g = isle_best_positions[isle_best_positions_idx];
+            const TFloat p_g = best_isle_vectors[best_isle_vectors_idx];
 
             velocities[particle_gene_idx] =
                 inertia_factor * v_i +
@@ -61,8 +136,8 @@ namespace locusta {
      const TFloat cognitive_factor,
      const TFloat social_factor,
      const TFloat * positions,
-     const TFloat * best_positions,
-     const TFloat * isle_best_positions,
+     const TFloat * best_particle_vectors,
+     const TFloat * best_isle_vectors,
      const TFloat * prng_vector,
      TFloat * velocities)
     {
@@ -73,8 +148,8 @@ namespace locusta {
                       cognitive_factor,
                       social_factor,
                       positions,
-                      best_positions,
-                      isle_best_positions,
+                      best_particle_vectors,
+                      best_isle_vectors,
                       prng_vector,
                       velocities);
         CudaCheckError();
@@ -90,8 +165,8 @@ namespace locusta {
      const float cognitive_factor,
      const float social_factor,
      const float * positions,
-     const float * best_positions,
-     const float * isle_best_positions,
+     const float * best_particle_vectors,
+     const float * best_isle_vectors,
      const float * prng_vector,
      float * velocities);
 
@@ -105,8 +180,8 @@ namespace locusta {
      const double cognitive_factor,
      const double social_factor,
      const double * positions,
-     const double * best_positions,
-     const double * isle_best_positions,
+     const double * best_particle_vectors,
+     const double * best_isle_vectors,
      const double * prng_vector,
      double * velocities);
 
@@ -124,10 +199,10 @@ namespace locusta {
         const uint32_t ISLES = gridDim.x;
         const uint32_t AGENTS = blockDim.x;
 
+        const uint32_t locus_offset = i * AGENTS + j;
         // Each thread iterates over a single particle.
         for(uint32_t k = 0; k < DIMENSIONS; k++) {
-            const uint32_t locus_offset = k * ISLES * AGENTS;
-            const uint32_t particle_gene_idx = locus_offset + i * AGENTS + j;
+            const uint32_t particle_gene_idx = locus_offset + k * ISLES * AGENTS;
 
             const TFloat curr_velocity = velocities[particle_gene_idx];
             const TFloat curr_position = positions[particle_gene_idx];

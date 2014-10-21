@@ -99,9 +99,9 @@ protected:
     evaluator_cuda<float> * evaluator_cuda_ptr;
 
     // Population
-    const uint64_t SEED = 1;
-    const uint32_t GENERATIONS = 3e1;
-    const uint32_t ISLES = 1;
+    const uint64_t SEED = 0;
+    const uint32_t GENERATIONS = 20;
+    const uint32_t ISLES = 2;
     const uint32_t AGENTS = 32;
     const uint32_t DIMENSIONS = 32;
 
@@ -146,10 +146,11 @@ public:
 
 };
 
-TEST_F(ParticleSwarmTest, BasicTest)
+TEST_F(ParticleSwarmTest, BasicCpuTest)
 {
     pso_solver_cpu_ptr->setup_solver();
-    pso_solver_cpu_ptr->setup_operators(new CanonicalSpeedUpdate<float>(),
+    pso_solver_cpu_ptr->setup_operators(new CanonicalParticleRecordUpdate<float>(),
+                                        new CanonicalSpeedUpdate<float>(),
                                         new CanonicalPositionUpdate<float>());
     pso_solver_cpu_ptr->run();
     //pso_solver_cpu_ptr->print_solutions();
@@ -158,7 +159,8 @@ TEST_F(ParticleSwarmTest, BasicTest)
 TEST_F(ParticleSwarmTest, BasicCudaTest)
 {
     pso_solver_cuda_ptr->setup_solver();
-    pso_solver_cuda_ptr->setup_operators(new CanonicalSpeedUpdateCuda<float>(),
+    pso_solver_cuda_ptr->setup_operators(new CanonicalParticleRecordUpdateCuda<float>(),
+                                         new CanonicalSpeedUpdateCuda<float>(),
                                          new CanonicalPositionUpdateCuda<float>());
     pso_solver_cuda_ptr->run();
     // pso_solver_cuda_ptr->print_population();

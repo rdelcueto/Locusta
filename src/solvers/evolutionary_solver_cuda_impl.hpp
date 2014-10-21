@@ -128,8 +128,8 @@ namespace locusta {
     {
         do {
             print_solutions();
-            //print_transformation_diff();
             //print_population();
+            //print_transformation_diff();
             advance();
         } while(_generation_count % _generation_target != 0);
     }

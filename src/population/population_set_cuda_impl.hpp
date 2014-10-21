@@ -51,11 +51,11 @@ namespace locusta {
             {
                 for(uint32_t j = 0; j < _AGENTS; ++j)
                 {
+                    const uint32_t locus_offset = i * _AGENTS + j;
                     for(uint32_t k = 0; k < _DIMENSIONS; ++k)
                     {
                         const uint32_t cpu_idx = i * _AGENTS * _DIMENSIONS + j * _DIMENSIONS + k;
-                        const uint32_t locus_offset = k * _ISLES * _AGENTS;
-                        const uint32_t cuda_idx = locus_offset + i * _AGENTS + j;
+                        const uint32_t cuda_idx = k * _ISLES * _AGENTS + locus_offset;
                         dst_data[cpu_idx] = store_buffer[cuda_idx];
                     }
                 }
@@ -70,11 +70,11 @@ namespace locusta {
             {
                 for(uint32_t j = 0; j < _AGENTS; ++j)
                 {
+                    const uint32_t locus_offset = i * _AGENTS + j;
                     for(uint32_t k = 0; k < _DIMENSIONS; ++k)
                     {
                         const uint32_t cpu_idx = i * _AGENTS * _DIMENSIONS + j * _DIMENSIONS + k;
-                        const uint32_t locus_offset = k * _ISLES * _AGENTS;
-                        const uint32_t cuda_idx = locus_offset + i * _AGENTS + j;
+                        const uint32_t cuda_idx = k * _ISLES * _AGENTS + locus_offset;
                         store_buffer[cuda_idx] = src_data[cpu_idx];
                     }
                 }

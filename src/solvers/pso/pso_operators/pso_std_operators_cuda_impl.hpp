@@ -5,6 +5,16 @@
 
 namespace locusta {
 
+    template <typename TFloat>
+    void canonical_particle_update_dispatch
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const TFloat * positions,
+     const TFloat * fitness,
+     TFloat * record_positions,
+     TFloat * record_fitness);
+
     template<typename TFloat>
     void canonical_speed_update_dispatch
     (const uint32_t ISLES,
@@ -14,8 +24,8 @@ namespace locusta {
      const TFloat cognitive_factor,
      const TFloat social_factor,
      const TFloat * positions,
-     const TFloat * best_positions,
-     const TFloat * isle_best_positions,
+     const TFloat * best_particle_vectors,
+     const TFloat * best_isle_vectors,
      const TFloat * prng_vector,
      TFloat * velocities);
 
@@ -27,6 +37,31 @@ namespace locusta {
      const TFloat * velocities,
      const TFloat * positions,
      TFloat * new_positions);
+
+    template<typename TFloat>
+    struct CanonicalParticleRecordUpdateCuda : UpdateParticleRecordCudaFunctor<TFloat> {
+        void operator()(pso_solver_cuda<TFloat> * solver)
+            {
+                const uint32_t ISLES = solver->_ISLES;
+                const uint32_t AGENTS = solver->_AGENTS;
+                const uint32_t DIMENSIONS = solver->_DIMENSIONS;
+
+                const TFloat * positions = const_cast<TFloat *>(solver->_dev_population->_dev_data_array);
+                const TFloat * fitness = const_cast<TFloat *>(solver->_dev_population->_dev_fitness_array);
+
+                TFloat * record_positions = solver->_dev_cognitive_position_vector;
+                TFloat * record_fitness = solver->_dev_cognitive_fitness_vector;
+
+                canonical_particle_update_dispatch(ISLES,
+                                                   AGENTS,
+                                                   DIMENSIONS,
+                                                   positions,
+                                                   fitness,
+                                                   record_positions,
+                                                   record_fitness);
+
+            }
+    };
 
     template<typename TFloat>
     struct CanonicalSpeedUpdateCuda : UpdateSpeedCudaFunctor<TFloat> {
@@ -44,10 +79,10 @@ namespace locusta {
                 // Solver state
                 const TFloat * positions = const_cast<TFloat *>(solver->_dev_population->_dev_data_array); // Current
                 // particle position.
-                const TFloat * best_positions = const_cast<TFloat *>(solver->_dev_cognitive_position_vector); // (Cognitive)
+                const TFloat * best_particle_vectors = const_cast<TFloat *>(solver->_dev_cognitive_position_vector); // (Cognitive)
                 // Particle's
                 // records
-                const TFloat * isle_best_positions = const_cast<TFloat *>(solver->_dev_best_genome); // (Social)
+                const TFloat * best_isle_vectors = const_cast<TFloat *>(solver->_dev_best_genome); // (Social)
                 // Isle's
                 // records
                 const TFloat * prng_vector = const_cast<TFloat *>(solver->_dev_bulk_prnumbers); // PRNGs
@@ -62,8 +97,8 @@ namespace locusta {
                                                 cognitive_factor,
                                                 social_factor,
                                                 positions,
-                                                best_positions,
-                                                isle_best_positions,
+                                                best_particle_vectors,
+                                                best_isle_vectors,
                                                 prng_vector,
                                                 velocities);
 

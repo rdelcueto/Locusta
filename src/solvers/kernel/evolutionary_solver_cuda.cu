@@ -13,8 +13,8 @@ namespace locusta {
                                const TFloat * __restrict__ fitness_array,
                                TFloat * __restrict__ best_genomes,
                                TFloat * __restrict__ best_genomes_fitness) {
-        const uint32_t i = blockIdx.x;
-        const uint32_t j = threadIdx.x;
+        const uint32_t i = blockIdx.x; // ISLE
+        const uint32_t j = threadIdx.x; // AGENT
 
         const uint32_t ISLES = gridDim.x;
         const uint32_t AGENTS = blockDim.x;
@@ -25,8 +25,8 @@ namespace locusta {
 
         // Initialize per thread fitness values
         TFloat a, b;
-        max_idx_reduction[j] = AGENTS * i + j;
-        max_eval_reduction[j] = fitness_array[max_idx_reduction[j]] ;
+        max_idx_reduction[j] = j;
+        max_eval_reduction[j] = fitness_array[j + i * AGENTS];
 
         int reduction_idx = 1;
         const int reduction_limit = AGENTS;
@@ -40,8 +40,8 @@ namespace locusta {
         // Parallel reduction
         while(reduction_idx != 0)
         {
-            if(j + reduction_idx < reduction_limit &&
-               j < reduction_idx)
+            if(j < reduction_idx &&
+               j + reduction_idx < reduction_limit)
             {
                 a = max_eval_reduction[j];
                 b = max_eval_reduction[j + reduction_idx];
@@ -60,12 +60,12 @@ namespace locusta {
             TFloat curr_best = best_genomes_fitness[i];
             if (curr_best < max_eval_reduction[0]) {
                 // Update isle's record fitness.
-                const uint32_t best_fitness_idx = max_idx_reduction[0];
+                const uint32_t best_isle_idx = max_idx_reduction[0];
                 best_genomes_fitness[i] = max_eval_reduction[0];
                 // Copy genome into best_genomes
                 for(uint32_t k = 0; k < DIMENSIONS; k++) {
                     best_genomes[i + ISLES * k] =
-                        data_array[best_fitness_idx + k * AGENTS * ISLES];
+                        data_array[best_isle_idx + i * AGENTS + k * AGENTS * ISLES];
                 }
             }
        }
@@ -123,10 +123,9 @@ namespace locusta {
         const uint32_t ISLES = gridDim.x;
         const uint32_t AGENTS = blockDim.x;
 
+        const uint32_t locus_offset = i * AGENTS + j;
         for(uint32_t k = 0; k < DIMENSIONS; k++) {
-            const uint32_t locus_offset = k * ISLES * AGENTS;
-            const uint32_t particle_gene_idx = locus_offset + i * AGENTS + j;
-
+            const uint32_t particle_gene_idx = k * ISLES * AGENTS + locus_offset;
             dst_vec[particle_gene_idx] = LOWER_BOUNDS[k] +
                 (VAR_RANGES[k] * tmp_vec[particle_gene_idx]);
         }
@@ -182,10 +181,10 @@ namespace locusta {
         const uint32_t ISLES = gridDim.x;
         const uint32_t AGENTS = blockDim.x;
 
+        const uint32_t locus_offset = i * AGENTS + j;
         for(uint32_t k = 0; k < DIMENSIONS; k++) {
+            const uint32_t particle_gene_idx = k * ISLES * AGENTS + locus_offset;
 
-            const uint32_t locus_offset = k * ISLES * AGENTS;
-            const uint32_t particle_gene_idx = locus_offset + i * AGENTS + j;
             const TFloat low_bound = LOWER_BOUNDS[k];
             const TFloat high_bound = UPPER_BOUNDS[k];
 

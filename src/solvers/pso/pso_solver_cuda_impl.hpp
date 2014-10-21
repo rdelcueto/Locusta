@@ -33,8 +33,10 @@ namespace locusta {
 
         // Allocate PSO resources
         const size_t TOTAL_GENES = _population->_TOTAL_GENES;
+        const size_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
 
         CudaSafeCall(cudaMalloc((void **) &(_dev_cognitive_position_vector), TOTAL_GENES * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_dev_cognitive_fitness_vector), TOTAL_AGENTS * sizeof(TFloat)));
         CudaSafeCall(cudaMalloc((void **) &(_dev_velocity_vector), TOTAL_GENES * sizeof(TFloat)));
     }
 
@@ -43,20 +45,44 @@ namespace locusta {
     {
         CudaSafeCall(cudaFree(_dev_bulk_prnumbers));
         CudaSafeCall(cudaFree(_dev_cognitive_position_vector));
+        CudaSafeCall(cudaFree(_dev_cognitive_fitness_vector));
         CudaSafeCall(cudaFree(_dev_velocity_vector));
     }
 
     template<typename TFloat>
     void pso_solver_cuda<TFloat>::setup_solver()
     {
-        evolutionary_solver_cuda<TFloat>::setup_solver();
+        TFloat * temporal_data = _dev_population->_dev_transformed_data_array;
+        TFloat * temporal_data_fitness = _dev_population->_dev_fitness_array;
+
+        const uint32_t TOTAL_GENES = _population->_TOTAL_GENES;
+        const uint32_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
+
         // Initialize best particle position with random positions.
-        evolutionary_solver_cuda<TFloat>::initialize_vector(_dev_cognitive_position_vector, _dev_velocity_vector);
+        evolutionary_solver_cuda<TFloat>::initialize_vector(temporal_data,
+                                                            _dev_velocity_vector);
+
+        // Evaluate cognitive vector fitness.
+        _population->swap_data_sets();
+        evolutionary_solver<TFloat>::evaluate_genomes();
+        _population->swap_data_sets();
+
+        // Copy evaluation values.
+        CudaSafeCall(cudaMemcpy(_dev_cognitive_fitness_vector,
+                                temporal_data_fitness,
+                                TOTAL_AGENTS * sizeof(TFloat),
+                                cudaMemcpyDeviceToDevice));
+
+        // Copy data values into cognitive vector.
+        CudaSafeCall(cudaMemcpy(_dev_cognitive_position_vector,
+                                temporal_data,
+                                TOTAL_GENES * sizeof(TFloat),
+                                cudaMemcpyDeviceToDevice));
 
         // Set fill_velocities_kernel dispatch
-        const uint32_t TOTAL_GENES = _dev_population->_TOTAL_GENES;
         CudaSafeCall(cudaMemset(_dev_velocity_vector, 0, TOTAL_GENES * sizeof(TFloat)));
 
+        evolutionary_solver_cuda<TFloat>::setup_solver();
     }
 
     template<typename TFloat>
@@ -66,11 +92,13 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void pso_solver_cuda<TFloat>::setup_operators(UpdateSpeedCudaFunctor<TFloat> * speed_functor_ptr,
-                                                  UpdatePositionCudaFunctor<TFloat> * position_functor_ptr)
+    void pso_solver_cuda<TFloat>::setup_operators(UpdateParticleRecordCudaFunctor<TFloat> * update_particle_record_functor_ptr,
+                                                  UpdateSpeedCudaFunctor<TFloat> * update_speed_functor_ptr,
+                                                  UpdatePositionCudaFunctor<TFloat> * update_position_functor_ptr)
     {
-        _speed_updater_ptr = speed_functor_ptr;
-        _position_updater_ptr = position_functor_ptr;
+        _particle_record_updater_ptr = update_particle_record_functor_ptr;
+        _speed_updater_ptr = update_speed_functor_ptr;
+        _position_updater_ptr = update_position_functor_ptr;
     }
 
     template<typename TFloat>
@@ -92,6 +120,7 @@ namespace locusta {
     template<typename TFloat>
     void pso_solver_cuda<TFloat>::transform()
     {
+        (*_particle_record_updater_ptr)(this);
         (*_speed_updater_ptr)(this);
         (*_position_updater_ptr)(this);
     }
