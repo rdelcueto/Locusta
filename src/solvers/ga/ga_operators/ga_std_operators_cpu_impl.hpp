@@ -26,7 +26,7 @@ namespace locusta {
                 const TFloat * LOWER_BOUNDS = solver->_LOWER_BOUNDS;
                 const TFloat * VAR_RANGES = solver->_VAR_RANGES;
 
-                const TFloat DEVIATION = 0.1;
+                const TFloat DEVIATION = 0.2;
 
                 const uint32_t RND_OFFSET = 1 + DIMENSIONS;
                 const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[ga_solver_cpu<TFloat>::BREEDING_SET]);
@@ -68,7 +68,7 @@ namespace locusta {
                         }
 
                         for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-                            const bool GENE_MUTATE_FLAG = (*agents_prns++) < CROSSOVER_RATE;
+                            const bool GENE_MUTATE_FLAG = (*agents_prns++) < MUTATION_RATE;
                             if(GENE_MUTATE_FLAG) {
                                 const TFloat & u = UPPER_BOUNDS[j];
                                 const TFloat & l = LOWER_BOUNDS[j];
@@ -82,13 +82,8 @@ namespace locusta {
                                 x *= INV_DIST_LIMIT;
                                 x -= 0.5;
                                 x *= DEVIATION * range;
-                                x += offspring[k];
 
-                                // Bound Checking
-                                x = x > u ? u : x;
-                                x = x < l ? l : x;
-
-                                offspring[k] = x;
+                                offspring[k] += x;
                             }
                         }
                     }
