@@ -40,6 +40,11 @@ namespace locusta {
 
     template<typename TFloat>
     struct CanonicalParticleRecordUpdateCuda : UpdateParticleRecordCudaFunctor<TFloat> {
+
+        virtual uint32_t required_prns(pso_solver_cuda<TFloat> * solver) {
+            return 0;
+        }
+
         void operator()(pso_solver_cuda<TFloat> * solver)
             {
                 const uint32_t ISLES = solver->_ISLES;
@@ -65,6 +70,15 @@ namespace locusta {
 
     template<typename TFloat>
     struct CanonicalSpeedUpdateCuda : UpdateSpeedCudaFunctor<TFloat> {
+
+        virtual uint32_t required_prns(pso_solver_cuda<TFloat> * solver) {
+            const uint32_t ISLES = solver->_ISLES;
+            const uint32_t AGENTS = solver->_AGENTS;
+            const uint32_t DIMENSIONS = solver->_DIMENSIONS;
+
+           return ISLES * AGENTS * DIMENSIONS * 2;
+        }
+
         void operator()(pso_solver_cuda<TFloat> * solver)
             {
                 const uint32_t ISLES = solver->_ISLES;
@@ -85,7 +99,7 @@ namespace locusta {
                 const TFloat * isle_record_positions = const_cast<TFloat *>(solver->_dev_best_genome); // (Social)
                 // Isle's
                 // records
-                const TFloat * prng_vector = const_cast<TFloat *>(solver->_dev_bulk_prnumbers); // PRNGs
+                const TFloat * prng_vector = const_cast<TFloat *>(solver->_dev_bulk_prns); // PRNGs
 
                 TFloat * velocities = solver->_dev_velocity_vector; // To be
                                                                     // modified
@@ -107,6 +121,11 @@ namespace locusta {
 
     template<typename TFloat>
     struct CanonicalPositionUpdateCuda : UpdatePositionCudaFunctor<TFloat> {
+
+        virtual uint32_t required_prns(pso_solver_cuda<TFloat> * solver) {
+            return 0;
+        }
+
         void operator()(pso_solver_cuda<TFloat> * solver)
             {
                 const uint32_t ISLES = solver->_ISLES;

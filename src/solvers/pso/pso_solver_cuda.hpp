@@ -12,7 +12,7 @@ namespace locusta {
     template<typename TFloat>
     struct pso_solver_cuda : evolutionary_solver_cuda<TFloat> {
 
-        enum class PRN_OFFSETS : uint8_t { COGNITIVE_OFFSET = 0, SOCIAL_OFFSET = 1 };
+        enum PRN_OFFSETS { RECORD_UPDATE_SET = 0, SPEED_UPDATE_SET = 1, POSITION_UPDATE_SET = 2 };
 
         pso_solver_cuda(population_set_cuda<TFloat> * population,
                         evaluator_cuda<TFloat> * evaluator,
@@ -35,12 +35,12 @@ namespace locusta {
                                      UpdatePositionCudaFunctor<TFloat> * update_position_functor_ptr);
 
         /// Sets up the solver's configuration
-        virtual void set_migration_config(uint32_t migration_step,
-                                          uint32_t migration_size,
-                                          uint32_t migration_selection_size,
-                                          TFloat inertia_factor,
-                                          TFloat cognitive_factor,
-                                          TFloat social_factor);
+        virtual void solver_config(uint32_t migration_step,
+                                   uint32_t migration_size,
+                                   uint32_t migration_selection_size,
+                                   TFloat inertia_factor,
+                                   TFloat cognitive_factor,
+                                   TFloat social_factor);
 
         /// Particle position update operator function pointer.
         UpdateParticleRecordCudaFunctor<TFloat> * _particle_record_updater_ptr;
@@ -69,12 +69,6 @@ namespace locusta {
         /// Describes the velocity vector of each particle.
         TFloat * _dev_velocity_vector;
 
-        /// Describes the locations of each pseudo random number set.
-        TFloat * _prn_sets;
-
-        /// Describes the offset within each isle's set.
-        std::size_t _prn_isle_offset;
-
         // CUDA specific Evolutionary solver vars
         using evolutionary_solver_cuda<TFloat>::_dev_population;
         using evolutionary_solver_cuda<TFloat>::_dev_evaluator;
@@ -87,7 +81,7 @@ namespace locusta {
         using evolutionary_solver_cuda<TFloat>::_dev_best_genome_fitness;
         using evolutionary_solver_cuda<TFloat>::_dev_migration_idxs;
         using evolutionary_solver_cuda<TFloat>::_dev_migration_buffer;
-        using evolutionary_solver_cuda<TFloat>::_dev_bulk_prnumbers;
+        using evolutionary_solver_cuda<TFloat>::_dev_bulk_prns;
 
         // Evolutionary solver vars
         using evolutionary_solver_cuda<TFloat>::_ISLES;
@@ -103,15 +97,17 @@ namespace locusta {
 
         using evolutionary_solver_cuda<TFloat>::_best_genome;
         using evolutionary_solver_cuda<TFloat>::_best_genome_fitness;
+
         using evolutionary_solver_cuda<TFloat>::_migration_step;
         using evolutionary_solver_cuda<TFloat>::_migration_size;
         using evolutionary_solver_cuda<TFloat>::_migration_selection_size;
-        using evolutionary_solver_cuda<TFloat>::_migrating_idxs;
+        using evolutionary_solver_cuda<TFloat>::_migration_idxs;
         using evolutionary_solver_cuda<TFloat>::_migration_buffer;
 
         using evolutionary_solver_cuda<TFloat>::_bulk_prn_generator;
-        using evolutionary_solver_cuda<TFloat>::_bulk_prnumbers;
+        using evolutionary_solver_cuda<TFloat>::_bulk_prns;
         using evolutionary_solver_cuda<TFloat>::_bulk_size;
+        using evolutionary_solver_cuda<TFloat>::_prn_sets;
 
         using evolutionary_solver_cuda<TFloat>::_generation_count;
         using evolutionary_solver_cuda<TFloat>::_generation_target;

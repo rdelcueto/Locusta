@@ -26,11 +26,6 @@ namespace locusta {
         _cognitive_factor = 2.0;
         _social_factor = 2.0;
 
-        _bulk_size = 2 * _population->_TOTAL_GENES;
-
-        // Memory allocation
-        CudaSafeCall(cudaMalloc((void **) &(_dev_bulk_prnumbers), _bulk_size * sizeof(TFloat)));
-
         // Allocate PSO resources
         const size_t TOTAL_GENES = _population->_TOTAL_GENES;
         const size_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
@@ -43,7 +38,6 @@ namespace locusta {
     template<typename TFloat>
     pso_solver_cuda<TFloat>::~pso_solver_cuda()
     {
-        CudaSafeCall(cudaFree(_dev_bulk_prnumbers));
         CudaSafeCall(cudaFree(_dev_cognitive_position_vector));
         CudaSafeCall(cudaFree(_dev_cognitive_fitness_vector));
         CudaSafeCall(cudaFree(_dev_velocity_vector));
@@ -52,6 +46,19 @@ namespace locusta {
     template<typename TFloat>
     void pso_solver_cuda<TFloat>::setup_solver()
     {
+         // Pseudo random number allocation.
+        const uint32_t RECORD_UPDATE_OFFSET = _particle_record_updater_ptr->required_prns(this);
+        const uint32_t SPEED_UPDATE_OFFSET = _speed_updater_ptr->required_prns(this);
+        const uint32_t POSITION_UPDATE_OFFSET = _position_updater_ptr->required_prns(this);
+
+        _bulk_size = RECORD_UPDATE_OFFSET + SPEED_UPDATE_OFFSET + POSITION_UPDATE_SET;
+        CudaSafeCall(cudaMalloc((void **) &(_dev_bulk_prns), _bulk_size * sizeof(TFloat)));
+
+        _prn_sets = new TFloat*[3];
+        _prn_sets[RECORD_UPDATE_SET] = _dev_bulk_prns;
+        _prn_sets[SPEED_UPDATE_SET] = _dev_bulk_prns + RECORD_UPDATE_OFFSET;
+        _prn_sets[POSITION_UPDATE_SET] = _dev_bulk_prns + RECORD_UPDATE_OFFSET + SPEED_UPDATE_OFFSET;
+
         TFloat * temporal_data = _dev_population->_dev_transformed_data_array;
         TFloat * temporal_data_fitness = _dev_population->_dev_fitness_array;
 
@@ -88,7 +95,8 @@ namespace locusta {
     template<typename TFloat>
     void pso_solver_cuda<TFloat>::teardown_solver()
     {
-
+        delete [] _prn_sets;
+        CudaSafeCall(cudaFree(_dev_bulk_prns));
     }
 
     template<typename TFloat>
@@ -102,12 +110,12 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void pso_solver_cuda<TFloat>::set_migration_config(uint32_t migration_step,
-                                                       uint32_t migration_size,
-                                                       uint32_t migration_selection_size,
-                                                       TFloat inertia_factor,
-                                                       TFloat cognitive_factor,
-                                                       TFloat social_factor)
+    void pso_solver_cuda<TFloat>::solver_config(uint32_t migration_step,
+                                                uint32_t migration_size,
+                                                uint32_t migration_selection_size,
+                                                TFloat inertia_factor,
+                                                TFloat cognitive_factor,
+                                                TFloat social_factor)
     {
         _migration_step = migration_step;
         _migration_size = migration_size;

@@ -39,20 +39,13 @@ namespace locusta {
   template<typename TFloat>
   void prngenerator_cpu<TFloat>::_generate(const uint32_t n, TFloat * output)
   {
-    const uint32_t chunk_size = n/_NUM_ENGINES;
-
-#pragma omp parallel num_threads(_NUM_ENGINES) default(shared)
-    {
       const int nthread = omp_get_thread_num();
       uni_real_dist real_dist;
       mersenne_twister &local_real_prng = this->_prng_engines[nthread];
-
-#pragma omp for schedule(static, chunk_size)
       for(uint32_t i = 0; i < n; ++i)
-        {
+      {
           output[i] = real_dist(local_real_prng);
-        }
-    }
+      }
   }
 
   template<typename TFloat>

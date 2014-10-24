@@ -47,8 +47,8 @@ namespace locusta {
         /// Updates best genomes records
         virtual void update_records();
 
-        /// Regenerates the bulk_prnumbers array.
-        virtual void regenerate_prnumbers();
+        /// Regenerates the bulk_prns array.
+        virtual void regenerate_prns();
 
         // Crop vector values, to fit within bounds.
         virtual void crop_vector(TFloat * vec);
@@ -102,22 +102,25 @@ namespace locusta {
         uint32_t _migration_selection_size;
 
         /// Describes the migration selection indexes.
-        uint32_t * _migrating_idxs;
+        uint32_t * _migration_idxs;
 
         /// Stores the temporal migration genomes to be migrated.
         TFloat * _migration_buffer;
 
         /// Bulk Pseudo Random Number array
-        TFloat * _bulk_prnumbers;
+        TFloat * _bulk_prns;
 
         /// Describes the size of the _bulk_prnumbers array.
-        std::size_t _bulk_size;
+        uint32_t _bulk_size;
+
+        /// Describes the locations of each pseudo random number set.
+        TFloat ** _prn_sets;
 
         /// Counter describing the solver's current generation.
-        std::size_t _generation_count;
+        uint32_t _generation_count;
 
         /// Defines the solver's target generation.
-        std::size_t _generation_target;
+        uint32_t _generation_target;
 
         uint8_t _f_initialized;
 

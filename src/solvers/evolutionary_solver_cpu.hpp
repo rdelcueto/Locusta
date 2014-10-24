@@ -27,51 +27,36 @@ namespace locusta {
         /// Default destructor
         virtual ~evolutionary_solver_cpu();
 
-        /// Evaluator
-        using evolutionary_solver<TFloat>::_evaluator;
-        /// Population Set
-        using evolutionary_solver<TFloat>::_population;
-        /// Bulk Pseudo Random Number Generator
-        using evolutionary_solver<TFloat>::_bulk_prn_generator;
+        virtual void teardown_solver() = 0;
 
-        /// Populations Configuration
         using evolutionary_solver<TFloat>::_ISLES;
         using evolutionary_solver<TFloat>::_AGENTS;
         using evolutionary_solver<TFloat>::_DIMENSIONS;
 
-        /// Genes Variable Bounds (HOST COPY)
-        using evolutionary_solver<TFloat> ::_UPPER_BOUNDS;
-        using evolutionary_solver<TFloat> ::_LOWER_BOUNDS;
+        using evolutionary_solver<TFloat>::_UPPER_BOUNDS;
+        using evolutionary_solver<TFloat>::_LOWER_BOUNDS;
+        using evolutionary_solver<TFloat>::_VAR_RANGES;
 
-        /// Variable Ranges (HOST COPY)
-        using evolutionary_solver<TFloat> ::_VAR_RANGES;
-        /// Stores best genome found, per isle. (HOST COPY)
-        using evolutionary_solver<TFloat> ::_best_genome;
-        /// Stores best genome found fitness, per isle. (HOST COPY)
-        using evolutionary_solver<TFloat> ::_best_genome_fitness;
+        using evolutionary_solver<TFloat>::_population;
+        using evolutionary_solver<TFloat>::_evaluator;
 
-        /// Defines the migration size.
-        using evolutionary_solver<TFloat> ::_migration_step;
+        using evolutionary_solver<TFloat>::_best_genome;
+        using evolutionary_solver<TFloat>::_best_genome_fitness;
 
-        /// Defines the migration size.
-        using evolutionary_solver<TFloat> ::_migration_size;
+        using evolutionary_solver<TFloat>::_migration_step;
+        using evolutionary_solver<TFloat>::_migration_size;
+        using evolutionary_solver<TFloat>::_migration_selection_size;
+        using evolutionary_solver<TFloat>::_migration_idxs;
+        using evolutionary_solver<TFloat>::_migration_buffer;
 
-        /// Defines the migration selection window size.
-        using evolutionary_solver<TFloat> ::_migration_selection_size;
+        using evolutionary_solver<TFloat>::_bulk_prn_generator;
+        using evolutionary_solver<TFloat>::_bulk_prns;
+        using evolutionary_solver<TFloat>::_bulk_size;
+        using evolutionary_solver<TFloat>::_prn_sets;
 
-        /// Describes the migration selection indexes. (HOST COPY)
-        using evolutionary_solver<TFloat> ::_migrating_idxs;
-
-        /// Describes the size of the _bulk_prnumbers array.
-        using evolutionary_solver<TFloat> ::_bulk_size;
-
-        /// Counter describing the solver_cuda's current generation.
-        using evolutionary_solver<TFloat> ::_generation_count;
-
-        /// Defines the solver_cuda's target generation.
-        using evolutionary_solver<TFloat> ::_generation_target;
-
-        using evolutionary_solver<TFloat> ::_f_initialized;
+        using evolutionary_solver<TFloat>::_generation_count;
+        using evolutionary_solver<TFloat>::_generation_target;
+        using evolutionary_solver<TFloat>::_f_initialized;
 
     };
 

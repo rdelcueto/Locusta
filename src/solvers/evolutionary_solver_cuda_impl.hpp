@@ -79,10 +79,6 @@ namespace locusta {
             _population->_f_initialized = true;
         }
 
-        if( _f_initialized ) {
-            teardown_solver();
-        }
-
         // Initialize solver records
         const TFloat * data_array = const_cast<TFloat *>(_population->_data_array);
         for(uint32_t i = 0; i < _ISLES; ++i) {
@@ -105,33 +101,7 @@ namespace locusta {
         // Update solver records.
         update_records();
         // Initialize random numbers.
-        regenerate_prnumbers();
-    }
-
-    template<typename TFloat>
-    void evolutionary_solver_cuda<TFloat>::advance()
-    {
-        transform();
-        crop_vector(_dev_population->_dev_transformed_data_array);
-
-        _population->swap_data_sets();
-
-        evaluate_genomes();
-        update_records();
-        regenerate_prnumbers();
-
-        _generation_count++;
-    }
-
-    template<typename TFloat>
-    void evolutionary_solver_cuda<TFloat>::run()
-    {
-        do {
-            print_solutions();
-            //print_population();
-            //print_transformation_diff();
-            advance();
-        } while(_generation_count % _generation_target != 0);
+        regenerate_prns();
     }
 
     template<typename TFloat>
@@ -156,9 +126,9 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver_cuda<TFloat>::regenerate_prnumbers()
+    void evolutionary_solver_cuda<TFloat>::regenerate_prns()
     {
-        _bulk_prn_generator->_generate(_bulk_size, _dev_bulk_prnumbers);
+        _bulk_prn_generator->_generate(_bulk_size, _dev_bulk_prns);
     }
 
     template<typename TFloat>

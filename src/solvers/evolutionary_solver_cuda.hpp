@@ -38,12 +38,6 @@ namespace locusta {
         /// Applies solver_cuda's population transformation.
         virtual void transform() = 0;
 
-        /// Evolves the population through one generation step.
-        virtual void advance();
-
-        /// Runs solver_cuda until it reaches the target number of generations.
-        virtual void run();
-
         /// Calls evaluator and assigns a fitness value to every genome.
         virtual void evaluate_genomes();
 
@@ -51,7 +45,7 @@ namespace locusta {
         virtual void update_records();
 
         /// Regenerates the bulk_prnumbers array.
-        virtual void regenerate_prnumbers();
+        virtual void regenerate_prns();
 
         // Crop vector values, to fit within bounds.
         virtual void crop_vector(TFloat * vec);
@@ -93,7 +87,7 @@ namespace locusta {
         TFloat * _dev_migration_buffer;
 
         /// Bulk Pseudo Random Number array
-        TFloat * _dev_bulk_prnumbers;
+        TFloat * _dev_bulk_prns;
 
         /// Evaluator
         using evolutionary_solver<TFloat>::_evaluator;
@@ -128,7 +122,10 @@ namespace locusta {
         using evolutionary_solver<TFloat> ::_migration_selection_size;
 
         /// Describes the migration selection indexes. (HOST COPY)
-        using evolutionary_solver<TFloat> ::_migrating_idxs;
+        using evolutionary_solver<TFloat> ::_migration_idxs;
+
+        /// Stores the temporal migration genomes to be migrated. (HOST COPY)
+        using evolutionary_solver<TFloat> ::_migration_buffer;
 
         /// Describes the size of the _bulk_prnumbers array.
         using evolutionary_solver<TFloat> ::_bulk_size;

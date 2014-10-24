@@ -2,11 +2,17 @@
 #define LOCUSTA_PSO_STD_OPERATORS_H
 
 #include "pso_operators.hpp"
+#include "prngenerator/prngenerator_cpu.hpp"
 
 namespace locusta {
 
     template<typename TFloat>
     struct CanonicalParticleRecordUpdate : UpdateParticleRecordFunctor<TFloat> {
+
+        uint32_t required_prns(pso_solver_cpu<TFloat> * solver) {
+            return 0;
+        }
+
         void operator()(pso_solver_cpu<TFloat> * solver)
             {
                 const uint32_t ISLES = solver->_ISLES;
@@ -42,6 +48,15 @@ namespace locusta {
 
     template<typename TFloat>
     struct CanonicalSpeedUpdate : UpdateSpeedFunctor<TFloat> {
+
+        uint32_t required_prns(pso_solver_cpu<TFloat> * solver) {
+            const uint32_t ISLES = solver->_ISLES;
+            const uint32_t AGENTS = solver->_AGENTS;
+            const uint32_t DIMENSIONS = solver->_DIMENSIONS;
+
+            return ISLES * AGENTS * DIMENSIONS * 2;
+        }
+
         void operator()(pso_solver_cpu<TFloat> * solver)
             {
                 const uint32_t ISLES = solver->_ISLES;
@@ -64,16 +79,17 @@ namespace locusta {
                                                                      // Isle's
                                                                      // records
 
-                const TFloat * prng_vector = const_cast<TFloat *>(solver->_bulk_prnumbers); // PRNGs vector
+                const uint32_t RND_OFFSET = DIMENSIONS * 2;
+                const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[pso_solver_cpu<TFloat>::SPEED_UPDATE_SET]);
 
                 for(uint32_t i = 0; i < ISLES; i++) {
                     const uint32_t isle_position_record_offset = i * DIMENSIONS;
                     for(uint32_t j = 0; j < AGENTS; j++) {
+                        const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
                         const uint32_t particle_offset = i * AGENTS * DIMENSIONS + j * DIMENSIONS;
                         for(uint32_t k = 0; k < DIMENSIONS; k++) {
-                            const uint32_t prng_offset = i * AGENTS * DIMENSIONS * 2 + j * DIMENSIONS * 2;
-                            const TFloat c_rnd = prng_vector[prng_offset];
-                            const TFloat s_rnd = prng_vector[prng_offset + 1];
+                            const TFloat c_rnd = (*agents_prns++);
+                            const TFloat s_rnd = (*agents_prns++);
 
                             const TFloat p_g = isle_position_record[isle_position_record_offset + k];
                             const TFloat p_i = position_record[particle_offset + k];
@@ -93,6 +109,11 @@ namespace locusta {
 
     template<typename TFloat>
     struct CanonicalPositionUpdate : UpdatePositionFunctor<TFloat> {
+
+        uint32_t required_prns(pso_solver_cpu<TFloat> * solver) {
+            return 0;
+        }
+
         void operator()(pso_solver_cpu<TFloat> * solver)
             {
                 const uint32_t ISLES = solver->_ISLES;
