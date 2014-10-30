@@ -106,7 +106,8 @@ namespace locusta {
                                  TFloat * max_agent_fitness,
                                  TFloat * min_agent_fitness) {
         update_records_kernel
-            <<<ISLES, AGENTS, AGENTS * (sizeof(uint32_t) + sizeof(TFloat))>>>
+            <<<ISLES, AGENTS,
+            2 * AGENTS * (sizeof(uint32_t) + sizeof(TFloat))>>>
             (DIMENSIONS,
              data_array,
              fitness_array,
