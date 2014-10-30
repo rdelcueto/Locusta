@@ -10,14 +10,12 @@ namespace locusta {
                                              uint32_t generation_target,
                                              TFloat * upper_bounds,
                                              TFloat * lower_bounds)
-
         : evolutionary_solver_cuda<TFloat>(population,
                                            evaluator,
                                            prn_generator,
                                            generation_target,
                                            upper_bounds,
-                                           lower_bounds)
-    {
+                                           lower_bounds) {
         // Defaults
         _migration_step = 0;
         _migration_size = 1;
@@ -36,16 +34,14 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    pso_solver_cuda<TFloat>::~pso_solver_cuda()
-    {
+    pso_solver_cuda<TFloat>::~pso_solver_cuda() {
         CudaSafeCall(cudaFree(_dev_cognitive_position_vector));
         CudaSafeCall(cudaFree(_dev_cognitive_fitness_vector));
         CudaSafeCall(cudaFree(_dev_velocity_vector));
     }
 
     template<typename TFloat>
-    void pso_solver_cuda<TFloat>::setup_solver()
-    {
+    void pso_solver_cuda<TFloat>::setup_solver() {
          // Pseudo random number allocation.
         const uint32_t RECORD_UPDATE_OFFSET = _particle_record_updater_ptr->required_prns(this);
         const uint32_t SPEED_UPDATE_OFFSET = _speed_updater_ptr->required_prns(this);
@@ -93,8 +89,7 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void pso_solver_cuda<TFloat>::teardown_solver()
-    {
+    void pso_solver_cuda<TFloat>::teardown_solver() {
         delete [] _prn_sets;
         CudaSafeCall(cudaFree(_dev_bulk_prns));
     }
@@ -102,8 +97,7 @@ namespace locusta {
     template<typename TFloat>
     void pso_solver_cuda<TFloat>::setup_operators(UpdateParticleRecordCudaFunctor<TFloat> * update_particle_record_functor_ptr,
                                                   UpdateSpeedCudaFunctor<TFloat> * update_speed_functor_ptr,
-                                                  UpdatePositionCudaFunctor<TFloat> * update_position_functor_ptr)
-    {
+                                                  UpdatePositionCudaFunctor<TFloat> * update_position_functor_ptr) {
         _particle_record_updater_ptr = update_particle_record_functor_ptr;
         _speed_updater_ptr = update_speed_functor_ptr;
         _position_updater_ptr = update_position_functor_ptr;
@@ -115,8 +109,7 @@ namespace locusta {
                                                 uint32_t migration_selection_size,
                                                 TFloat inertia_factor,
                                                 TFloat cognitive_factor,
-                                                TFloat social_factor)
-    {
+                                                TFloat social_factor) {
         _migration_step = migration_step;
         _migration_size = migration_size;
         _migration_selection_size = migration_selection_size;
@@ -126,11 +119,13 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void pso_solver_cuda<TFloat>::transform()
-    {
+    void pso_solver_cuda<TFloat>::transform() {
         (*_particle_record_updater_ptr)(this);
         (*_speed_updater_ptr)(this);
         (*_position_updater_ptr)(this);
+
+        // Crop transformation vector
+        evolutionary_solver_cuda<TFloat>::crop_vector(_dev_population->_dev_transformed_data_array);
     }
 
 } // namespace locusta

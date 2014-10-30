@@ -16,8 +16,7 @@ namespace locusta {
                                           prn_generator,
                                           generation_target,
                                           upper_bounds,
-                                          lower_bounds)
-    {
+                                          lower_bounds) {
         // Defaults
         _migration_step = 0;
         _migration_size = 1;
@@ -36,14 +35,12 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    ga_solver_cpu<TFloat>::~ga_solver_cpu()
-    {
+    ga_solver_cpu<TFloat>::~ga_solver_cpu() {
         delete [] _couples_idx_array;
     }
 
     template<typename TFloat>
-    void ga_solver_cpu<TFloat>::setup_solver()
-    {
+    void ga_solver_cpu<TFloat>::setup_solver() {
         // Pseudo random number allocation.
         const uint32_t SELECTION_OFFSET = _selection_functor_ptr->required_prns(this);
         const uint32_t BREEDING_OFFSET = _breed_functor_ptr->required_prns(this);
@@ -59,16 +56,14 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void ga_solver_cpu<TFloat>::teardown_solver()
-    {
+    void ga_solver_cpu<TFloat>::teardown_solver() {
         delete [] _prn_sets;
         delete [] _bulk_prns;
     }
 
     template<typename TFloat>
     void ga_solver_cpu<TFloat>::setup_operators(BreedFunctor<TFloat> * breed_functor_ptr,
-                                                SelectionFunctor<TFloat> * selection_functor_ptr)
-    {
+                                                SelectionFunctor<TFloat> * selection_functor_ptr) {
         _breed_functor_ptr = breed_functor_ptr;
         _selection_functor_ptr = selection_functor_ptr;
     }
@@ -81,8 +76,7 @@ namespace locusta {
                                               TFloat selection_stochastic_factor,
                                               TFloat crossover_rate,
                                               TFloat mutation_rate,
-                                              uint32_t mut_dist_iterations)
-    {
+                                              uint32_t mut_dist_iterations) {
         _migration_step = migration_step;
         _migration_size = migration_size;
         _migration_selection_size = migration_selection_size;
@@ -94,10 +88,34 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void ga_solver_cpu<TFloat>::transform()
-    {
+    void ga_solver_cpu<TFloat>::transform() {
+        //elite_population_replace();
+
         (*_selection_functor_ptr)(this);
         (*_breed_functor_ptr)(this);
+
+        // Crop transformation vector
+        evolutionary_solver_cpu<TFloat>::crop_vector(_population->_transformed_data_array);
+    }
+
+    template<typename TFloat>
+    void ga_solver_cpu<TFloat>::elite_population_replace() {
+        TFloat * genomes = _population->_data_array;
+        TFloat * fitness = _population->_fitness_array;
+
+        // Scan population
+        for(uint32_t i = 0; i < _ISLES; i++) {
+            const uint32_t min_idx = _min_agent_idx[i];
+
+            fitness[i * _AGENTS + min_idx] = _max_agent_fitness[i];
+
+            const TFloat * max_genome = _max_agent_genome + i * _DIMENSIONS;
+            TFloat * min_genome = genomes + i * _AGENTS * _DIMENSIONS + min_idx * _DIMENSIONS;
+
+            for(uint32_t k = 0; k < _DIMENSIONS; k++) {
+                min_genome[k] = max_genome[k];
+            }
+        }
     }
 
 } // namespace locusta

@@ -69,8 +69,8 @@ protected:
             lower_bounds_ptr = new float[DIMENSIONS];
 
             // Bounds definition
-            std::fill(upper_bounds_ptr, upper_bounds_ptr + DIMENSIONS, 2.0f);
-            std::fill(lower_bounds_ptr, lower_bounds_ptr + DIMENSIONS, 0.0f);
+            std::fill(upper_bounds_ptr, upper_bounds_ptr + DIMENSIONS, 1.0f);
+            std::fill(lower_bounds_ptr, lower_bounds_ptr + DIMENSIONS, -1.0f);
         }
 
     virtual void TearDown()
@@ -107,8 +107,8 @@ protected:
     evaluator_cuda<float> * evaluator_cuda_ptr;
 
     // Population
-    const uint64_t SEED = 1;
-    const uint32_t GENERATIONS = 3;
+    const uint64_t SEED = 2;
+    const uint32_t GENERATIONS = 20;
     const uint32_t ISLES = 1;
     const uint32_t AGENTS = 8;
     const uint32_t DIMENSIONS = 4;
@@ -187,25 +187,25 @@ public:
 
 };
 
-// TEST_F(ParticleSwarmTest, BasicCpuTest)
-// {
-//     pso_solver_cpu_ptr->setup_operators(new CanonicalParticleRecordUpdate<float>(),
-//                                         new CanonicalSpeedUpdate<float>(),
-//                                         new CanonicalPositionUpdate<float>());
-//     pso_solver_cpu_ptr->setup_solver();
-//     pso_solver_cpu_ptr->run();
-//     //pso_solver_cpu_ptr->print_solutions();
-// }
+TEST_F(ParticleSwarmTest, BasicCpuTest)
+{
+    pso_solver_cpu_ptr->setup_operators(new CanonicalParticleRecordUpdate<float>(),
+                                        new CanonicalSpeedUpdate<float>(),
+                                        new CanonicalPositionUpdate<float>());
+    pso_solver_cpu_ptr->setup_solver();
+    pso_solver_cpu_ptr->run();
+    //pso_solver_cpu_ptr->print_solutions();
+}
 
-// TEST_F(ParticleSwarmTest, BasicCudaTest)
-// {
-//     pso_solver_cuda_ptr->setup_operators(new CanonicalParticleRecordUpdateCuda<float>(),
-//                                          new CanonicalSpeedUpdateCuda<float>(),
-//                                          new CanonicalPositionUpdateCuda<float>());
-//     pso_solver_cuda_ptr->setup_solver();
-//     pso_solver_cuda_ptr->run();
-//     // pso_solver_cuda_ptr->print_population();
-// }
+TEST_F(ParticleSwarmTest, BasicCudaTest)
+{
+    pso_solver_cuda_ptr->setup_operators(new CanonicalParticleRecordUpdateCuda<float>(),
+                                         new CanonicalSpeedUpdateCuda<float>(),
+                                         new CanonicalPositionUpdateCuda<float>());
+    pso_solver_cuda_ptr->setup_solver();
+    pso_solver_cuda_ptr->run();
+    // pso_solver_cuda_ptr->print_population();
+}
 
 TEST_F(GeneticAlgorithmTest, BasicCpuTest)
 {

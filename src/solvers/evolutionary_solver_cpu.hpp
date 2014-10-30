@@ -40,8 +40,12 @@ namespace locusta {
         using evolutionary_solver<TFloat>::_population;
         using evolutionary_solver<TFloat>::_evaluator;
 
-        using evolutionary_solver<TFloat>::_best_genome;
-        using evolutionary_solver<TFloat>::_best_genome_fitness;
+        using evolutionary_solver<TFloat>::_max_agent_genome;
+        using evolutionary_solver<TFloat>::_min_agent_genome;
+        using evolutionary_solver<TFloat>::_max_agent_fitness;
+        using evolutionary_solver<TFloat>::_min_agent_fitness;
+        using evolutionary_solver<TFloat>::_max_agent_idx;
+        using evolutionary_solver<TFloat>::_min_agent_idx;
 
         using evolutionary_solver<TFloat>::_migration_step;
         using evolutionary_solver<TFloat>::_migration_size;

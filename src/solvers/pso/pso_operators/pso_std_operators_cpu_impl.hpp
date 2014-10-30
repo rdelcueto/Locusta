@@ -75,7 +75,7 @@ namespace locusta {
                 const TFloat * position_record = const_cast<TFloat *>(solver->_cognitive_position_vector); // (Cognitive)
                                                                                        // Particle's
                                                                                        // records
-                const TFloat * isle_position_record = const_cast<TFloat *>(solver->_best_genome); // (Social)
+                const TFloat * isle_position_record = const_cast<TFloat *>(solver->_max_agent_genome); // (Social)
                                                                      // Isle's
                                                                      // records
 

@@ -11,8 +11,10 @@ namespace locusta {
     void update_records_kernel(const uint32_t DIMENSIONS,
                                const TFloat * __restrict__ data_array,
                                const TFloat * __restrict__ fitness_array,
-                               TFloat * __restrict__ best_genomes,
-                               TFloat * __restrict__ best_genomes_fitness) {
+                               TFloat * __restrict__ max_agent_genome,
+                               TFloat * __restrict__ min_agent_genome,
+                               TFloat * __restrict__ max_agent_fitness,
+                               TFloat * __restrict__ min_agent_fitness) {
         const uint32_t i = blockIdx.x; // ISLE
         const uint32_t j = threadIdx.x; // AGENT
 
@@ -21,12 +23,17 @@ namespace locusta {
 
         // GPU Shared memory
         uint32_t * max_idx_reduction = (uint32_t *) solver_shared_memory;
-        TFloat * max_eval_reduction = (TFloat *) &max_idx_reduction[AGENTS];
+        uint32_t * min_idx_reduction = (uint32_t *) &max_idx_reduction[AGENTS];
+        TFloat * max_eval_reduction = (TFloat *) &min_idx_reduction[AGENTS];
+        TFloat * min_eval_reduction = (TFloat *) &max_eval_reduction[AGENTS];
 
         // Initialize per thread fitness values
         TFloat a, b;
         max_idx_reduction[j] = j;
         max_eval_reduction[j] = fitness_array[j + i * AGENTS];
+
+        min_idx_reduction[j] = j;
+        min_eval_reduction[j] = fitness_array[j + i * AGENTS];
 
         int reduction_idx = 1;
         const int reduction_limit = AGENTS;
@@ -50,6 +57,11 @@ namespace locusta {
                     max_eval_reduction[j] = b;
                     max_idx_reduction[j] = max_idx_reduction[j + reduction_idx];
                 }
+                if(b < a)
+                {
+                    min_eval_reduction[j] = b;
+                    min_idx_reduction[j] = min_idx_reduction[j + reduction_idx];
+                }
             }
             reduction_idx >>= 1;
             __syncthreads();
@@ -57,15 +69,27 @@ namespace locusta {
 
         if (j == 0) {
             // Update only if it has better fitness.
-            TFloat curr_best = best_genomes_fitness[i];
-            if (curr_best < max_eval_reduction[0]) {
-                // Update isle's record fitness.
-                const uint32_t best_isle_idx = max_idx_reduction[0];
-                best_genomes_fitness[i] = max_eval_reduction[0];
-                // Copy genome into best_genomes
+            TFloat curr_max = max_agent_fitness[i];
+            TFloat curr_min = min_agent_fitness[i];
+            if (curr_max < max_eval_reduction[0]) {
+                // Update isle's max record fitness.
+                const uint32_t max_isle_idx = max_idx_reduction[0];
+                max_agent_fitness[i] = max_eval_reduction[0];
+                // Copy genome into max_agent_genome
                 for(uint32_t k = 0; k < DIMENSIONS; k++) {
-                    best_genomes[i + ISLES * k] =
-                        data_array[best_isle_idx + i * AGENTS + k * AGENTS * ISLES];
+                    max_agent_genome[i + ISLES * k] =
+                        data_array[max_isle_idx + i * AGENTS + k * AGENTS * ISLES];
+                }
+            }
+
+            if (curr_min > min_eval_reduction[0]) {
+                 // Update isle's min record fitness.
+                const uint32_t min_isle_idx = min_idx_reduction[0];
+                min_agent_fitness[i] = min_eval_reduction[0];
+                // Copy genome into min_agent_genome
+                for(uint32_t k = 0; k < DIMENSIONS; k++) {
+                    min_agent_genome[i + ISLES * k] =
+                        data_array[min_isle_idx + i * AGENTS + k * AGENTS * ISLES];
                 }
             }
        }
@@ -77,15 +101,20 @@ namespace locusta {
                                  const uint32_t DIMENSIONS,
                                  const TFloat * data_array,
                                  const TFloat * fitness_array,
-                                 TFloat * best_genomes,
-                                 TFloat * best_genomes_fitness) {
+                                 TFloat * max_agent_genome,
+                                 TFloat * min_agent_genome,
+                                 TFloat * max_agent_fitness,
+                                 TFloat * min_agent_fitness) {
         update_records_kernel
             <<<ISLES, AGENTS, AGENTS * (sizeof(uint32_t) + sizeof(TFloat))>>>
             (DIMENSIONS,
              data_array,
              fitness_array,
-             best_genomes,
-             best_genomes_fitness);
+             max_agent_genome,
+             min_agent_genome,
+             max_agent_fitness,
+             min_agent_fitness);
+
         CudaCheckError();
     }
 
@@ -95,8 +124,10 @@ namespace locusta {
                                         const uint32_t DIMENSIONS,
                                         const float * data_array,
                                         const float * fitness_array,
-                                        float * best_genomes,
-                                        float * best_genomes_fitness);
+                                        float * max_agent_genome,
+                                        float * min_agent_genome,
+                                        float * max_agent_fitness,
+                                        float * min_agent_fitness);
 
     template
     void update_records_dispatch<double>(const uint32_t ISLES,
@@ -104,10 +135,10 @@ namespace locusta {
                                          const uint32_t DIMENSIONS,
                                          const double * data_array,
                                          const double * fitness_array,
-                                         double * best_genomes,
-                                         double * best_genomes_fitness);
-
-
+                                         double * max_agent_genome,
+                                         double * min_agent_genome,
+                                         double * max_agent_fitness,
+                                         double * min_agent_fitness);
 
     template<typename TFloat>
     __global__

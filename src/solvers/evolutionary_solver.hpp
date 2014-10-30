@@ -86,11 +86,23 @@ namespace locusta {
         /// Variable Ranges
         TFloat * _VAR_RANGES;
 
-        /// Stores best genome found, per isle.
-        TFloat * _best_genome;
+        /// Stores the agent's genome, which has max fitness, per isle.
+        TFloat * _max_agent_genome;
 
-        /// Stores best genome found, per isle.
-        TFloat * _best_genome_fitness;
+        /// Stores the agent's genome, which has min fitness, per isle.
+        TFloat * _min_agent_genome;
+
+        /// Stores the agent's fitness, which has max fitness, per isle.
+        TFloat * _max_agent_fitness;
+
+        /// Stores the agent's fitness, which has min fitness, per isle.
+        TFloat * _min_agent_fitness;
+
+        /// Stores the agent's index, which has max fitness, per isle.
+        uint32_t * _max_agent_idx;
+
+        /// Stores the agent's index, which has min fitness, per isle.
+        uint32_t * _min_agent_idx;
 
         /// Defines the migration size.
         uint32_t _migration_step;

@@ -11,17 +11,22 @@ namespace locusta {
                                                      TFloat * lower_bounds)
         : _population(population),
           _evaluator(evaluator),
-        _bulk_prn_generator(prn_generator),
-        _generation_target(generation_target),
-        _generation_count(0),
-        _ISLES(population->_ISLES),
-        _AGENTS(population->_AGENTS),
-        _DIMENSIONS(population->_DIMENSIONS),
-        _UPPER_BOUNDS(new TFloat[_DIMENSIONS]),
-        _LOWER_BOUNDS(new TFloat[_DIMENSIONS]),
-        _VAR_RANGES(new TFloat[_DIMENSIONS]),
-        _best_genome(new TFloat[_ISLES * _DIMENSIONS]),
-        _best_genome_fitness(new TFloat[_ISLES]) {
+          _bulk_prn_generator(prn_generator),
+          _generation_target(generation_target),
+          _generation_count(0),
+          _ISLES(population->_ISLES),
+          _AGENTS(population->_AGENTS),
+          _DIMENSIONS(population->_DIMENSIONS),
+          _UPPER_BOUNDS(new TFloat[_DIMENSIONS]),
+          _LOWER_BOUNDS(new TFloat[_DIMENSIONS]),
+          _VAR_RANGES(new TFloat[_DIMENSIONS]),
+          _max_agent_genome(new TFloat[_ISLES * _DIMENSIONS]),
+          _min_agent_genome(new TFloat[_ISLES * _DIMENSIONS]),
+          _max_agent_fitness(new TFloat[_ISLES]),
+          _min_agent_fitness(new TFloat[_ISLES]),
+          _max_agent_idx(new uint32_t[_ISLES]),
+          _min_agent_idx(new uint32_t[_ISLES]) {
+
         for (uint32_t i = 0; i < _DIMENSIONS; i++) {
             _UPPER_BOUNDS[i] = upper_bounds[i];
             _LOWER_BOUNDS[i] = lower_bounds[i];
@@ -35,8 +40,12 @@ namespace locusta {
         delete [] _LOWER_BOUNDS;
         delete [] _VAR_RANGES;
 
-        delete [] _best_genome;
-        delete [] _best_genome_fitness;
+        delete [] _max_agent_genome;
+        delete [] _min_agent_genome;
+        delete [] _max_agent_fitness;
+        delete [] _min_agent_fitness;
+        delete [] _max_agent_idx;
+        delete [] _min_agent_idx;
     }
 
     template<typename TFloat>
@@ -52,16 +61,22 @@ namespace locusta {
         for(uint32_t i = 0; i < _ISLES; ++i) {
             for(uint32_t j = 0; j < _AGENTS; ++j) {
                 // Initialize best genomes
+                _max_agent_idx[i] = 0;
+                _min_agent_idx[i] = 0;
+
+                _max_agent_fitness[i] = -std::numeric_limits<TFloat>::infinity();
+                _min_agent_fitness[i] = std::numeric_limits<TFloat>::infinity();
+
                 for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
                     const uint32_t data_idx =
                         i * _AGENTS * _DIMENSIONS +
                         0 * _DIMENSIONS +
                         k;
 
-                    _best_genome[i * _DIMENSIONS + k] = data_array[data_idx];
+                    _max_agent_genome[i * _DIMENSIONS + k] = data_array[data_idx];
+                    _min_agent_genome[i * _DIMENSIONS + k] = data_array[data_idx];
                 }
-                _best_genome_fitness[i] = -std::numeric_limits<TFloat>::infinity();
-            }
+           }
         }
 
         // Initialize fitness, evaluating initialization data.
@@ -75,7 +90,6 @@ namespace locusta {
     template<typename TFloat>
     void evolutionary_solver<TFloat>::advance() {
         transform();
-        crop_vector(_population->_transformed_data_array);
 
         _population->swap_data_sets();
 
@@ -90,7 +104,7 @@ namespace locusta {
     void evolutionary_solver<TFloat>::run() {
         do {
             print_solutions();
-            print_population();
+            //print_population();
             //print_transformation_diff();
             advance();
         } while(_generation_count % _generation_target != 0);
@@ -103,37 +117,61 @@ namespace locusta {
 
     template<typename TFloat>
     void evolutionary_solver<TFloat>::update_records() {
-
         TFloat * genomes = _population->_data_array;
         TFloat * fitness = _population->_fitness_array;
 
+        // Scan population
         for(uint32_t i = 0; i < _ISLES; i++) {
 
             uint32_t isle_max_idx = 0;
             TFloat isle_max_fitness = fitness[i * _AGENTS];
+            uint32_t isle_min_idx = 0;
+            TFloat isle_min_fitness = fitness[i * _AGENTS];
 
             for(uint32_t j = 1; j < _AGENTS; j++) {
 
                 const TFloat candidate_fitness = fitness[i * _AGENTS + j];
+
                 if (candidate_fitness > isle_max_fitness) {
                     isle_max_fitness = candidate_fitness;
                     isle_max_idx = j;
                 }
-            }
 
-            // Update isle record
-            const TFloat current_isle_best = _best_genome_fitness[i];
-
-            if(isle_max_fitness > current_isle_best) {
-                _best_genome_fitness[i] = isle_max_fitness;
-                TFloat * candidate_genome = _best_genome + i * _DIMENSIONS;
-                const uint32_t genomes_offset = i * _AGENTS * _DIMENSIONS + isle_max_idx * _DIMENSIONS;
-
-                for(uint32_t k = 0; k < _DIMENSIONS; k++) {
-                    candidate_genome[k] = genomes[genomes_offset + k];
+                if (candidate_fitness < isle_min_fitness) {
+                    isle_min_fitness = candidate_fitness;
+                    isle_min_idx = j;
                 }
             }
-        }
+
+            // Update current isle records
+            const TFloat curr_max = _max_agent_fitness[i];
+
+            if (isle_max_fitness > curr_max) {
+                _max_agent_idx[i] = isle_max_idx;
+                _max_agent_fitness[i] = isle_max_fitness;
+
+                TFloat * max_genome = _max_agent_genome + i * _DIMENSIONS;
+                const uint32_t max_genomes_offset = i * _AGENTS * _DIMENSIONS + isle_max_idx * _DIMENSIONS;
+
+                for(uint32_t k = 0; k < _DIMENSIONS; k++) {
+                    max_genome[k] = genomes[max_genomes_offset + k];
+                }
+            }
+
+            const TFloat curr_min = _min_agent_fitness[i];
+
+            if (isle_min_fitness < curr_min) {
+                _min_agent_idx[i] = isle_min_idx;
+                _min_agent_fitness[i] = isle_min_fitness;
+
+                TFloat * min_genome = _min_agent_genome + i * _DIMENSIONS;
+                const uint32_t min_genomes_offset = i * _AGENTS * _DIMENSIONS + isle_min_idx * _DIMENSIONS;
+
+                for(uint32_t k = 0; k < _DIMENSIONS; k++) {
+                    min_genome[k] = genomes[min_genomes_offset + k];
+                }
+            }
+       }
     }
 
     template<typename TFloat>
@@ -244,9 +282,9 @@ namespace locusta {
     void evolutionary_solver<TFloat>::print_solutions() {
         std::cout << "Solutions @ " << (_generation_count)+1 << " / " << _generation_target << std::endl;
         for(uint32_t i = 0; i < _ISLES; i++) {
-            std::cout << _best_genome_fitness[i] << " : [";
+            std::cout << _max_agent_fitness[i] << " : [";
             for(uint32_t k = 0; k < _DIMENSIONS; k++) {
-                std::cout << _best_genome[i*_DIMENSIONS + k];
+                std::cout << _max_agent_genome[i*_DIMENSIONS + k];
                 if (k == _DIMENSIONS - 1) {
                     std::cout << "]\n";
                 } else {

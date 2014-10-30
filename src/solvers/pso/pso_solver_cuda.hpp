@@ -77,8 +77,15 @@ namespace locusta {
         using evolutionary_solver_cuda<TFloat>::_DEV_UPPER_BOUNDS;
         using evolutionary_solver_cuda<TFloat>::_DEV_LOWER_BOUNDS;
         using evolutionary_solver_cuda<TFloat>::_DEV_VAR_RANGES;
-        using evolutionary_solver_cuda<TFloat>::_dev_best_genome;
-        using evolutionary_solver_cuda<TFloat>::_dev_best_genome_fitness;
+
+        using evolutionary_solver_cuda<TFloat>::_dev_max_agent_genome;
+        using evolutionary_solver_cuda<TFloat>::_dev_max_agent_fitness;
+        using evolutionary_solver_cuda<TFloat>::_dev_max_agent_idx;
+
+        using evolutionary_solver_cuda<TFloat>::_dev_min_agent_genome;
+        using evolutionary_solver_cuda<TFloat>::_dev_min_agent_fitness;
+        using evolutionary_solver_cuda<TFloat>::_dev_min_agent_idx;
+
         using evolutionary_solver_cuda<TFloat>::_dev_migration_idxs;
         using evolutionary_solver_cuda<TFloat>::_dev_migration_buffer;
         using evolutionary_solver_cuda<TFloat>::_dev_bulk_prns;
@@ -95,8 +102,13 @@ namespace locusta {
         using evolutionary_solver_cuda<TFloat>::_population;
         using evolutionary_solver_cuda<TFloat>::_evaluator;
 
-        using evolutionary_solver_cuda<TFloat>::_best_genome;
-        using evolutionary_solver_cuda<TFloat>::_best_genome_fitness;
+        using evolutionary_solver_cuda<TFloat>::_max_agent_genome;
+        using evolutionary_solver_cuda<TFloat>::_max_agent_fitness;
+        using evolutionary_solver_cuda<TFloat>::_max_agent_idx;
+
+        using evolutionary_solver_cuda<TFloat>::_min_agent_genome;
+        using evolutionary_solver_cuda<TFloat>::_min_agent_fitness;
+        using evolutionary_solver_cuda<TFloat>::_min_agent_idx;
 
         using evolutionary_solver_cuda<TFloat>::_migration_step;
         using evolutionary_solver_cuda<TFloat>::_migration_size;

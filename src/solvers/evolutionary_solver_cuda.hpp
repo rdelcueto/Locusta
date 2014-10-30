@@ -74,11 +74,26 @@ namespace locusta {
         /// Variable Ranges (DEVICE COPY)
         TFloat * _DEV_VAR_RANGES;
 
-        /// Stores best genome found, per isle. (DEVICE COPY)
-        TFloat * _dev_best_genome;
+         /// Stores the agent's genome, which has max fitness, per
+         /// isle. (DEVICE COPY)
+        TFloat * _dev_max_agent_genome;
+         /// Stores the agent's genome, which has min fitness, per
+         /// isle. (DEVICE COPY)
+        TFloat * _dev_min_agent_genome;
 
-        /// Stores best genome found fitness, per isle. (DEVICE COPY)
-        TFloat * _dev_best_genome_fitness;
+        /// Stores the agent's fitness, which has max fitness, per
+        /// isle. (DEVICE COPY)
+        TFloat * _dev_max_agent_fitness;
+        /// Stores the agent's fitness, which has min fitness, per
+        /// isle. (DEVICE COPY)
+        TFloat * _dev_min_agent_fitness;
+
+        /// Stores the agent's index, which has max fitness, per isle. (DEVICE
+        /// COPY)
+        uint32_t * _dev_max_agent_idx;
+        /// Stores the agent's index, which has min fitness, per isle. (DEVICE
+        /// COPY)
+        uint32_t * _dev_min_agent_idx;
 
         /// Describes the migration selection indexes. (DEVICE COPY)
         uint32_t * _dev_migration_idxs;
@@ -107,10 +122,15 @@ namespace locusta {
 
         /// Variable Ranges (HOST COPY)
         using evolutionary_solver<TFloat> ::_VAR_RANGES;
-        /// Stores best genome found, per isle. (HOST COPY)
-        using evolutionary_solver<TFloat> ::_best_genome;
-        /// Stores best genome found fitness, per isle. (HOST COPY)
-        using evolutionary_solver<TFloat> ::_best_genome_fitness;
+
+        using evolutionary_solver<TFloat>::_max_agent_genome;
+        using evolutionary_solver<TFloat>::_min_agent_genome;
+
+        using evolutionary_solver<TFloat>::_max_agent_fitness;
+        using evolutionary_solver<TFloat>::_min_agent_fitness;
+
+        using evolutionary_solver<TFloat>::_max_agent_idx;
+        using evolutionary_solver<TFloat>::_min_agent_idx;
 
         /// Defines the migration size.
         using evolutionary_solver<TFloat> ::_migration_step;

@@ -23,8 +23,10 @@ namespace locusta {
                                  const uint32_t DIMENSIONS,
                                  const TFloat * data_array,
                                  const TFloat * fitness_array,
-                                 TFloat * best_genomes,
-                                 TFloat * best_genomes_fitness);
+                                 TFloat * max_agent_genome,
+                                 TFloat * min_agent_genome,
+                                 TFloat * max_agent_fitness,
+                                 TFloat * min_agent_fitness);
 
     template<typename TFloat>
     evolutionary_solver_cuda<TFloat>::evolutionary_solver_cuda(population_set_cuda<TFloat> * population,
@@ -48,8 +50,14 @@ namespace locusta {
         CudaSafeCall(cudaMalloc((void **) &(_DEV_LOWER_BOUNDS), _DIMENSIONS * sizeof(TFloat)));
         CudaSafeCall(cudaMalloc((void **) &(_DEV_VAR_RANGES), _DIMENSIONS * sizeof(TFloat)));
 
-        CudaSafeCall(cudaMalloc((void **) &(_dev_best_genome), _ISLES * _DIMENSIONS * sizeof(TFloat)));
-        CudaSafeCall(cudaMalloc((void **) &(_dev_best_genome_fitness), _ISLES * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_dev_max_agent_genome), _ISLES * _DIMENSIONS * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_dev_max_agent_fitness), _ISLES * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_dev_max_agent_idx), _ISLES * sizeof(uint32_t)));
+
+        CudaSafeCall(cudaMalloc((void **) &(_dev_min_agent_genome), _ISLES * _DIMENSIONS * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_dev_min_agent_fitness), _ISLES * sizeof(TFloat)));
+        CudaSafeCall(cudaMalloc((void **) &(_dev_min_agent_idx), _ISLES * sizeof(uint32_t)));
+
 
         // Copy values into device
         CudaSafeCall(cudaMemcpy(_DEV_UPPER_BOUNDS, _UPPER_BOUNDS, _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
@@ -65,8 +73,13 @@ namespace locusta {
         CudaSafeCall(cudaFree(_DEV_LOWER_BOUNDS));
         CudaSafeCall(cudaFree(_DEV_VAR_RANGES));
 
-        CudaSafeCall(cudaFree(_dev_best_genome));
-        CudaSafeCall(cudaFree(_dev_best_genome_fitness));
+        CudaSafeCall(cudaFree(_dev_max_agent_genome));
+        CudaSafeCall(cudaFree(_dev_max_agent_fitness));
+        CudaSafeCall(cudaFree(_dev_max_agent_idx));
+
+        CudaSafeCall(cudaFree(_dev_min_agent_genome));
+        CudaSafeCall(cudaFree(_dev_min_agent_fitness));
+        CudaSafeCall(cudaFree(_dev_min_agent_idx));
     }
 
     template<typename TFloat>
@@ -83,18 +96,32 @@ namespace locusta {
         const TFloat * data_array = const_cast<TFloat *>(_population->_data_array);
         for(uint32_t i = 0; i < _ISLES; ++i) {
             // Initialize best genomes
+            _max_agent_idx[i] = 0;
+            _min_agent_idx[i] = 0;
+
+            _max_agent_fitness[i] = -std::numeric_limits<TFloat>::infinity();
+            _min_agent_fitness[i] = std::numeric_limits<TFloat>::infinity();
+
             for(uint32_t k = 0; k < _DIMENSIONS; ++k) {
                 const uint32_t data_idx =
                     i * _AGENTS * _DIMENSIONS +
                     0 * _DIMENSIONS +
                     k;
-                _best_genome[i + k * _ISLES] = -std::numeric_limits<TFloat>::infinity();
+                _max_agent_genome[i + k * _ISLES] =
+                _min_agent_genome[i + k * _ISLES] =
+                    0;
+                // TODO: Define correct initialize value.
+                    //std::numeric_limits<TFloat>::quiet_NaN();
             }
-            _best_genome_fitness[i] = -std::numeric_limits<TFloat>::infinity();
-        }
+       }
 
-        CudaSafeCall(cudaMemcpy(_dev_best_genome, _best_genome, _ISLES * _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
-        CudaSafeCall(cudaMemcpy(_dev_best_genome_fitness, _best_genome_fitness, _ISLES * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_dev_max_agent_genome, _max_agent_genome, _ISLES * _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_dev_max_agent_fitness, _max_agent_fitness, _ISLES * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_dev_max_agent_idx, _max_agent_idx, _ISLES * sizeof(uint32_t), cudaMemcpyHostToDevice));
+
+        CudaSafeCall(cudaMemcpy(_dev_min_agent_genome, _min_agent_genome, _ISLES * _DIMENSIONS * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_dev_min_agent_fitness, _min_agent_fitness, _ISLES * sizeof(TFloat), cudaMemcpyHostToDevice));
+        CudaSafeCall(cudaMemcpy(_dev_min_agent_idx, _min_agent_idx, _ISLES * sizeof(uint32_t), cudaMemcpyHostToDevice));
 
         // Initialize fitness, evaluating initialization data.
         evaluate_genomes();
@@ -121,8 +148,10 @@ namespace locusta {
                                 _DIMENSIONS,
                                 data_array,
                                 fitness_array,
-                                _dev_best_genome,
-                                _dev_best_genome_fitness);
+                                _dev_max_agent_genome,
+                                _dev_min_agent_genome,
+                                _dev_max_agent_fitness,
+                                _dev_min_agent_fitness);
     }
 
     template<typename TFloat>
@@ -244,21 +273,21 @@ namespace locusta {
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::print_solutions()
     {
-        CudaSafeCall(cudaMemcpy(_best_genome_fitness,
-                                _dev_best_genome_fitness,
+        CudaSafeCall(cudaMemcpy(_max_agent_fitness,
+                                _dev_max_agent_fitness,
                                 _ISLES * sizeof(TFloat),
                                 cudaMemcpyDeviceToHost));
 
-        CudaSafeCall(cudaMemcpy(_best_genome,
-                                _dev_best_genome,
+        CudaSafeCall(cudaMemcpy(_max_agent_genome,
+                                _dev_max_agent_genome,
                                 _ISLES * _DIMENSIONS * sizeof(TFloat),
                                 cudaMemcpyDeviceToHost));
 
         std::cout << "Solutions @ " << (_generation_count)+1 << " / " << _generation_target << std::endl;
         for(uint32_t i = 0; i < _ISLES; i++) {
-            std::cout << _best_genome_fitness[i] << " : [";
+            std::cout << _max_agent_fitness[i] << " : [";
             for(uint32_t k = 0; k < _DIMENSIONS; k++) {
-                std::cout << _best_genome[i + _ISLES * k];
+                std::cout << _max_agent_genome[i + _ISLES * k];
                 if (k == _DIMENSIONS - 1) {
                     std::cout << "]\n";
                 } else {
