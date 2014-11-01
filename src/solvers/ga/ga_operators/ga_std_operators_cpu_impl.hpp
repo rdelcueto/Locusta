@@ -7,7 +7,7 @@
 namespace locusta {
 
     template<typename TFloat>
-    struct CanonicalBreed : BreedFunctor<TFloat> {
+    struct WholeCrossover : BreedFunctor<TFloat> {
 
         uint32_t required_prns(ga_solver_cpu<TFloat> * solver) {
             const uint32_t ISLES = solver->_ISLES;
@@ -22,8 +22,6 @@ namespace locusta {
                 const uint32_t ISLES = solver->_ISLES;
                 const uint32_t AGENTS = solver->_AGENTS;
                 const uint32_t DIMENSIONS = solver->_DIMENSIONS;
-                const TFloat * UPPER_BOUNDS = solver->_UPPER_BOUNDS;
-                const TFloat * LOWER_BOUNDS = solver->_LOWER_BOUNDS;
                 const TFloat * VAR_RANGES = solver->_VAR_RANGES;
 
                 const TFloat DEVIATION = 0.2;
@@ -70,9 +68,7 @@ namespace locusta {
                         for(uint32_t k = 0; k < DIMENSIONS; ++k) {
                             const bool GENE_MUTATE_FLAG = (*agents_prns++) < MUTATION_RATE;
                             if(GENE_MUTATE_FLAG) {
-                                const TFloat & u = UPPER_BOUNDS[j];
-                                const TFloat & l = LOWER_BOUNDS[j];
-                                const TFloat & range = VAR_RANGES[j];
+                                const TFloat & range = VAR_RANGES[k];
 
                                 TFloat x = 0.0;
                                 for(uint32_t n = 0; n < DIST_LIMIT; ++n) {
@@ -169,9 +165,11 @@ namespace locusta {
                             switch_flag = (candidate > best_fitness);
 
                             if((SELECTION_P != 0.0f) &&
-                               (SELECTION_P >= (*agents_prns++))) {
+                               (SELECTION_P >= (*agents_prns))) {
                                 switch_flag = !switch_flag;
                             }
+
+                            agents_prns++; // Advance pointer
 
                             if(switch_flag) {
                                 best_fitness = candidate;

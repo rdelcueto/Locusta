@@ -69,12 +69,6 @@ namespace locusta {
         /// Couple selection array.
         uint32_t * _couples_idx_array;
 
-        /// Isle's minimum genome.
-        TFloat * _min_genome;
-
-        /// Isle's minimum genome fitness.
-        TFloat * _min_genome_fitness;
-
         using evolutionary_solver_cpu<TFloat>::_ISLES;
         using evolutionary_solver_cpu<TFloat>::_AGENTS;
         using evolutionary_solver_cpu<TFloat>::_DIMENSIONS;

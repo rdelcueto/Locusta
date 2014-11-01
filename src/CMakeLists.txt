@@ -12,7 +12,13 @@ set(HPPFILES
   solvers/evolutionary_solver_cpu.hpp
   solvers/evolutionary_solver_cuda.hpp
   solvers/pso/pso_solver_cpu.hpp
+  solvers/pso/pso_operators/pso_operators_cpu.hpp
   solvers/pso/pso_solver_cuda.hpp
+  solvers/pso/pso_operators/pso_operators_cuda.hpp
+  solvers/ga/ga_solver_cpu.hpp
+  solvers/pso/pso_operators/ga_operators_cpu.hpp
+  solvers/ga/ga_solver_cuda.hpp
+  solvers/pso/pso_operators/ga_operators_cuda.hpp
   )
 
 set(CUFILES
@@ -20,6 +26,8 @@ set(CUFILES
   population/kernel/population_set_cuda.cu
   solvers/kernel/evolutionary_solver_cuda.cu
   solvers/pso/pso_operators/kernel/pso_std_operators_cuda.cu
+  solvers/ga/kernel/ga_solver_cuda.cu
+  solvers/ga/ga_operators/kernel/ga_std_operators_cuda.cu
   )
 
 source_group("CUDA Source Files" FILES ${CUFILES})
