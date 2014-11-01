@@ -4,69 +4,140 @@
 #include <limits>
 
 #include "../prngenerator/prngenerator.hpp"
+#include "../evaluator/evaluator.hpp"
 #include "../population/population_set.hpp"
+
+#include <iostream>
 
 namespace locusta {
 
-  ///Interface for evolutionary computing metaheuristic solvers
-  template<typename TFloat>
-  class evolutionary_solver {
+    /// Interface for evolutionary computing metaheuristic solvers
+    template<typename TFloat>
+    struct evolutionary_solver {
 
-  public:
+        /// Default constructor
+        evolutionary_solver(population_set<TFloat> * population,
+                            evaluator<TFloat> * evaluator,
+                            prngenerator<TFloat> * prn_generator,
+                            uint32_t generation_target,
+                            TFloat * upper_bounds,
+                            TFloat * lower_bounds);
 
-    evolutionary_solver(population_set<TFloat> * population,
-                        evaluator<TFloat> * evaluator,
-                        prngenerator<TFloat> * prn_generator)
-      : _population(population),
-        _evaluator(evaluator),
-        _bulk_prn_generator(prn_generator),
-        _f_initialized(false)
-    {}
+        /// Default destructor
+        virtual ~evolutionary_solver();
 
-    virtual ~evolutionary_solver() {}
+        /// Initializes and allocates solver's runtime resources.
+        virtual void setup_solver();
 
-    /// Prints the current solver's configuration.
-    virtual void _print_solver_config() = 0;
+        /// Terminates and deallocates solver's runtime resources.
+        virtual void teardown_solver() = 0;
 
-    /// Prints the current elite set
-    virtual void _print_solver_elite() = 0;
+        /// Applies solver's population transformation.
+        virtual void transform() = 0;
 
-    /// Prints the current best solution.
-    virtual void _print_solver_solution() = 0;
+        /// Evolves the population through one generation step.
+        virtual void advance();
 
-    /// Initializes and allocated solver's dynamic resources.
-    virtual void _initialize() = 0;
+        /// Runs solver until it reaches the target number of generations.
+        virtual void run();
 
-    /// Finalizes and frees solver's dynamic resources.
-    virtual void _finalize() = 0;
+        /// Calls evaluator and assigns a fitness value to every genome.
+        virtual void evaluate_genomes();
 
-  protected:
+        /// Updates best genomes records
+        virtual void update_records();
 
-    /// Describes the state of the solver.
-    bool _f_initialized;
+        /// Regenerates the bulk_prns array.
+        virtual void regenerate_prns();
 
-    /// Population Set
-    population_set<TFloat> * const _population;
+        // Crop vector values, to fit within bounds.
+        virtual void crop_vector(TFloat * vec);
 
-    /// Evaluator
-    evaluator<TFloat> * const _evaluator;
+        /// Initializes vector to uniform random values, within the solver's bounds.
+        virtual void initialize_vector(TFloat * dst_vec, TFloat * tmp_vec);
 
-    /// Bulk Pseudo Random Number Generator
-    prngenerator<TFloat> * const _bulk_prn_generator;
+        /// Prints all current genomes and their fitness.
+        virtual void print_population();
 
-    /// Bulk Pseudo Random Number array
-    TFloat * _bulk_prnumbers;
+        /// Prints last transformation diff.
+        virtual void print_transformation_diff();
 
-    /// Describes the size of the _bulk_prnumbers array.
-    size_t _bulk_size;
+        /// Prints solver's current best found solutions and their fitness.
+        virtual void print_solutions();
 
-    ///Counter describing the solver's current generation.
-    size_t _generation_count;
+        /// Evaluator
+        evaluator<TFloat> * const _evaluator;
 
-    ///Counter describint the solver's target generation count.
-    size_t _generation_target;
+        /// Bulk Pseudo Random Number Generator
+        prngenerator<TFloat> * const _bulk_prn_generator;
 
-  };
+        /// Population Set
+        population_set<TFloat> * const _population;
+
+        /// Populations Configuration
+        const uint32_t _ISLES;
+        const uint32_t _AGENTS;
+        const uint32_t _DIMENSIONS;
+
+        /// Genes Variable Bounds
+        TFloat * _UPPER_BOUNDS;
+        TFloat * _LOWER_BOUNDS;
+
+        /// Variable Ranges
+        TFloat * _VAR_RANGES;
+
+        /// Stores the agent's genome, which has max fitness, per isle.
+        TFloat * _max_agent_genome;
+
+        /// Stores the agent's genome, which has min fitness, per isle.
+        TFloat * _min_agent_genome;
+
+        /// Stores the agent's fitness, which has max fitness, per isle.
+        TFloat * _max_agent_fitness;
+
+        /// Stores the agent's fitness, which has min fitness, per isle.
+        TFloat * _min_agent_fitness;
+
+        /// Stores the agent's index, which has max fitness, per isle.
+        uint32_t * _max_agent_idx;
+
+        /// Stores the agent's index, which has min fitness, per isle.
+        uint32_t * _min_agent_idx;
+
+        /// Defines the migration size.
+        uint32_t _migration_step;
+
+        /// Defines the migration size.
+        uint32_t _migration_size;
+
+        /// Defines the migration selection window size.
+        uint32_t _migration_selection_size;
+
+        /// Describes the migration selection indexes.
+        uint32_t * _migration_idxs;
+
+        /// Stores the temporal migration genomes to be migrated.
+        TFloat * _migration_buffer;
+
+        /// Bulk Pseudo Random Number array
+        TFloat * _bulk_prns;
+
+        /// Describes the size of the _bulk_prnumbers array.
+        uint32_t _bulk_size;
+
+        /// Describes the locations of each pseudo random number set.
+        TFloat ** _prn_sets;
+
+        /// Counter describing the solver's current generation.
+        uint32_t _generation_count;
+
+        /// Defines the solver's target generation.
+        uint32_t _generation_target;
+
+        uint8_t _f_initialized;
+
+    };
 
 } // namespace locusta
+#include "evolutionary_solver_impl.hpp"
 #endif

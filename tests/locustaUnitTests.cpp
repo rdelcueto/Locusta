@@ -4,20 +4,26 @@
 #include <algorithm>
 #include <time.h>
 
-#include "benchmarks/benchmarks_cpu.hpp"
-#include "benchmarks/benchmarks_gpu.hpp"
-
-#include "prngenerator/prngenerator_cpu.hpp"
-#include "prngenerator/prngenerator_gpu.hpp"
-
-#include "population/population_set_cpu.hpp"
-#include "population/population_set_gpu.hpp"
+#include "./benchmarks/benchmarks_cpu.hpp"
+#include "./benchmarks/benchmarks_cuda.hpp"
 
 #include "evaluator/evaluator_cpu.hpp"
-#include "evaluator/evaluator_gpu.hpp"
+#include "evaluator/evaluator_cuda.hpp"
+
+#include "prngenerator/prngenerator_cpu.hpp"
+#include "prngenerator/prngenerator_cuda.hpp"
+
+#include "solvers/pso/pso_solver_cpu.hpp"
+#include "solvers/pso/pso_solver_cuda.hpp"
+
+#include "solvers/pso/pso_operators/pso_std_operators_cpu_impl.hpp"
+#include "solvers/pso/pso_operators/pso_std_operators_cuda_impl.hpp"
 
 #include "solvers/ga/ga_solver_cpu.hpp"
-#include "solvers/ga/ga_solver_gpu.hpp"
+// #include "solvers/ga/ga_solver_cuda.hpp"
+
+#include "solvers/ga/ga_operators/ga_std_operators_cpu_impl.hpp"
+// #include "solvers/ga/ga_operators/ga_std_operators_cuda_impl.hpp"
 
 #include "cuda_runtime.h"
 
@@ -26,411 +32,196 @@ using namespace locusta;
 class LocustaTest : public testing::Test {
 protected:
 
-  void setupCPU() {
-    // Define Pseudo random generator
-    cpu_generator = new prngenerator_cpu<float>(ISLES * AGENTS);
-    cpu_generator->_initialize_engines(SEED);
+    static void SetUpTestCase()
+        {
+            __setup_cuda();
+        }
 
-    // Define Population
-    cpu_population = new population_set_cpu<float>(ISLES,
-                                                   AGENTS,
-                                                   DIMENSIONS,
-                                                   upper_bounds,
-                                                   lower_bounds);
+    virtual void SetUp()
+        {
+            // Init timer
+            start_time = time(NULL);
 
-    // Initialize Population
-    const uint32_t pop_size = DIMENSIONS * AGENTS * ISLES;
-    float * const pop_data = cpu_population->_get_transformed_data_array();
+            evaluation_functor_cpu_ptr = new BenchmarkFunctor<float>();
+            evaluator_cpu_ptr = new evaluator_cpu<float>(evaluation_functor_cpu_ptr,
+                                                         true,
+                                                         BoundMapKind::CropBounds,
+                                                         DIMENSIONS);
 
-    cpu_generator->_generate(pop_size, pop_data);
-    cpu_population->_initialize();
+            evaluation_functor_cuda_ptr = new BenchmarkCudaFunctor<float>();
+            evaluator_cuda_ptr = new evaluator_cuda<float>(evaluation_functor_cuda_ptr,
+                                                           true,
+                                                           BoundMapKind::CropBounds,
+                                                           DIMENSIONS);
 
-    // Define Genome evaluator
-    cpu_evaluator = new evaluator_cpu<float>(true,
-                                             evaluator_cpu<float>::IGNORE_BOUNDS,
-                                             0,
-                                             benchmark_cpu_func_1<float>);
-  }
+            //prngenerator_cpu_ptr = new prngenerator_cpu<float>(ISLES *
+            //AGENTS);
+            prngenerator_cpu_ptr = new prngenerator_cpu<float>(1);
+            prngenerator_cpu_ptr->_initialize_engines(SEED);
 
-  void setupGPU() {
-    __setup_cuda();
+            prngenerator_cuda_ptr = new prngenerator_cuda<float>(ISLES * AGENTS);
+            prngenerator_cuda_ptr->_initialize_engines(SEED);
 
-    // Test data allocation
-    gpu_fitness_test_bridge = new float[fitness_array_size];
-    gpu_data_test_bridge = new float[data_array_size];
+            population_cpu_ptr = new population_set_cpu<float>(ISLES, AGENTS, DIMENSIONS);
+            population_cuda_ptr = new population_set_cuda<float>(ISLES, AGENTS, DIMENSIONS);
 
-    // Invalidating initialized array values
-    std::fill(gpu_fitness_test_bridge,
-              gpu_fitness_test_bridge + fitness_array_size,
-              std::numeric_limits<float>::quiet_NaN());
+            upper_bounds_ptr = new float[DIMENSIONS];
+            lower_bounds_ptr = new float[DIMENSIONS];
 
-    std::fill(gpu_data_test_bridge,
-              gpu_data_test_bridge + data_array_size,
-              std::numeric_limits<float>::quiet_NaN());
+            // Bounds definition
+            std::fill(upper_bounds_ptr, upper_bounds_ptr + DIMENSIONS, 1.0f);
+            std::fill(lower_bounds_ptr, lower_bounds_ptr + DIMENSIONS, -1.0f);
+        }
 
-    // Define Pseudo random generator
-    gpu_generator = new prngenerator_gpu<float>(ISLES * AGENTS);
-    // Define Population
-    gpu_population = new population_set_gpu<float>(ISLES,
-                                                   AGENTS,
-                                                   DIMENSIONS,
-                                                   upper_bounds,
-                                                   lower_bounds);
+    virtual void TearDown()
+        {
+            const time_t end_time = time(NULL);
+            const time_t elapsed_time = end_time - start_time;
 
-    // Initialize Population
-    const uint32_t pop_size = DIMENSIONS * AGENTS * ISLES;
-    float * const pop_data = gpu_population->_get_dev_transformed_data_array();
+            delete [] lower_bounds_ptr;
+            delete [] upper_bounds_ptr;
 
-    gpu_generator->_generate(pop_size, pop_data);
-    gpu_population->_initialize();
+            delete population_cpu_ptr;
+            delete population_cuda_ptr;
 
-    // Define Genome evaluator
-    gpu_evaluator = new evaluator_gpu<float>(true,
-                                             evaluator_gpu<float>::IGNORE_BOUNDS,
-                                             0,
-                                             benchmark_gpu_func_1<float>);
-  }
+            delete evaluator_cpu_ptr;
+            delete evaluator_cuda_ptr;
 
-  virtual void SetUp() {
+            delete prngenerator_cpu_ptr;
+            delete prngenerator_cuda_ptr;
 
-    // Common variables allocation
-    upper_bounds = new float[DIMENSIONS];
-    lower_bounds = new float[DIMENSIONS];
+            RecordProperty("Elapsed Time", elapsed_time);
+        }
 
-    test_cpu_data = new float[ISLES * AGENTS * DIMENSIONS];
-    test_gpu_data = new float[ISLES * AGENTS * DIMENSIONS];
+    time_t start_time;
 
-    test_coupling = new uint32_t[ISLES * AGENTS];
+    // Pseudo Random Number Generators
+    prngenerator_cpu<float> * prngenerator_cpu_ptr;
+    EvaluationFunctor<float> * evaluation_functor_cpu_ptr;
 
-    // Bounds definition
-    std::fill(upper_bounds, upper_bounds+DIMENSIONS, 2.0f);
-    std::fill(lower_bounds, lower_bounds+DIMENSIONS, 0.0f);
+    prngenerator_cuda<float> * prngenerator_cuda_ptr;
+    EvaluationCudaFunctor<float> * evaluation_functor_cuda_ptr;
 
-// Test data definition
-    for (uint32_t i = 0; i < ISLES; ++i)
-      {
-        for(uint32_t j = 0; j < AGENTS; ++j)
-          {
-            test_coupling[i * AGENTS + j] = j < (AGENTS - 1) ? j + 1: 0;
+    // Evaluator
+    evaluator_cpu<float> * evaluator_cpu_ptr;
+    evaluator_cuda<float> * evaluator_cuda_ptr;
 
-            for(uint32_t k = 0; k < DIMENSIONS; ++k)
-              {
-                uint32_t locus_offset = k * ISLES * AGENTS;
-                test_cpu_data[i * AGENTS * DIMENSIONS + j * DIMENSIONS + k] = test_gpu_data[locus_offset + i * AGENTS + j] = (k + 1) + (2 << (j + 1));
-              }
-          }
-      }
+    // Population
+    const uint64_t SEED = 2;
+    const uint32_t GENERATIONS = 20;
+    const uint32_t ISLES = 1;
+    const uint32_t AGENTS = 8;
+    const uint32_t DIMENSIONS = 4;
 
-    setupCPU();
-    setupGPU();
+    population_set_cpu<float> * population_cpu_ptr;
+    population_set_cuda<float> * population_cuda_ptr;
 
-    // Init timer
-    start_time = time(NULL);
-  }
-
-  virtual void TearDown() {
-    const time_t end_time = time(NULL);
-    const time_t elapsed_time = end_time - start_time;
-
-    RecordProperty("Elapsed Time", elapsed_time);
-
-    delete cpu_population;
-    delete cpu_generator;
-    delete cpu_evaluator;
-
-    delete gpu_population;
-    delete gpu_generator;
-    delete gpu_evaluator;
-
-    delete [] gpu_data_test_bridge;
-    delete [] gpu_fitness_test_bridge;
-
-    delete [] lower_bounds;
-    delete [] upper_bounds;
-  }
-
-  time_t start_time;
-
-  // Pseudo Random Number Generators
-  prngenerator_cpu<float> * cpu_generator;
-  prngenerator_gpu<float> * gpu_generator;
-
-  // Evaluator
-  evaluator_cpu<float> * cpu_evaluator;
-  evaluator_gpu<float> * gpu_evaluator;
-
-  // Population
-  population_set_cpu<float> * cpu_population;
-  population_set_gpu<float> * gpu_population;
-
-  const uint64_t SEED = 1;
-  const size_t GENERATIONS = 1e3;
-  const size_t ISLES = 1;
-  const size_t AGENTS = 128;
-  const size_t DIMENSIONS = 128;
-
-  const size_t fitness_array_size = ISLES * AGENTS;
-  const size_t data_array_size = fitness_array_size * DIMENSIONS;
-
-  float * upper_bounds;
-  float * lower_bounds;
-
-  float * gpu_fitness_test_bridge;
-  float * gpu_data_test_bridge;
-
-  float * test_cpu_data;
-  float * test_gpu_data;
-
-  uint32_t * test_coupling;
-  uint32_t * test_migration;
+    float * upper_bounds_ptr;
+    float * lower_bounds_ptr;
 
 };
 
-class GATest : public LocustaTest {
-  virtual void SetUp() {
-    LocustaTest::SetUp();
+class ParticleSwarmTest : public LocustaTest {
+    virtual void SetUp()
+        {
+            LocustaTest::SetUp();
+            pso_solver_cpu_ptr = new pso_solver_cpu<float>(population_cpu_ptr,
+                                                           evaluator_cpu_ptr,
+                                                           prngenerator_cpu_ptr,
+                                                           GENERATIONS,
+                                                           upper_bounds_ptr,
+                                                           lower_bounds_ptr);
 
-    // GPU SOLVER
-    // Define solvers
-    gpu_solver = new ga_solver_gpu<float>(gpu_population,
-                                          gpu_evaluator,
-                                          gpu_generator);
+            pso_solver_cuda_ptr = new pso_solver_cuda<float>(population_cuda_ptr,
+                                                             evaluator_cuda_ptr,
+                                                             prngenerator_cuda_ptr,
+                                                             GENERATIONS,
+                                                             upper_bounds_ptr,
+                                                             lower_bounds_ptr);
 
-    // GA Solver Setup
-    gpu_solver->_setup_operators(ga_operators_gpu<float>::tournament_select,
-                                 ga_operators_gpu<float>::whole_crossover,
-                                 ga_operators_gpu<float>::migration_ring);
+        }
 
-    gpu_solver->_set_migration_config(0, // Migration step
-                                      1, // Migration size,
-                                      4
-                                      );
-
-    gpu_solver->_set_selection_config(4, // Selection size,
-                                      0.0 // Selection stochastic bias
-                                      );
-
-    gpu_solver->_set_breeding_config(0.8, // Crossover rate
-                                     0.1  // Mutation rate
-                                     );
-
-    gpu_solver->_set_range_extension(0.0);
-
-    gpu_solver->_initialize();
-
-    // BUG: Population must be initialized before solver!
-    // gpu_solver->_initialize_population();
-
-    // CPU SOLVER
-    // Define solvers
-    cpu_solver = new ga_solver_cpu<float>(cpu_population,
-                                          cpu_evaluator,
-                                          cpu_generator);
-
-    // GA Solver Setup
-    cpu_solver->_setup_operators(ga_operators_cpu<float>::tournament_select,
-                                 ga_operators_cpu<float>::whole_crossover,
-                                 ga_operators_cpu<float>::migration_ring);
-
-    cpu_solver->_set_migration_config(0, // Migration step
-                                      1, // Migration size,
-                                      4
-                                      );
-
-    cpu_solver->_set_selection_config(4, // Selection size,
-                                      0.0 // Selection stochastic bias
-                                      );
-
-    cpu_solver->_set_breeding_config(0.8, // Crossover rate
-                                     0.1  // Mutation rate
-                                     );
-
-    cpu_solver->_set_range_extension(0.0);
-
-    cpu_solver->_initialize();
-
-  }
-
-  virtual void TearDown() {
-    delete cpu_solver;
-    delete gpu_solver;
-    LocustaTest::TearDown();
-  }
+    virtual void TearDown()
+        {
+            delete pso_solver_cpu_ptr;
+            delete pso_solver_cuda_ptr;
+            LocustaTest::TearDown();
+        }
 
 public:
-  // GA Solver
-  ga_solver_cpu<float> * cpu_solver;
-  ga_solver_gpu<float> * gpu_solver;
+    pso_solver_cpu<float> * pso_solver_cpu_ptr;
+    pso_solver_cuda<float> * pso_solver_cuda_ptr;
 
 };
 
-// Test that initialized GPU population's genome values are valid.
-TEST_F(GATest, GPUBoundedGenomeValues) {
-  gpu_population->_copy_dev_data_into_host(gpu_data_test_bridge);
-  for (uint32_t i = 0; i < data_array_size; ++i)
-    {
-      uint32_t mapped_dim = i / (ISLES * AGENTS);
-      EXPECT_LE(gpu_data_test_bridge[i], upper_bounds[mapped_dim]);
-      EXPECT_GE(gpu_data_test_bridge[i], lower_bounds[mapped_dim]);
-    }
-}
-
-// Test that GPU population's fitness values are initialized to -inf.
-TEST_F(GATest, GPUInitFitnessValues) {
-  gpu_population->_copy_dev_fitness_into_host(gpu_fitness_test_bridge);
-  for (uint32_t i = 0; i < fitness_array_size; ++i)
-    {
-      EXPECT_EQ(gpu_fitness_test_bridge[i], -std::numeric_limits<float>::infinity());
-    }
-}
-
-// Test that initialized CPU population's genome values are valid.
-TEST_F(GATest, CPUBoundedGenomeValues) {
-  float * cpu_data_test_bridge = cpu_population->_get_data_array();
-  for (uint32_t i = 0; i < data_array_size; ++i)
-    {
-      uint32_t mapped_dim = i / (ISLES * AGENTS);
-      EXPECT_LE(cpu_data_test_bridge[i], upper_bounds[mapped_dim]);
-      EXPECT_GE(cpu_data_test_bridge[i], lower_bounds[mapped_dim]);
-    }
-}
-
-// Test that CPU population's fitness values are initialized to -inf.
-TEST_F(GATest, CPUInitFitnessValues) {
-  float * cpu_fitness_test_bridge = cpu_population->_get_fitness_array();
-  for (uint32_t i = 0; i < fitness_array_size; ++i)
-    {
-      EXPECT_EQ(cpu_fitness_test_bridge[i], -std::numeric_limits<float>::infinity());
-    }
-}
-
-// Run the GPU solver
-TEST_F(GATest, GpuSolverRun) {
-
-    for(size_t g = 0; g < GENERATIONS; ++g)
-    {
-// #ifdef _DEBUG
-//         std::cout << "Generation: " << g << std::endl;
-// #else
-//         std::cout << "Generation: " << g << "\r";
-// #endif
-        gpu_solver->_advance_generation();
-        //gpu_solver->_print_gpu_solver_elite();
-    }
-    gpu_solver->_print_solver_solution();
-}
-
-// Run the CPU solver
-TEST_F(GATest, CpuSolverRun) {
-
-    for(size_t g = 0; g < GENERATIONS; ++g)
-    {
-// #ifdef _DEBUG
-//         std::cout << "Generation: " << g << std::endl;
-// #else
-//         std::cout << "Generation: " << g << "\r";
-// #endif
-        cpu_solver->_advance_generation();
-        //cpu_solver->_print_cpu_solver_elite();
-    }
-    cpu_solver->_print_solver_solution();
-}
-
-// Test that CPU vs GPU evaluation values.
-TEST_F(GATest, CompareFitnessValues) {
-
-  // Sync implementation data
-  float * cpu_genomes = cpu_population->_get_data_array();
-  gpu_population->_copy_dev_data_into_host(gpu_data_test_bridge);
-  // Reorganize genomes
-  for (uint32_t i = 0; i < ISLES; ++i)
-    {
-      for(uint32_t j = 0; j < AGENTS; ++j)
+class GeneticAlgorithmTest : public LocustaTest {
+    virtual void SetUp()
         {
-          for(uint32_t k = 0; k < DIMENSIONS; ++k)
-            {
-              uint32_t locus_offset = k * ISLES * AGENTS;
-              cpu_genomes[i * AGENTS * DIMENSIONS + j * DIMENSIONS + k] = gpu_data_test_bridge[locus_offset + i * AGENTS + j];
-            }
+            LocustaTest::SetUp();
+            ga_solver_cpu_ptr = new ga_solver_cpu<float>(population_cpu_ptr,
+                                                         evaluator_cpu_ptr,
+                                                         prngenerator_cpu_ptr,
+                                                         GENERATIONS,
+                                                         upper_bounds_ptr,
+                                                         lower_bounds_ptr);
+
+            // ga_solver_cuda_ptr = new ga_solver_cuda<float>(population_cuda_ptr,
+            //                                                  evaluator_cuda_ptr,
+            //                                                  prngenerator_cuda_ptr,
+            //                                                  GENERATIONS,
+            //                                                  upper_bounds_ptr,
+            //                                                  lower_bounds_ptr);
+
         }
-    }
 
-  // Evaluate Genomes
-  gpu_solver->_evaluate_genomes();
-  cpu_solver->_evaluate_genomes();
-
-  // Compare Fitness Evaluation
-  gpu_population->_copy_dev_fitness_into_host(gpu_fitness_test_bridge);
-  float * cpu_fitness_test_bridge = cpu_population->_get_fitness_array();
-
-  for (uint32_t i = 0; i < fitness_array_size; ++i)
-    {
-      const float tolerance = 1e-4f;
-      const float cpu_fitness = cpu_fitness_test_bridge[i];
-      const float gpu_fitness = gpu_fitness_test_bridge[i];
-      EXPECT_NEAR(cpu_fitness, gpu_fitness, tolerance);
-    }
-}
-
-// Compare predefined fitness
-TEST_F(GATest, ComparePredefinedFitness) {
-  
-  // Update solver's PRNGS
-  gpu_solver->_generate_prngs();
-  cpu_solver->_generate_prngs();
-
-  // Sync implementation data
-  float * cpu_genomes = cpu_population->_get_data_array();
-
-  // Copy CPU test data
-  memcpy(cpu_genomes, test_cpu_data, sizeof(float) * ISLES * AGENTS * DIMENSIONS);
-  // Copy GPU test data
-  gpu_population->_copy_host_data_into_dev(test_gpu_data);
-
-  // Evaluate Genomes
-  gpu_solver->_evaluate_genomes();
-  cpu_solver->_evaluate_genomes();
-
-  // Compare Fitness Evaluation
-  gpu_population->_copy_dev_fitness_into_host(gpu_fitness_test_bridge);
-  float * cpu_fitness_test_bridge = cpu_population->_get_fitness_array();
-
-  for (uint32_t i = 0; i < fitness_array_size; ++i)
-    {
-      const float tolerance = 1e-4f;
-      const float cpu_fitness = cpu_fitness_test_bridge[i];
-      const float gpu_fitness = gpu_fitness_test_bridge[i];
-      EXPECT_NEAR(cpu_fitness, gpu_fitness, tolerance);
-    }
-
-  gpu_solver->_set_couples_idx(test_coupling);
-  cpu_solver->_set_couples_idx(test_coupling);
-
-  gpu_solver->_breed();
-  cpu_solver->_breed();  
-
-  // Compare Offspring Genomes
-  gpu_population->_swap_data_sets();
-  cpu_population->_swap_data_sets();
-
-  gpu_population->_copy_dev_data_into_host(test_gpu_data);
-
-  cpu_genomes = cpu_population->_get_data_array();
-  memcpy(test_cpu_data, cpu_genomes, sizeof(float) * ISLES * AGENTS * DIMENSIONS);
-
-  for (uint32_t i = 0; i < ISLES; ++i)
-    {
-      for(uint32_t j = 0; j < AGENTS; ++j)
+    virtual void TearDown()
         {
-          for(uint32_t k = 0; k < DIMENSIONS; ++k)
-            {
-              uint32_t locus_offset = k * ISLES * AGENTS;
-
-              const float tolerance = 1e-4f;
-              const float cpu_gene = test_cpu_data[i * AGENTS * DIMENSIONS + j * DIMENSIONS + k];
-              const float gpu_gene = test_gpu_data[locus_offset + i * AGENTS + j];
-              //EXPECT_NEAR(cpu_gene, gpu_gene, tolerance);
-            }
+            delete ga_solver_cpu_ptr;
+            // delete ga_solver_cuda_ptr;
+            LocustaTest::TearDown();
         }
-    }
+
+public:
+    ga_solver_cpu<float> * ga_solver_cpu_ptr;
+    // ga_solver_cuda<float> * ga_solver_cuda_ptr;
+
+};
+
+TEST_F(ParticleSwarmTest, BasicCpuTest)
+{
+    pso_solver_cpu_ptr->setup_operators(new CanonicalParticleRecordUpdate<float>(),
+                                        new CanonicalSpeedUpdate<float>(),
+                                        new CanonicalPositionUpdate<float>());
+    pso_solver_cpu_ptr->setup_solver();
+    pso_solver_cpu_ptr->run();
+    //pso_solver_cpu_ptr->print_solutions();
 }
+
+TEST_F(ParticleSwarmTest, BasicCudaTest)
+{
+    pso_solver_cuda_ptr->setup_operators(new CanonicalParticleRecordUpdateCuda<float>(),
+                                         new CanonicalSpeedUpdateCuda<float>(),
+                                         new CanonicalPositionUpdateCuda<float>());
+    pso_solver_cuda_ptr->setup_solver();
+    pso_solver_cuda_ptr->run();
+    // pso_solver_cuda_ptr->print_population();
+}
+
+TEST_F(GeneticAlgorithmTest, BasicCpuTest)
+{
+    ga_solver_cpu_ptr->setup_operators(new CanonicalBreed<float>(),
+                                       new TournamentSelection<float>());
+    ga_solver_cpu_ptr->setup_solver();
+    ga_solver_cpu_ptr->run();
+    // ga_solver_cpu_ptr->print_solutions();
+}
+
+// TEST_F(GeneticAlgorithmTest, BasicCudaTest)
+// {
+//     ga_solver_cuda_ptr->setup_operators(new CanonicalParticleRecordUpdateCuda<float>(),
+//                                          new CanonicalSpeedUpdateCuda<float>(),
+//                                          new CanonicalPositionUpdateCuda<float>());
+//     ga_solver_cuda_ptr->setup_solver();
+//     ga_solver_cuda_ptr->run();
+//     // ga_solver_cuda_ptr->print_population();
+// }

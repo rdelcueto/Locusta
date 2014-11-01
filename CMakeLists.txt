@@ -9,7 +9,8 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake/cuda" ${CMAKE_MODULE_PATH})
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-add_definitions(-std=gnu++0x)
+add_definitions(-std=c++11)
+LIST(APPEND CUDA_NVCC_FLAGS -std=c++11)
 
 # Flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra -g -pg -D_DEBUG")
@@ -27,10 +28,10 @@ find_package(CUDA REQUIRED)
 find_cuda_helper_libs(curand)
 
 # CUDA Arch Target
-LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
+#LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
 LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
 
-option(BUILD_SHARED_LIBS	
+option(BUILD_SHARED_LIBS
   "On to build shared libraries, off for static libraries."
   OFF
   )

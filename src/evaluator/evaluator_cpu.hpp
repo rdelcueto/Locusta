@@ -1,41 +1,39 @@
 #ifndef LOCUSTA_EVALUATOR_CPU_H
 #define LOCUSTA_EVALUATOR_CPU_H
 
+#include <functional>
+
 #include "evaluator.hpp"
 
 namespace locusta {
 
-  template<typename TFloat>
-  class evaluator_cpu : public evaluator<TFloat> {
-  public:
+    template<typename TFloat>
+    struct evolutionary_solver_cpu;
 
-    typedef void (*cpu_evaluable_function)(const TFloat * const UPPER_BOUNDS,
-                                           const TFloat * const LOWER_BOUNDS,
-                                           const uint32_t NUM_ISLES,
-                                           const uint32_t NUM_AGENTS,
-                                           const uint32_t NUM_DIMENSIONS,
-                                           const uint32_t bound_mapping_method,
-                                           const bool f_negate,
-                                           const TFloat * const agents_data,
-                                           TFloat * const agents_fitness);
+    template<typename TFloat>
+    struct evaluator_cpu : evaluator<TFloat> {
+        evaluator_cpu(EvaluationFunctor<TFloat> * eval_functor,
+                      bool f_negate,
+                      BoundMapKind bound_mapping,
+                      uint32_t prn_numbers);
 
-    evaluator_cpu(const bool f_negate,
-                  const uint32_t bound_mapping_method,
-                  const uint32_t num_eval_prnumbers,
-                  cpu_evaluable_function fitness_function);
+        virtual ~evaluator_cpu();
 
-    virtual ~evaluator_cpu();
+        virtual void evaluate(evolutionary_solver<TFloat> * solver);
 
-    virtual void evaluate(population_set<TFloat> * population);
+        virtual void bound_map(BoundMapKind bound_mapping_method,
+                               const TFloat &u,
+                               const TFloat &l,
+                               TFloat &x);
 
-    using evaluator<TFloat>::_f_negate;
-    using evaluator<TFloat>::_bounding_mapping_method;
-    using evaluator<TFloat>::_num_eval_prnumbers;
+        using evaluator<TFloat>::_f_negate;
+        using evaluator<TFloat>::_bound_mapping_method;
+        using evaluator<TFloat>::_eval_prn_size;
+        using evaluator<TFloat>::_eval_prn_numbers;
+        using evaluator<TFloat>::_evaluation_functor;
 
-    /// Pointer to fitness function
-    cpu_evaluable_function _fitness_function;
-  };
+    };
 
 } // namespace locusta
-#include "evaluator_cpu.cpp"
+#include "evaluator_cpu_impl.hpp"
 #endif

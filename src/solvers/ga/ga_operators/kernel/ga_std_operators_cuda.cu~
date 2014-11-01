@@ -1,0 +1,66 @@
+#include "cuda_common/cuda_helpers.h"
+#include "../ga_std_operators_cuda_impl.hpp"
+
+namespace locusta {
+
+    /// GPU Kernels Shared Memory Pointer.
+    extern __shared__ int evaluator_shared_memory[];
+    const uint32_t REPETITIONS = 1e2;
+
+    template <typename TFloat>
+    __global__
+    void whole_crossover_kernel(const uint32_t DIMENSIONS,
+                                const TFloat * __restrict__ VAR_RANGES,
+                                const TFloat DEVIATION,
+                                const TFloat CROSSOVER_RATE,
+                                const TFloat MUTATION_RATE,
+                                const uint32_t DIST_LIMIT,
+                                const TFloat *  __restrict__ prn_array,
+                                const TFloat *  __restrict__ couple_selection,
+                                const TFloat *  __restrict__ parent_genomes,
+                                TFloat *  __restrict__ offspring_genomes,
+                                curandState *  __restrict__ const local_generator) {
+
+    }
+
+    template <typename TFloat>
+    void whole_crossover_dispatch
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const TFloat * VAR_RANGES,
+     const TFloat DEVIATION,
+     const TFloat CROSSOVER_RATE,
+     const TFloat MUTATION_RATE,
+     const uint32_t DIST_LIMIT,
+     const TFloat * prn_array,
+     const TFloat * couple_selection,
+     const TFloat * parent_genomes,
+     TFloat * offspring_genomes,
+     curandState * const local_generator) {
+        whole_crossover_kernel
+            <<<ISLES, AGENTS>>>
+            (DIMENSIONS,
+             VAR_RANGES,
+             DEVIATION,
+             CROSSOVER_RATE,
+             MUTATION_RATE,
+             DIST_LIMIT,
+             prn_array,
+             couple_selection,
+             parent_genomes);
+    }
+
+    template <typename TFloat>
+    void tournament_selection_dispatch
+    (const uint32_t ISLES,
+     const uint32_t AGENTS,
+     const uint32_t DIMENSIONS,
+     const uint32_t SELECTION_SIZE,
+     const TFloat SELECTION_P,
+     const TFloat * prn_array,
+     uint32_t * couple_idx_array);
+
+
+
+}

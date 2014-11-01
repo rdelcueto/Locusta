@@ -5,26 +5,25 @@
 
 namespace locusta {
 
-  template<typename TFloat>
-  class prngenerator {
-  public:
+    template<typename TFloat>
+    struct prngenerator {
 
-    prngenerator(const uint32_t num_generators) : _NUM_GENERATORS(num_generators) {}
+        prngenerator() : _NUM_ENGINES(1) {}
+        prngenerator(uint32_t num_engines) : _NUM_ENGINES(num_engines) {}
+        virtual ~prngenerator() {}
 
-    virtual ~prngenerator() {}
+        /// Initialize engines state
+        virtual void _initialize_engines(uint64_t seed) = 0;
 
-    virtual void _initialize_engines(uint64_t seed) = 0;
+        /// Generate n pseudo random numbers into output array.
+        virtual void _generate(uint32_t n, TFloat * output) = 0;
 
-    virtual void _generate(const uint32_t n, TFloat * output) = 0;
+        /// Generate and return a pseudo random number.
+        virtual TFloat _generate() = 0;
 
-    virtual TFloat _generate() = 0;
-
-  protected:
-
-    const uint32_t _NUM_GENERATORS;
-
-  };
-
+        /// Number of prng engines.
+        const uint32_t _NUM_ENGINES;
+    };
 }
 
 #endif /* _PRNGENERATOR_H_ */

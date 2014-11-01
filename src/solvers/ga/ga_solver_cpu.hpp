@@ -1,113 +1,110 @@
 #ifndef LOCUSTA_GA_SOLVER_CPU_H
 #define LOCUSTA_GA_SOLVER_CPU_H
 
-#include <iostream>
-
-#include "ga_solver.hpp"
-#include "ga_operators_cpu.hpp"
-
+#include "../evolutionary_solver_cpu.hpp"
 #include "../../prngenerator/prngenerator_cpu.hpp"
-#include "../../population/population_set_cpu.hpp"
+
+#include "./ga_operators/ga_operators.hpp"
 
 namespace locusta {
 
-  template<typename TFloat>
-  class ga_solver_cpu : public ga_solver<TFloat> {
+    ///Interface for Genetic Algorithm solver_cpus
+    template<typename TFloat>
+    struct ga_solver_cpu : evolutionary_solver_cpu<TFloat> {
 
-  public:
+        enum PRN_OFFSETS { SELECTION_SET = 0, BREEDING_SET = 1 };
 
-    ga_solver_cpu(population_set_cpu<TFloat> * population,
-                  evaluator_cpu<TFloat> * evaluator,
-                  prngenerator_cpu<TFloat> * prn_generator);
+        ga_solver_cpu(population_set_cpu<TFloat> * population,
+                      evaluator_cpu<TFloat> * evaluator,
+                      prngenerator_cpu<TFloat> * prn_generator,
+                      uint32_t generation_target,
+                      TFloat * upper_bounds,
+                      TFloat * lower_bounds);
 
-    virtual ~ga_solver_cpu();
+        virtual ~ga_solver_cpu();
 
-    virtual void _print_solver_config();
+        virtual void setup_solver();
 
-    virtual void _print_solver_elite();
+        virtual void teardown_solver();
 
-    virtual void _print_solver_solution();
+        virtual void transform();
 
-    virtual void _initialize();
+        virtual void elite_population_replace();
 
-    virtual void _finalize();
+        /// Set Particle Swarm Optimization solver operators.
+        virtual void setup_operators(BreedFunctor<TFloat> * breed_functor_ptr,
+                                     SelectionFunctor<TFloat> * select_functor_ptr);
 
-    virtual void _setup_operators(typename ga_operators_cpu<TFloat>::select_func selection_function,
-                                  typename ga_operators_cpu<TFloat>::breed_func breeding_function,
-                                  typename ga_operators_cpu<TFloat>::migrate_func migration_function);
+        /// Sets up the solver_cpu's configuration
+        virtual void solver_config(uint32_t migration_step,
+                                   uint32_t migration_size,
+                                   uint32_t migration_selection_size,
+                                   uint32_t selection_size,
+                                   TFloat selection_stochastic_factor,
+                                   TFloat crossover_rate,
+                                   TFloat mutation_rate,
+                                   uint32_t mut_dist_iterations);
 
-    virtual void _set_migration_config(uint32_t migration_step,
-                                       uint32_t migration_size,
-                                       uint32_t migration_selection_size);
+        /// Population crossover + mutation operator.
+        BreedFunctor<TFloat> * _breed_functor_ptr;
 
-    virtual void _set_selection_config(uint32_t selection_size,
-                                       TFloat selection_p);
+        /// Population couple selection.
+        SelectionFunctor<TFloat> * _selection_functor_ptr;
 
-    virtual void _set_breeding_config(TFloat crossover_rate,
-                                      TFloat mutation_rate);
+        /// Tournament selection size.
+        uint32_t _selection_size;
 
-    virtual void _set_range_extension(TFloat range_multiplier);
+        /// Tournament stochastic factor
+        TFloat _selection_stochastic_factor;
 
-    virtual void _set_generation_target(uint32_t generation_target);
+        /// Crossover rate.
+        TFloat _crossover_rate;
 
-    virtual void _generate_prngs();
+        /// Mutation rate.
+        TFloat _mutation_rate;
 
-    virtual void _evaluate_genomes();
+        /// Mutation operator, distribution operator.
+        uint32_t _mut_dist_iterations;
 
-    virtual void _advance_generation();
+        /// Couple selection array.
+        uint32_t * _couples_idx_array;
 
-    virtual void _select();
-    virtual void _breed();
-    virtual void _replace_update_elite();
-    virtual void _migrate();
+        using evolutionary_solver_cpu<TFloat>::_ISLES;
+        using evolutionary_solver_cpu<TFloat>::_AGENTS;
+        using evolutionary_solver_cpu<TFloat>::_DIMENSIONS;
 
-    virtual void _set_couples_idx(uint32_t * const input_couples);
-    virtual void _get_couples_idx(uint32_t * const output_couples);
+        using evolutionary_solver_cpu<TFloat>::_UPPER_BOUNDS;
+        using evolutionary_solver_cpu<TFloat>::_LOWER_BOUNDS;
+        using evolutionary_solver_cpu<TFloat>::_VAR_RANGES;
 
-  protected:
+        using evolutionary_solver_cpu<TFloat>::_population;
+        using evolutionary_solver_cpu<TFloat>::_evaluator;
 
-    using ga_solver<TFloat>::_f_initialized;
+        using evolutionary_solver_cpu<TFloat>::_max_agent_genome;
+        using evolutionary_solver_cpu<TFloat>::_max_agent_fitness;
+        using evolutionary_solver_cpu<TFloat>::_max_agent_idx;
 
-    using ga_solver<TFloat>::_population;
+        using evolutionary_solver_cpu<TFloat>::_min_agent_genome;
+        using evolutionary_solver_cpu<TFloat>::_min_agent_fitness;
+        using evolutionary_solver_cpu<TFloat>::_min_agent_idx;
 
-    using ga_solver<TFloat>::_evaluator;
+        using evolutionary_solver_cpu<TFloat>::_migration_step;
+        using evolutionary_solver_cpu<TFloat>::_migration_size;
+        using evolutionary_solver_cpu<TFloat>::_migration_selection_size;
+        using evolutionary_solver_cpu<TFloat>::_migration_idxs;
+        using evolutionary_solver_cpu<TFloat>::_migration_buffer;
 
-    using ga_solver<TFloat>::_bulk_prn_generator;
-    using ga_solver<TFloat>::_bulk_prnumbers;
-    using ga_solver<TFloat>::_bulk_size;
+        using evolutionary_solver_cpu<TFloat>::_bulk_prn_generator;
+        using evolutionary_solver_cpu<TFloat>::_bulk_prns;
+        using evolutionary_solver_cpu<TFloat>::_bulk_size;
+        using evolutionary_solver_cpu<TFloat>::_prn_sets;
 
-    using ga_solver<TFloat>::_prn_sets;
-    using ga_solver<TFloat>::_prn_isle_offset;
+        using evolutionary_solver_cpu<TFloat>::_generation_count;
+        using evolutionary_solver_cpu<TFloat>::_generation_target;
+        using evolutionary_solver_cpu<TFloat>::_f_initialized;
 
-    using ga_solver<TFloat>::_migration_step;
-    using ga_solver<TFloat>::_migration_size;
-    using ga_solver<TFloat>::_migration_selection_size;
-    using ga_solver<TFloat>::_selection_size;
-    using ga_solver<TFloat>::_selection_p;
-    using ga_solver<TFloat>::_crossover_rate;
-    using ga_solver<TFloat>::_mutation_rate;
-    using ga_solver<TFloat>::_distribution_iterations;
-    using ga_solver<TFloat>::_range_extension_p;
+    };
 
-    using ga_solver<TFloat>::_extended_upper_bounds;
-    using ga_solver<TFloat>::_extended_lower_bounds;
-
-    using ga_solver<TFloat>::_coupling_idxs;
-
-    using ga_solver<TFloat>::_migrating_idxs;
-    using ga_solver<TFloat>::_migration_buffer;
-
-    using ga_solver<TFloat>::_elite_fitness;
-    using ga_solver<TFloat>::_elite_genomes;
-
-    using ga_solver<TFloat>::_selection_function;
-    using ga_solver<TFloat>::_breeding_function;
-    using ga_solver<TFloat>::_migration_function;
-
-    using ga_solver<TFloat>::_generation_count;
-    using ga_solver<TFloat>::_generation_target;
-
-  };
 } // namespace locusta
-#include "ga_solver_cpu.cpp"
+#include "ga_solver_cpu_impl.hpp"
 #endif

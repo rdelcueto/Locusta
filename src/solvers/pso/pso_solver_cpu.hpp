@@ -1,108 +1,110 @@
 #ifndef LOCUSTA_PSO_SOLVER_CPU_H
 #define LOCUSTA_PSO_SOLVER_CPU_H
 
-#include <iostream>
-
-#include "pso_solver.hpp"
-#include "pso_operators_cpu.hpp"
-
+#include "../evolutionary_solver_cpu.hpp"
 #include "../../prngenerator/prngenerator_cpu.hpp"
-#include "../../population/population_set_cpu.hpp"
+
+#include "./pso_operators/pso_operators.hpp"
 
 namespace locusta {
 
-  template<typename TFloat>
-  class pso_solver_cpu : public pso_solver<TFloat> {
+    ///Interface for Genetic Algorithm solver_cpus
+    template<typename TFloat>
+    struct pso_solver_cpu : evolutionary_solver_cpu<TFloat> {
 
-  public:
+        enum PRN_OFFSETS { RECORD_UPDATE_SET = 0, SPEED_UPDATE_SET = 1, POSITION_UPDATE_SET = 2 };
 
-    pso_solver_cpu(population_set_cpu<TFloat> * population,
-                   evaluator_cpu<TFloat> * evaluator,
-                   prngenerator_cpu<TFloat> * prn_generator);
+        pso_solver_cpu(population_set_cpu<TFloat> * population,
+                       evaluator_cpu<TFloat> * evaluator,
+                       prngenerator_cpu<TFloat> * prn_generator,
+                       uint32_t generation_target,
+                       TFloat * upper_bounds,
+                       TFloat * lower_bounds);
 
-    virtual ~pso_solver_cpu();
+        virtual ~pso_solver_cpu();
 
-    virtual void _print_solver_config();
+        virtual void setup_solver();
 
-    virtual void _print_solver_elite();
+        virtual void teardown_solver();
 
-    virtual void _print_solver_solution();
+        virtual void transform();
 
-    virtual void _initialize();
+        /// Set Particle Swarm Optimization solver operators.
+        virtual void setup_operators(UpdateParticleRecordFunctor<TFloat> * update_particle_record_functor_ptr,
+                                     UpdateSpeedFunctor<TFloat> * update_speed_functor_ptr,
+                                     UpdatePositionFunctor<TFloat> * update_position_functor_ptr);
 
-    virtual void _finalize();
+        /// Sets up the solver_cpu's configuration
+        virtual void solver_config(uint32_t migration_step,
+                                   uint32_t migration_size,
+                                   uint32_t migration_selection_size,
+                                   TFloat inertia_factor,
+                                   TFloat cognitive_factor,
+                                   TFloat social_factor);
 
-    virtual void _setup_operators(typename pso_operators<TFloat>::position_func position_function,
-                                  typename pso_operators<TFloat>::velocity_func velocity_function,
-                                  typename pso_operators<TFloat>::migrate_func migration_function);
+        /// Particle record update operator function pointer.
+        UpdateParticleRecordFunctor<TFloat> * _particle_record_updater_ptr;
 
-    /// Sets up the parent selection operator parameters.
-    virtual void _set_pso_config(TFloat inertia_factor,
-                                 TFloat cognitive_factor,
-                                 TFloat social_factor);
+        /// Particle speed update operator function pointer.
+        UpdateSpeedFunctor<TFloat> * _speed_updater_ptr;
 
-    virtual void _set_velocity_limit_config(TFloat max_velocity,
-                                            TFloat min_velocity);
+        /// Particle position update operator function pointer.
+        UpdatePositionFunctor<TFloat> * _position_updater_ptr;
 
-    virtual void _set_generation_target(uint32_t generation_target);
+        /// Defines the PSO cognitive factor.
+        TFloat _inertia_factor;
 
-    virtual void _generate_prngs();
+        /// Defines the PSO cognitive factor.
+        TFloat _cognitive_factor;
 
-    virtual void _evaluate_genomes();
+        /// Defines the PSO social factor.
+        TFloat _social_factor;
 
-    virtual void _advance_generation();
+        /// Describes the best position found per particle.
+        TFloat * _cognitive_position_vector;
 
-    virtual void _update_position();
-    virtual void _update_velocity();
+        /// Describes the best position's fitness per particle.
+        TFloat * _cognitive_fitness_vector;
 
-    virtual void _migrate();
+        /// Describes the velocity vector of each particle.
+        TFloat * _velocity_vector;
 
-  protected:
+        using evolutionary_solver_cpu<TFloat>::_ISLES;
+        using evolutionary_solver_cpu<TFloat>::_AGENTS;
+        using evolutionary_solver_cpu<TFloat>::_DIMENSIONS;
 
-    using pso_solver<TFloat>::_f_initialized;
+        using evolutionary_solver_cpu<TFloat>::_UPPER_BOUNDS;
+        using evolutionary_solver_cpu<TFloat>::_LOWER_BOUNDS;
+        using evolutionary_solver_cpu<TFloat>::_VAR_RANGES;
 
-    using pso_solver<TFloat>::_population;
+        using evolutionary_solver_cpu<TFloat>::_population;
+        using evolutionary_solver_cpu<TFloat>::_evaluator;
 
-    using pso_solver<TFloat>::_evaluator;
+        using evolutionary_solver_cpu<TFloat>::_max_agent_genome;
+        using evolutionary_solver_cpu<TFloat>::_max_agent_fitness;
+        using evolutionary_solver_cpu<TFloat>::_max_agent_idx;
 
-    using pso_solver<TFloat>::_bulk_prn_generator;
-    using pso_solver<TFloat>::_bulk_prnumbers;
-    using pso_solver<TFloat>::_bulk_size;
+        using evolutionary_solver_cpu<TFloat>::_min_agent_genome;
+        using evolutionary_solver_cpu<TFloat>::_min_agent_fitness;
+        using evolutionary_solver_cpu<TFloat>::_min_agent_idx;
 
-    using pso_solver<TFloat>::_prn_sets;
-    using pso_solver<TFloat>::_prn_isle_offset;
+        using evolutionary_solver_cpu<TFloat>::_migration_step;
+        using evolutionary_solver_cpu<TFloat>::_migration_size;
+        using evolutionary_solver_cpu<TFloat>::_migration_selection_size;
+        using evolutionary_solver_cpu<TFloat>::_migration_idxs;
+        using evolutionary_solver_cpu<TFloat>::_migration_buffer;
 
-    using pso_solver<TFloat>::_migration_step;
-    using pso_solver<TFloat>::_migration_size;
-    using pso_solver<TFloat>::_migration_selection_size;
-    using pso_solver<TFloat>::_max_velocity;
-    using pso_solver<TFloat>::_min_velocity;
-    using pso_solver<TFloat>::_inertia_factor;
-    using pso_solver<TFloat>::_cognitive_factor;
-    using pso_solver<TFloat>::_social_factor;
+        using evolutionary_solver_cpu<TFloat>::_bulk_prn_generator;
+        using evolutionary_solver_cpu<TFloat>::_bulk_prns;
+        using evolutionary_solver_cpu<TFloat>::_bulk_size;
+        using evolutionary_solver_cpu<TFloat>::_prn_sets;
 
-    using pso_solver<TFloat>::_range_extension_p;
+        using evolutionary_solver_cpu<TFloat>::_generation_count;
+        using evolutionary_solver_cpu<TFloat>::_generation_target;
+        using evolutionary_solver_cpu<TFloat>::_f_initialized;
 
-    using pso_solver<TFloat>::_extended_upper_bounds;
-    using pso_solver<TFloat>::_extended_lower_bounds;
+    };
 
-    using pso_solver<TFloat>::_velocities;
-    using pso_solver<TFloat>::_best_positions;
-
-    using pso_solver<TFloat>::_migrating_idxs;
-    using pso_solver<TFloat>::_migration_buffer;
-
-    using pso_solver<TFloat>::_elite_fitness;
-    using pso_solver<TFloat>::_elite_genomes;
-
-    using pso_solver<TFloat>::_position_function;
-    using pso_solver<TFloat>::_velocity_function;
-    using pso_solver<TFloat>::_migration_function;
-
-    using pso_solver<TFloat>::_generation_count;
-    using pso_solver<TFloat>::_generation_target;
-
-  };
 } // namespace locusta
-#include "pso_solver_cpu.cpp"
+#include "pso_solver_cpu_impl.hpp"
 #endif
