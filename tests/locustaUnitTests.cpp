@@ -20,10 +20,10 @@
 #include "solvers/pso/pso_operators/pso_std_operators_cuda_impl.hpp"
 
 #include "solvers/ga/ga_solver_cpu.hpp"
-// #include "solvers/ga/ga_solver_cuda.hpp"
+#include "solvers/ga/ga_solver_cuda.hpp"
 
 #include "solvers/ga/ga_operators/ga_std_operators_cpu_impl.hpp"
-// #include "solvers/ga/ga_operators/ga_std_operators_cuda_impl.hpp"
+#include "solvers/ga/ga_operators/ga_std_operators_cuda_impl.hpp"
 
 #include "cuda_runtime.h"
 
@@ -107,11 +107,11 @@ protected:
     evaluator_cuda<float> * evaluator_cuda_ptr;
 
     // Population
-    const uint64_t SEED = 2;
-    const uint32_t GENERATIONS = 20;
+    const uint64_t SEED = 0;
+    const uint32_t GENERATIONS = 3e1;
     const uint32_t ISLES = 1;
     const uint32_t AGENTS = 8;
-    const uint32_t DIMENSIONS = 4;
+    const uint32_t DIMENSIONS = 8;
 
     population_set_cpu<float> * population_cpu_ptr;
     population_set_cuda<float> * population_cuda_ptr;
@@ -165,25 +165,25 @@ class GeneticAlgorithmTest : public LocustaTest {
                                                          upper_bounds_ptr,
                                                          lower_bounds_ptr);
 
-            // ga_solver_cuda_ptr = new ga_solver_cuda<float>(population_cuda_ptr,
-            //                                                  evaluator_cuda_ptr,
-            //                                                  prngenerator_cuda_ptr,
-            //                                                  GENERATIONS,
-            //                                                  upper_bounds_ptr,
-            //                                                  lower_bounds_ptr);
+            ga_solver_cuda_ptr = new ga_solver_cuda<float>(population_cuda_ptr,
+                                                             evaluator_cuda_ptr,
+                                                             prngenerator_cuda_ptr,
+                                                             GENERATIONS,
+                                                             upper_bounds_ptr,
+                                                             lower_bounds_ptr);
 
         }
 
     virtual void TearDown()
         {
             delete ga_solver_cpu_ptr;
-            // delete ga_solver_cuda_ptr;
+            delete ga_solver_cuda_ptr;
             LocustaTest::TearDown();
         }
 
 public:
     ga_solver_cpu<float> * ga_solver_cpu_ptr;
-    // ga_solver_cuda<float> * ga_solver_cuda_ptr;
+    ga_solver_cuda<float> * ga_solver_cuda_ptr;
 
 };
 
@@ -209,19 +209,18 @@ TEST_F(ParticleSwarmTest, BasicCudaTest)
 
 TEST_F(GeneticAlgorithmTest, BasicCpuTest)
 {
-    ga_solver_cpu_ptr->setup_operators(new CanonicalBreed<float>(),
+    ga_solver_cpu_ptr->setup_operators(new WholeCrossover<float>(),
                                        new TournamentSelection<float>());
     ga_solver_cpu_ptr->setup_solver();
     ga_solver_cpu_ptr->run();
-    // ga_solver_cpu_ptr->print_solutions();
+    //ga_solver_cpu_ptr->print_solutions();
 }
 
-// TEST_F(GeneticAlgorithmTest, BasicCudaTest)
-// {
-//     ga_solver_cuda_ptr->setup_operators(new CanonicalParticleRecordUpdateCuda<float>(),
-//                                          new CanonicalSpeedUpdateCuda<float>(),
-//                                          new CanonicalPositionUpdateCuda<float>());
-//     ga_solver_cuda_ptr->setup_solver();
-//     ga_solver_cuda_ptr->run();
-//     // ga_solver_cuda_ptr->print_population();
-// }
+TEST_F(GeneticAlgorithmTest, BasicCudaTest)
+{
+    ga_solver_cuda_ptr->setup_operators(new WholeCrossoverCuda<float>(),
+                                        new TournamentSelectionCuda<float>());
+    ga_solver_cuda_ptr->setup_solver();
+    ga_solver_cuda_ptr->run();
+    // ga_solver_cuda_ptr->print_population();
+}

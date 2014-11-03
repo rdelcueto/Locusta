@@ -26,18 +26,17 @@ namespace locusta {
         const uint32_t j = threadIdx.x;
 
         const uint32_t ISLES = gridDim.x;
-        const uint32_t AGENTS = blockIdx.x;
+        const uint32_t AGENTS = blockDim.x;
 
         const uint32_t THREAD_OFFSET = ISLES * AGENTS;
         const uint32_t BASE_IDX = i * AGENTS + j;
 
         curandState local_state = local_generator[BASE_IDX];
 
-        const uint32_t AGENT_GENOME_BASE = j + i * AGENTS * DIMENSIONS;
         const TFloat * agent_prns = prn_array + BASE_IDX;
 
-        TFloat * offspring = offspring_genomes + AGENT_GENOME_BASE;
-        const TFloat * parentA = parent_genomes + AGENT_GENOME_BASE;
+        TFloat * offspring = offspring_genomes + BASE_IDX;
+        const TFloat * parentA = parent_genomes + BASE_IDX;
 
         const bool CROSSOVER_FLAG = (*agent_prns) < CROSSOVER_RATE;
         agent_prns += THREAD_OFFSET; // Advance pointer
@@ -48,7 +47,8 @@ namespace locusta {
 
         if (CROSSOVER_FLAG) {
             const uint32_t couple_idx = couple_selection[BASE_IDX];
-            const TFloat * parentB = parent_genomes + couple_idx + i * AGENTS * DIMENSIONS;
+            const TFloat * parentB = parent_genomes + couple_idx + i * AGENTS;
+
             for(uint32_t k = 0; k < DIMENSIONS; ++k) {
                 offspring[k * THREAD_OFFSET] *= 0.5;
                 offspring[k * THREAD_OFFSET] += parentB[k * THREAD_OFFSET] * 0.5;
@@ -66,7 +66,6 @@ namespace locusta {
                 TFloat x = 0.0;
                 for(uint32_t n = 0; n < DIST_LIMIT; ++n) {
                     x += curand_uniform(&local_state);
-                    x += 0;
                 }
 
                 x *= INV_DIST_LIMIT;
@@ -156,7 +155,7 @@ namespace locusta {
                                      const TFloat * __restrict__ fitness_array,
                                      const TFloat * __restrict__ prn_array,
                                      uint32_t * __restrict__ couple_idx_array,
-                                     uint32_t * __restrict__ candidates_array) {
+                                     uint32_t * __restrict__ candidates_reservoir_array) {
 
         const uint32_t i = blockIdx.x; // ISLE
         const uint32_t j = threadIdx.x; // AGENT
@@ -165,12 +164,16 @@ namespace locusta {
         const uint32_t AGENTS = blockDim.x;
 
         const uint32_t THREAD_OFFSET = ISLES * AGENTS;
-        const TFloat * agent_prns = prn_array + j;
+        const uint32_t BASE_IDX = i * AGENTS + j;
+
+        const TFloat * agent_prns = prn_array + BASE_IDX;
+
+        uint32_t * local_candidates = candidates_reservoir_array + BASE_IDX;
 
         // Resevoir Sampling
         // * Fill
         for (uint32_t k = 0; k < SELECTION_SIZE; ++k) {
-            candidates_array[j + k * THREAD_OFFSET] = k < j ? k : k + 1;
+            local_candidates[k * THREAD_OFFSET] = k < j ? k : k + 1;
         }
 
         // * Replace
@@ -186,23 +189,23 @@ namespace locusta {
             agent_prns += THREAD_OFFSET; // Advance pointer
 
             if(selection_idx <= SELECTION_SIZE) {
-                candidates_array[j + selection_idx * THREAD_OFFSET] = k < j ? k : k + 1;
+                local_candidates[selection_idx * THREAD_OFFSET] = k < j ? k : k + 1;
             }
         }
 
         // Tournament
         bool switch_flag;
 
-        uint32_t * candidate_idx = candidates_array + j;
-        uint32_t best_idx = *(candidates_array);
-        TFloat best_fitness = fitness_array[(*candidate_idx) + i * AGENTS];
+        uint32_t best_idx = *(local_candidates);
+        TFloat best_fitness = fitness_array[best_idx + i * AGENTS];
 
         // TODO: Check prng cardinality.
         // SELECTION_SIZE - 1
 
         for(uint32_t k = 1; k < SELECTION_SIZE; ++k) {
-            candidate_idx += THREAD_OFFSET;
-            const TFloat candidate_fitness = fitness_array[(*candidate_idx) + i * AGENTS];
+            const uint32_t candidate_idx = local_candidates[k * THREAD_OFFSET];
+            const TFloat candidate_fitness = fitness_array[candidate_idx + i * AGENTS];
+
             switch_flag = (candidate_fitness > best_fitness);
 
             if((SELECTION_P != 0.0f) &&
@@ -214,11 +217,11 @@ namespace locusta {
 
             if(switch_flag) {
                 best_fitness = candidate_fitness;
-                best_idx = (*candidate_idx);
+                best_idx = candidate_idx;
             }
         }
 
-        couple_idx_array[j + i * AGENTS] = best_idx;
+        couple_idx_array[BASE_IDX] = best_idx;
     }
 
 
@@ -231,7 +234,7 @@ namespace locusta {
      const TFloat * fitness_array,
      const TFloat * prn_array,
      uint32_t * couple_idx_array,
-     uint32_t * candidates_array) {
+     uint32_t * candidates_reservoir_array) {
         tournament_selection_kernel
             <<<ISLES, AGENTS>>>
             (SELECTION_SIZE,
@@ -239,7 +242,7 @@ namespace locusta {
              fitness_array,
              prn_array,
              couple_idx_array,
-             candidates_array);
+             candidates_reservoir_array);
 
         CudaCheckError();
     }
@@ -253,7 +256,7 @@ namespace locusta {
      const float * fitness_array,
      const float * prn_array,
      uint32_t * couple_idx_array,
-     uint32_t * candidates_array);
+     uint32_t * candidates_reservoir_array);
 
     template
     void tournament_selection_dispatch<double>
@@ -264,6 +267,6 @@ namespace locusta {
      const double * fitness_array,
      const double * prn_array,
      uint32_t * couple_idx_array,
-     uint32_t * candidates_array);
+     uint32_t * candidates_reservoir_array);
 
 }

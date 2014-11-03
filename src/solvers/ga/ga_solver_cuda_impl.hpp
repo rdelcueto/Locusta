@@ -41,13 +41,13 @@ namespace locusta {
         const size_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
 
         CudaSafeCall(cudaMalloc((void **) &(_dev_couples_idx_array), TOTAL_AGENTS * sizeof(uint32_t)));
-        CudaSafeCall(cudaMalloc((void **) &(_dev_candidates_array), _ISLES * _AGENTS * _selection_size * sizeof(uint32_t)));
+        CudaSafeCall(cudaMalloc((void **) &(_dev_candidates_reservoir_array), _ISLES * _AGENTS * _AGENTS * sizeof(uint32_t)));
     }
 
     template<typename TFloat>
     ga_solver_cuda<TFloat>::~ga_solver_cuda() {
         CudaSafeCall(cudaFree(_dev_couples_idx_array));
-        CudaSafeCall(cudaFree(_dev_candidates_array));
+        CudaSafeCall(cudaFree(_dev_candidates_reservoir_array));
     }
 
     template<typename TFloat>

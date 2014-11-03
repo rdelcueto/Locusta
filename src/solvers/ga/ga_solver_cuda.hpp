@@ -70,7 +70,7 @@ namespace locusta {
         uint32_t * _dev_couples_idx_array;
 
         /// Temporal candidate selection array
-        uint32_t * _dev_candidates_array;
+        uint32_t * _dev_candidates_reservoir_array;
 
         // CUDA specific Evolutionary solver vars
         using evolutionary_solver_cuda<TFloat>::_dev_population;

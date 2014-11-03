@@ -103,11 +103,12 @@ namespace locusta {
     template<typename TFloat>
     void evolutionary_solver<TFloat>::run() {
         do {
-            print_solutions();
+            //print_solutions();
             //print_population();
             //print_transformation_diff();
             advance();
         } while(_generation_count % _generation_target != 0);
+        print_solutions();
     }
 
     template<typename TFloat>

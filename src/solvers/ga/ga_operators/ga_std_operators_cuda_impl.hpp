@@ -31,7 +31,7 @@ namespace locusta {
      const TFloat * fitness_array,
      const TFloat * prn_array,
      uint32_t * couple_idx_array,
-     uint32_t * candidates_array);
+     uint32_t * candidates_reservoir_array);
 
     template <typename TFloat>
     struct WholeCrossoverCuda : BreedCudaFunctor<TFloat> {
@@ -53,16 +53,18 @@ namespace locusta {
             const TFloat DEVIATION = 0.2;
 
             const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[ga_solver_cuda<TFloat>::BREEDING_SET]);
-            prngenerator_cuda<TFloat> * local_generator = solver->_dev_bulk_prn_generator;
 
             const TFloat CROSSOVER_RATE = solver->_crossover_rate;
             const TFloat MUTATION_RATE = solver->_mutation_rate;
             const uint32_t DIST_LIMIT = solver->_mut_dist_iterations;
 
+            const uint32_t * couple_selection = const_cast<uint32_t *>(solver->_dev_couples_idx_array);
+
             const TFloat * parent_genomes = const_cast<TFloat *>(solver->_dev_population->_dev_data_array);
+
             TFloat * offspring_genomes = solver->_dev_population->_dev_transformed_data_array;
 
-            const uint32_t * couple_selection = const_cast<uint32_t *>(solver->_dev_couples_idx_array);
+            prngenerator_cuda<TFloat> * local_generator = solver->_dev_bulk_prn_generator;
 
             whole_crossover_dispatch(ISLES,
                                      AGENTS,
@@ -105,7 +107,7 @@ namespace locusta {
             const TFloat * fitness_array = const_cast<TFloat *>(solver->_dev_population->_dev_fitness_array);
 
             uint32_t * couple_idx_array = solver->_dev_couples_idx_array;
-            uint32_t * candidates_array = solver->_dev_candidates_array;
+            uint32_t * candidates_reservoir_array = solver->_dev_candidates_reservoir_array;
 
             tournament_selection_dispatch(ISLES,
                                           AGENTS,
@@ -114,7 +116,7 @@ namespace locusta {
                                           fitness_array,
                                           prn_array,
                                           couple_idx_array,
-                                          candidates_array);
+                                          candidates_reservoir_array);
         }
     };
 

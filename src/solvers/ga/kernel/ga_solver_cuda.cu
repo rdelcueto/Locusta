@@ -21,9 +21,9 @@ namespace locusta {
         const uint32_t min_idx = min_agent_idx[i];
 
         const uint32_t THREAD_OFFSET = ISLES * AGENTS;
+        const uint32_t BASE_IDX = min_idx + i * AGENTS;
 
-        const uint32_t AGENT_GENOME_BASE = min_idx + i * AGENTS * DIMENSIONS;
-        TFloat * min_genome = genomes + AGENT_GENOME_BASE;
+        TFloat * min_genome = genomes + BASE_IDX;
 
         const TFloat * max_genome = max_agent_genome + i;
 
