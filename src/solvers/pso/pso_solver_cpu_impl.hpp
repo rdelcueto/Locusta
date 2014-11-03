@@ -67,9 +67,9 @@ namespace locusta {
 
         // Evaluate cognitive vector fitness.
         _population->swap_data_sets();
+        evolutionary_solver<TFloat>::evaluate_genomes();
         _population->swap_data_sets();
 
-        evolutionary_solver<TFloat>::evaluate_genomes();
         // Copy evaluation values.
         memcpy(_cognitive_fitness_vector,
                temporal_data_fitness,
