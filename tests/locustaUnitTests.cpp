@@ -42,13 +42,13 @@ protected:
             // Init timer
             start_time = time(NULL);
 
-            evaluation_functor_cpu_ptr = new BenchmarkFunctor<float>();
+            evaluation_functor_cpu_ptr = new BenchmarkFunctor<float>(1, DIMENSIONS);
             evaluator_cpu_ptr = new evaluator_cpu<float>(evaluation_functor_cpu_ptr,
                                                          true,
                                                          BoundMapKind::CropBounds,
                                                          DIMENSIONS);
 
-            evaluation_functor_cuda_ptr = new BenchmarkCudaFunctor<float>();
+            evaluation_functor_cuda_ptr = new BenchmarkCudaFunctor<float>(1, DIMENSIONS);
             evaluator_cuda_ptr = new evaluator_cuda<float>(evaluation_functor_cuda_ptr,
                                                            true,
                                                            BoundMapKind::CropBounds,
@@ -108,9 +108,9 @@ protected:
 
     // Population
     const uint64_t SEED = 0;
-    const uint32_t GENERATIONS = 3e1;
-    const uint32_t ISLES = 1;
-    const uint32_t AGENTS = 8;
+    const uint32_t GENERATIONS = 3e3;
+    const uint32_t ISLES = 8;
+    const uint32_t AGENTS = 16;
     const uint32_t DIMENSIONS = 8;
 
     population_set_cpu<float> * population_cpu_ptr;

@@ -8,16 +8,35 @@ namespace locusta {
     const uint32_t REPETITIONS = 1e2;
 
     template <typename TFloat>
+    __device__
+    TFloat sphere(const uint32_t DIMENSIONS,
+                  const uint32_t DIMENSION_OFFSET,
+                  const TFloat * evaluation_vector) {
+
+        TFloat reduction_sum = 0;
+
+        for(uint32_t k = 0; k < DIMENSIONS; ++k) {
+            const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
+            reduction_sum += x * x;
+        }
+
+        return reduction_sum;
+    }
+
+    template <typename TFloat>
     __global__
-    void hyper_sphere_kernel
+    void benchmark_kernel
     (const uint32_t DIMENSIONS,
-     const TFloat * __restrict__ UPPER_BOUNDS,
-     const TFloat * __restrict__ LOWER_BOUNDS,
-     BoundMapKind bound_mapping_method,
-     const bool f_negate,
-     const TFloat * __restrict__ data,
-     TFloat * __restrict__ evaluation_array)
-    {
+     const bool F_NEGATE_EVALUATION,
+     const uint32_t FUNC_ID,
+     const TFloat EVALUATION_BIAS,
+     const TFloat * __restrict__ SHIFT_ORIGIN,
+     const bool F_ROTATE,
+     const TFloat * __restrict__ ROTATION_MATRIX,
+     const TFloat * __restrict__ evaluation_data,
+     TFloat * __restrict__ evaluation_results,
+     curandState * __restrict__ local_generator) {
+
         const uint32_t isle = blockIdx.x;
         const uint32_t agent = threadIdx.x;
 
@@ -27,77 +46,88 @@ namespace locusta {
         const uint32_t genome_base = isle * AGENTS + agent;
         const uint32_t gene_offset = ISLES * AGENTS;
 
-        TFloat reduction_sum;
-        for(uint32_t r = 0; r < REPETITIONS; ++r)
-        {
-            reduction_sum = 0;
-            for(uint32_t i = 0; i < DIMENSIONS; ++i)
-            {
-                TFloat x = data[genome_base + i * gene_offset];
+        const TFloat * genome = evaluation_data + genome_base;
+        TFloat result = 0;
 
-                // const TFloat &u = UPPER_BOUNDS[i];
-                // const TFloat &l = LOWER_BOUNDS[i];
-
-                //bound_mapping(bound_mapping_method, u, l, x);
-
-                reduction_sum += x * x;
+        for(uint32_t r = 0; r < REPETITIONS; ++r) {
+            switch (FUNC_ID) {
+            default:
+                result = sphere(DIMENSIONS,
+                                gene_offset,
+                                genome);
+               break;
             }
         }
 
         const uint32_t fitness_idx = isle * AGENTS + agent;
-        evaluation_array[fitness_idx] = f_negate ?
-            -reduction_sum :
-            reduction_sum;
+        evaluation_results[fitness_idx] = F_NEGATE_EVALUATION ?
+            -result : result;
     }
 
     template <typename TFloat>
-    void hyper_sphere_dispatch
+    void benchmark_dispatch
     (const uint32_t ISLES,
      const uint32_t AGENTS,
      const uint32_t DIMENSIONS,
-     const TFloat * UPPER_BOUNDS,
-     const TFloat * LOWER_BOUNDS,
-     BoundMapKind bound_mapping_method,
-     const bool f_negate,
-     const TFloat * data,
-     TFloat * evaluation_array)
-    {
-        hyper_sphere_kernel
+     const bool F_NEGATE_EVALUATION,
+     const uint32_t FUNC_ID,
+     const TFloat EVALUATION_BIAS,
+     const TFloat * SHIFT_ORIGIN,
+     const bool F_ROTATE,
+     const TFloat * ROTATION_MATRIX,
+     const TFloat * evaluation_data,
+     TFloat * evaluation_results,
+     prngenerator_cuda<TFloat> * local_generator) {
+
+
+        curandState * device_generators = local_generator->get_device_generator_states();
+
+        benchmark_kernel
             <<<ISLES, AGENTS>>>
             (DIMENSIONS,
-             UPPER_BOUNDS,
-             LOWER_BOUNDS,
-             bound_mapping_method,
-             f_negate,
-             data,
-             evaluation_array);
+             F_NEGATE_EVALUATION,
+             FUNC_ID,
+             EVALUATION_BIAS,
+             SHIFT_ORIGIN,
+             F_ROTATE,
+             ROTATION_MATRIX,
+             evaluation_data,
+             evaluation_results,
+             device_generators);
+
         CudaCheckError();
     }
 
     // Template Specialization (float)
     template
-    void hyper_sphere_dispatch<float>
+    void benchmark_dispatch<float>
     (const uint32_t ISLES,
      const uint32_t AGENTS,
      const uint32_t DIMENSIONS,
-     const float * UPPER_BOUNDS,
-     const float * LOWER_BOUNDS,
-     BoundMapKind bound_mapping_method,
-     const bool f_negate,
-     const float * data,
-     float * evaluation_array);
+     const bool F_NEGATE_EVALUATION,
+     const uint32_t FUNC_ID,
+     const float EVALUATION_BIAS,
+     const float * SHIFT_ORIGIN,
+     const bool F_ROTATE,
+     const float * ROTATION_MATRIX,
+     const float * evaluation_data,
+     float * evaluation_results,
+     prngenerator_cuda<float> * local_generator);
 
     // Template Specialization (double)
     template
-    void hyper_sphere_dispatch<double>
+    void benchmark_dispatch<double>
     (const uint32_t ISLES,
      const uint32_t AGENTS,
      const uint32_t DIMENSIONS,
-     const double * UPPER_BOUNDS,
-     const double * LOWER_BOUNDS,
-     BoundMapKind bound_mapping_method,
-     const bool f_negate,
-     const double * data,
-     double * evaluation_array);
+     const bool F_NEGATE_EVALUATION,
+     const uint32_t FUNC_ID,
+     const double EVALUATION_BIAS,
+     const double * SHIFT_ORIGIN,
+     const bool F_ROTATE,
+     const double * ROTATION_MATRIX,
+     const double * evaluation_data,
+     double * evaluation_results,
+     prngenerator_cuda<double> * local_generator);
 
 }
