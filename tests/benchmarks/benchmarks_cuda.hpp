@@ -77,7 +77,6 @@ namespace locusta {
                 break;
             }
 
-
             _SHIFT_ORIGIN = new TFloat[_DIMENSIONS];
             CudaSafeCall(cudaMalloc((void **) &(_DEV_SHIFT_ORIGIN), _DIMENSIONS * sizeof(TFloat)));
 
