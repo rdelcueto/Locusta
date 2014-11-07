@@ -9,8 +9,7 @@ namespace locusta {
     __global__ void
     gpu_setup_curand(uint64_t seed,
                      curandState *curand_states,
-                     uint32_t num_engines)
-    {
+                     uint32_t num_engines) {
         uint64_t id =
             blockIdx.y * gridDim.x * blockDim.x +
             blockIdx.x * blockDim.x +
@@ -26,8 +25,7 @@ namespace locusta {
     template<typename TFloat>
     void gpu_setup_curand_dispatch(uint64_t seed,
                                    curandState *curand_states,
-                                   uint32_t num_engines)
-    {
+                                   uint32_t num_engines) {
         gpu_setup_curand<TFloat>
                      <<<32, 32>>>
                      (seed, curand_states, num_engines);

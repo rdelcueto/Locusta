@@ -34,10 +34,10 @@ namespace locusta {
         using prngenerator<TFloat>::_NUM_ENGINES;
 
         /// CUDA bulk prng engine.
-        curandGenerator_t _bulk_prng_engine;
+        curandGenerator_t _dev_bulk_prng_engine;
 
         /// CUDA prng kernel engines.
-        curandState *_device_prng_engines;
+        curandState *_dev_prng_engines;
     };
 
 }

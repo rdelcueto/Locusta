@@ -51,7 +51,7 @@ namespace locusta {
         virtual void crop_vector(TFloat * vec);
 
         /// Initializes vector to uniform random values, within the solver_cuda's bounds.
-        virtual void initialize_vector(TFloat * dst_vec, TFloat * tmp_vec);
+        virtual void initialize_vector(TFloat * dst_vec);
 
         /// Prints all current genomes and their fitness.
         virtual void print_population();

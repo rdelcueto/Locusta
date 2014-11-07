@@ -89,7 +89,7 @@ namespace locusta {
 
     template<typename TFloat>
     void ga_solver_cpu<TFloat>::transform() {
-        //elite_population_replace();
+        elite_population_replace();
 
         (*_selection_functor_ptr)(this);
         (*_breed_functor_ptr)(this);

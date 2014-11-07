@@ -27,7 +27,32 @@ namespace locusta {
         /// Default destructor
         virtual ~evolutionary_solver_cpu();
 
-        virtual void teardown_solver() = 0;
+        /// Initializes and allocates solver's runtime resources.
+        virtual void setup_solver();
+
+        /// Terminates and deallocates solver's runtime resources.
+        virtual void teardown_solver();
+
+        /// Applies solver's population transformation.
+        virtual void transform() = 0;
+
+        /// Updates best genomes records
+        virtual void update_records();
+
+        // Crop vector values, to fit within bounds.
+        virtual void crop_vector(TFloat * vec);
+
+        /// Initializes vector to uniform random values, within the solver's bounds.
+        virtual void initialize_vector(TFloat * dst_vec);
+
+        /// Prints all current genomes and their fitness.
+        virtual void print_population();
+
+        /// Prints last transformation diff.
+        virtual void print_transformation_diff();
+
+        /// Prints solver's current best found solutions and their fitness.
+        virtual void print_solutions();
 
         using evolutionary_solver<TFloat>::_ISLES;
         using evolutionary_solver<TFloat>::_AGENTS;

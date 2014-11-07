@@ -27,7 +27,7 @@ namespace locusta {
         virtual ~evolutionary_solver();
 
         /// Initializes and allocates solver's runtime resources.
-        virtual void setup_solver();
+        virtual void setup_solver() = 0;
 
         /// Terminates and deallocates solver's runtime resources.
         virtual void teardown_solver() = 0;
@@ -45,25 +45,25 @@ namespace locusta {
         virtual void evaluate_genomes();
 
         /// Updates best genomes records
-        virtual void update_records();
+        virtual void update_records() = 0;
 
         /// Regenerates the bulk_prns array.
         virtual void regenerate_prns();
 
         // Crop vector values, to fit within bounds.
-        virtual void crop_vector(TFloat * vec);
+        virtual void crop_vector(TFloat * vec) = 0;
 
         /// Initializes vector to uniform random values, within the solver's bounds.
-        virtual void initialize_vector(TFloat * dst_vec, TFloat * tmp_vec);
+        virtual void initialize_vector(TFloat * dst_vec) = 0;
 
         /// Prints all current genomes and their fitness.
-        virtual void print_population();
+        virtual void print_population() = 0;
 
         /// Prints last transformation diff.
-        virtual void print_transformation_diff();
+        virtual void print_transformation_diff() = 0;
 
         /// Prints solver's current best found solutions and their fitness.
-        virtual void print_solutions();
+        virtual void print_solutions() = 0;
 
         /// Evaluator
         evaluator<TFloat> * const _evaluator;

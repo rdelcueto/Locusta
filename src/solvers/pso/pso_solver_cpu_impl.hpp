@@ -16,6 +16,7 @@ namespace locusta {
                                           generation_target,
                                           upper_bounds,
                                           lower_bounds) {
+
         // Defaults
         _migration_step = 0;
         _migration_size = 1;
@@ -62,8 +63,12 @@ namespace locusta {
         const uint32_t TOTAL_GENES = _population->_TOTAL_GENES;
         const uint32_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
 
-        evolutionary_solver_cpu<TFloat>::initialize_vector(temporal_data,
-                                                           _velocity_vector);
+        evolutionary_solver_cpu<TFloat>::initialize_vector(_cognitive_position_vector);
+
+        // Copy data values into temporal population.
+        memcpy(temporal_data,
+               _cognitive_position_vector,
+               TOTAL_GENES * sizeof(TFloat));
 
         // Evaluate cognitive vector fitness.
         _population->swap_data_sets();
@@ -75,14 +80,8 @@ namespace locusta {
                temporal_data_fitness,
                TOTAL_AGENTS * sizeof(TFloat));
 
-        // Copy data values into cognitive vector.
-        memcpy(_cognitive_position_vector,
-               temporal_data,
-               TOTAL_GENES * sizeof(TFloat));
-
         // Initialize Velocity to 0
-        const size_t vec_size = _population->_TOTAL_GENES;
-        std::fill(_velocity_vector, _velocity_vector + vec_size, 0);
+        std::fill(_velocity_vector, _velocity_vector + TOTAL_GENES, 0);
 
         evolutionary_solver_cpu<TFloat>::setup_solver();
     }

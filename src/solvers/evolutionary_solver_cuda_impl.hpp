@@ -87,8 +87,7 @@ namespace locusta {
     {
         // Initialize Population
         if( !_population->_f_initialized ) {
-            initialize_vector(_dev_population->_dev_data_array,
-                              _dev_population->_dev_transformed_data_array);
+            initialize_vector(_dev_population->_dev_data_array);
             _population->_f_initialized = true;
         }
 
@@ -172,12 +171,13 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    void evolutionary_solver_cuda<TFloat>::initialize_vector(TFloat * dst_vec, TFloat * tmp_vec)
+    void evolutionary_solver_cuda<TFloat>::initialize_vector(TFloat * dst_vec)
     {
         // Initialize vector data, within given bounds.
-        const size_t vec_size = _ISLES * _AGENTS * _DIMENSIONS;
+        const uint32_t TOTAL_GENES = _population->_TOTAL_GENES;
+        TFloat * tmp_vec = _dev_population->_dev_transformed_data_array;
 
-        _dev_bulk_prn_generator->_generate(vec_size, tmp_vec);
+        _dev_bulk_prn_generator->_generate(TOTAL_GENES, tmp_vec);
 
         initialize_vector_dispatch(_ISLES,
                                    _AGENTS,

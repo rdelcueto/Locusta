@@ -62,8 +62,13 @@ namespace locusta {
         const uint32_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
 
         // Initialize best particle position with random positions.
-        evolutionary_solver_cuda<TFloat>::initialize_vector(temporal_data,
-                                                            _dev_velocity_vector);
+        evolutionary_solver_cuda<TFloat>::initialize_vector(_dev_cognitive_position_vector);
+
+        // Copy data values into temporal vector.
+        CudaSafeCall(cudaMemcpy(temporal_data,
+                                _dev_cognitive_position_vector,
+                                TOTAL_GENES * sizeof(TFloat),
+                                cudaMemcpyDeviceToDevice));
 
         // Evaluate cognitive vector fitness.
         _population->swap_data_sets();
@@ -76,14 +81,8 @@ namespace locusta {
                                 TOTAL_AGENTS * sizeof(TFloat),
                                 cudaMemcpyDeviceToDevice));
 
-        // Copy data values into cognitive vector.
-        CudaSafeCall(cudaMemcpy(_dev_cognitive_position_vector,
-                                temporal_data,
-                                TOTAL_GENES * sizeof(TFloat),
-                                cudaMemcpyDeviceToDevice));
-
-        // Set fill_velocities_kernel dispatch
-        CudaSafeCall(cudaMemset(_dev_velocity_vector, 0, TOTAL_GENES * sizeof(TFloat)));
+        // TODO: Fill array with zeroes
+        //CudaSafeCall(cudaMemset(_dev_velocity_vector, 0, TOTAL_GENES * sizeof(TFloat)));
 
         evolutionary_solver_cuda<TFloat>::setup_solver();
     }
