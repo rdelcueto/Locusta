@@ -214,18 +214,23 @@ namespace locusta {
         const uint32_t AGENTS = blockDim.x;
 
         const uint32_t locus_offset = i * AGENTS + j;
+
         for(uint32_t k = 0; k < DIMENSIONS; k++) {
             const uint32_t particle_gene_idx = k * ISLES * AGENTS + locus_offset;
 
             const TFloat low_bound = LOWER_BOUNDS[k];
             const TFloat high_bound = UPPER_BOUNDS[k];
 
-            TFloat c_value = vec[particle_gene_idx];
+            const TFloat curr_value = vec[particle_gene_idx];
+            TFloat crop_value = curr_value;
 
-            c_value = c_value < low_bound ? low_bound : c_value;
-            c_value = c_value > high_bound ? high_bound : c_value;
+            crop_value = crop_value < low_bound ? low_bound : crop_value;
+            crop_value = crop_value > high_bound ? high_bound : crop_value;
 
-            vec[particle_gene_idx] = c_value;
+            // Crop
+            if(curr_value != crop_value) {
+                vec[particle_gene_idx] = crop_value;
+            }
         }
     }
 

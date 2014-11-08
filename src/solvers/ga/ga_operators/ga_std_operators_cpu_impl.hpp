@@ -40,25 +40,30 @@ namespace locusta {
 
                 const uint32_t * couple_selection = const_cast<uint32_t *>(solver->_couples_idx_array);
 
+#pragma omp for collapse(2)
                 for(uint32_t i = 0; i < ISLES; ++i) {
-                    const uint32_t ISLE_GENOMES_OFFSET = i * AGENTS * DIMENSIONS;
                     for(uint32_t j = 0; j < AGENTS; ++j) {
+                        const uint32_t ISLE_OFFSET = AGENTS * DIMENSIONS;
+                        const uint32_t BASE_IDX = i * ISLE_OFFSET + j * DIMENSIONS;
+
                         const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
-                        const uint32_t agents_idx = ISLE_GENOMES_OFFSET + j * DIMENSIONS;
 
-                        const bool CROSSOVER_FLAG = (*agents_prns++) < CROSSOVER_RATE;
-
-                        TFloat * offspring = offspring_genomes + agents_idx;
-                        const TFloat * parentA = parent_genomes + agents_idx;
+                        TFloat * offspring = offspring_genomes + BASE_IDX;
+                        const TFloat * parentA = parent_genomes + BASE_IDX;
 
                         for(uint32_t k = 0; k < DIMENSIONS; ++k) {
                             offspring[k] = parentA[k];
                         }
 
-                        if(CROSSOVER_FLAG) {
-                            const uint32_t couple_idx = couple_selection[i * AGENTS + j];
-                            const TFloat * parentB = parent_genomes + ISLE_GENOMES_OFFSET + couple_idx * DIMENSIONS;
+                        const bool CROSSOVER_FLAG = (*agents_prns) < CROSSOVER_RATE;
+                        agents_prns++;
 
+                        if(CROSSOVER_FLAG) {
+                            const uint32_t COUPLE_IDX = couple_selection[i * AGENTS + j];
+                            const uint32_t COUPLE_BASE_IDX = i * ISLE_OFFSET + COUPLE_IDX * DIMENSIONS;
+                            const TFloat * parentB = parent_genomes + COUPLE_BASE_IDX;
+
+                            #pragma omp simd
                             for(uint32_t k = 0; k < DIMENSIONS; ++k) {
                                 offspring[k] *= 0.5;
                                 offspring[k] += parentB[k] * 0.5;
@@ -66,7 +71,9 @@ namespace locusta {
                         }
 
                         for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-                            const bool GENE_MUTATE_FLAG = (*agents_prns++) < MUTATION_RATE;
+                            const bool GENE_MUTATE_FLAG = (*agents_prns) < MUTATION_RATE;
+
+                            agents_prns++;
                             if(GENE_MUTATE_FLAG) {
                                 const TFloat & range = VAR_RANGES[k];
 
@@ -117,9 +124,10 @@ namespace locusta {
 
                 uint32_t * couple_idx_array = solver->_couples_idx_array;
 
+                #pragma omp parallel for collapse(2)
                 for(uint32_t i = 0; i < ISLES; ++i) {
-                    const uint32_t ISLE_OFFSET = i * AGENTS;
                     for(uint32_t j = 0; j < AGENTS; ++j) {
+                    const uint32_t ISLE_OFFSET = i * AGENTS;
 
                         const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
                         const uint32_t idx = ISLE_OFFSET + j;
@@ -140,7 +148,8 @@ namespace locusta {
 
                         for(uint32_t k = SELECTION_SIZE; k < iter_limit; ++k) {
                             selection_idx = (AGENTS - 1) *
-                                (*agents_prns++);
+                                (*agents_prns);
+                            agents_prns++;
 
                             if(selection_idx <= SELECTION_SIZE) {
                                 candidates[selection_idx] = k < j ? k : k + 1;
@@ -176,8 +185,6 @@ namespace locusta {
                                 candidates[0] = candidates[k];
                             }
                         }
-
-                        //std::cout << candidates[0] << " WON!" << std::endl;
                         couple_idx_array[idx] = candidates[0];
                     }
                 }

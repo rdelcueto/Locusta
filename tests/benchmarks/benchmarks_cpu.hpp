@@ -2,25 +2,9 @@
 #define _BENCHMARKS_CPU_H_
 
 #include "evaluator/evaluator_cpu.hpp"
-
 #include "prngenerator/prngenerator_cpu.hpp"
 
 namespace locusta {
-
-    template<typename TFloat>
-    inline TFloat sphere(const uint32_t DIMENSIONS,
-                  const uint32_t DIMENSION_OFFSET,
-                  const TFloat * evaluation_vector) {
-
-        TFloat reduction_sum = 0.0;
-
-        for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-            const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-            reduction_sum += x * x;
-        }
-
-        return reduction_sum;
-    }
 
     template<typename TFloat>
     void benchmark_dispatch
@@ -35,49 +19,24 @@ namespace locusta {
      const TFloat * ROTATION_MATRIX,
      const TFloat * evaluation_data,
      TFloat * evaluation_results,
-     prngenerator_cpu<TFloat> * local_generator) {
-
-        const uint32_t REPETITIONS = 1e2;
-
-        for(uint32_t i = 0; i < ISLES; ++i) {
-            for(uint32_t j = 0; j < AGENTS; ++j) {
-                const uint32_t isle = i;
-                const uint32_t agent = j;
-
-                TFloat result = 0;
-                const TFloat * genome = evaluation_data + i * AGENTS * DIMENSIONS + j * DIMENSIONS;
-                for(uint32_t r = 0; r < REPETITIONS; ++r) {
-                    switch (FUNC_ID) {
-                    default:
-                        result = sphere(DIMENSIONS,
-                                        1,
-                                        genome);
-                        break;
-                    }
-                }
-
-                evaluation_results[isle * AGENTS + agent] = F_NEGATE_EVALUATION ?
-                    -result : result;
-            }
-        }
-    }
+     prngenerator_cpu<TFloat> * local_generator);
 
     template<typename TFloat>
     struct BenchmarkFunctor : EvaluationFunctor<TFloat> {
 
         enum FUNCTION_IDENTIFIERS {
             SPHERE = 1,
-            ROT_ELLIPS,
-            ROT_BENT_CIGAR,
-            ROT_DISCUS,
-            DIFF_POWERS,
-            ROT_ROSENBROCK,
-            ROT_SCHAFFER,
-            ROT_ACKLEY,
-            ROT_WEIERSTRASS,
-            ROT_GRIEWANK,
-            RASTRIGIN,
-            ROT_RASTRIGIN
+            ROT_ELLIPS,      // 2
+            ROT_BENT_CIGAR,  // 3
+            ROT_DISCUS,      // 4
+            DIFF_POWERS,     // 5
+            ROT_ROSENBROCK,  // 6
+            ROT_SCHAFFER,    // 7
+            ROT_ACKLEY,      // 8
+            ROT_WEIERSTRASS, // 9
+            ROT_GRIEWANK,    // 10
+            RASTRIGIN,       // 11
+            ROT_RASTRIGIN    // 12
         };
 
         const uint32_t _FUNCTION_ID;
@@ -94,33 +53,19 @@ namespace locusta {
             // TODO: Load CEC transformation matrices/vectors.
 
             switch (function_id) {
-            case ROT_ELLIPS:
-                _EVALUATION_BIAS = -1300.0;
-                _ROT_FLAG = 1;
-                break;
-            case ROT_BENT_CIGAR:
-                _EVALUATION_BIAS = -1200.0;
-                _ROT_FLAG = 1;
-                break;
-            case ROT_DISCUS:
-                _EVALUATION_BIAS = -1100.0;
-                _ROT_FLAG = 1;
-                break;
-            case DIFF_POWERS:
-                _EVALUATION_BIAS = -1000.0;
-                break;
             default: // SPHERE DEFAULT FUNC
                 _EVALUATION_BIAS = -1400.0;
+                _ROT_FLAG = 0;
                 break;
             }
 
             _SHIFT_ORIGIN = new TFloat[_DIMENSIONS];
             _ROTATION_MATRIX = new TFloat[_DIMENSIONS * _DIMENSIONS];
-
         }
 
         ~BenchmarkFunctor() {
-
+            delete [] _SHIFT_ORIGIN;
+            delete [] _ROTATION_MATRIX;
         }
 
         virtual void operator()(evolutionary_solver<TFloat> * solver)
@@ -147,7 +92,10 @@ namespace locusta {
                                    local_generator);
             }
 
+
     };
 
 } // namespace locusta
+
+#include "benchmarks_cpu_impl.hpp"
 #endif /* _BENCHMARKS_CPU_H_ */

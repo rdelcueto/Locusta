@@ -1,40 +1,28 @@
-#include <math_functions.h>
-
-#include "cuda_common/cuda_helpers.h"
-#include "../benchmarks_cuda.hpp"
+#ifndef _BENCHMARKS_CPU_IMPL_H_
+#define _BENCHMARKS_CPU_IMPL_H_
 
 namespace locusta {
 
-    /// GPU Kernels Shared Memory Pointer.
-    extern __shared__ int evaluator_shared_memory[];
-    const uint32_t REPETITIONS = 1e2;
-
     template<typename TFloat>
-    __device__
     inline TFloat scale(const TFloat x, const TFloat scale) {
         return x * scale;
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat shift(const TFloat x, const TFloat o) {
         return x - o;
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat asy(const TFloat x, const TFloat beta, const uint32_t i, const uint32_t k) {
-        const TFloat ONE = 1.0;
-        const TFloat HALF = 0.5;
         if(x > 0) {
-            return pow(x, ONE + beta*i/(k-1)*pow(x, HALF));
+            return pow(x, 1 + beta*i/(k-1)*pow(x, 0.5));
         } else {
             return x;
         }
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat osz(const TFloat x, const uint32_t i, const uint32_t k) {
         const TFloat c3 = 0.049;
 
@@ -63,12 +51,12 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat sphere(const uint32_t DIMENSIONS,
                          const uint32_t DIMENSION_OFFSET,
                          const TFloat * evaluation_vector) {
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             reduction_sum += x * x;
@@ -77,7 +65,6 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat ellips(const uint32_t DIMENSIONS,
                          const uint32_t DIMENSION_OFFSET,
                          const TFloat * evaluation_vector) {
@@ -86,6 +73,7 @@ namespace locusta {
 
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
@@ -95,7 +83,6 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat bent_cigar(const uint32_t DIMENSIONS,
                              const uint32_t DIMENSION_OFFSET,
                              const TFloat * evaluation_vector) {
@@ -104,6 +91,7 @@ namespace locusta {
         const TFloat c2 = 6.0;
         TFloat reduction_sum = 0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
@@ -118,7 +106,6 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat discus(const uint32_t DIMENSIONS,
                          const uint32_t DIMENSION_OFFSET,
                          const TFloat * evaluation_vector) {
@@ -127,6 +114,7 @@ namespace locusta {
 
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
@@ -140,17 +128,16 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat diff_powers(const uint32_t DIMENSIONS,
                               const uint32_t DIMENSION_OFFSET,
                               const TFloat * evaluation_vector) {
-        const TFloat ONE = 1.0;
         const TFloat c1 = 0.5;
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-            reduction_sum += pow(fabs(x), 2+4*k/(DIMENSIONS-1)*ONE);
+            reduction_sum += pow(fabs(x), 2+4*k/(DIMENSIONS-1));
         }
 
         reduction_sum = pow(reduction_sum, c1);
@@ -158,7 +145,6 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat rosenbrock(const uint32_t DIMENSIONS,
                              const uint32_t DIMENSION_OFFSET,
                              const TFloat * evaluation_vector) {
@@ -177,7 +163,6 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat schaffer(const uint32_t DIMENSIONS,
                            const uint32_t DIMENSION_OFFSET,
                            const TFloat * evaluation_vector) {
@@ -190,8 +175,7 @@ namespace locusta {
 
         const TFloat x = evaluation_vector[0];
         const TFloat asy_x = asy<TFloat>(x, beta, 0, DIMENSIONS);
-        //TFloat y = asy_x * pow(c1, c2*0/(DIMENSIONS-1)/c3);
-        TFloat y = asy_x * c1;
+        TFloat y = asy_x * pow(c1, c2*0/(DIMENSIONS-1)/c3);
 
         TFloat reduction_sum = 0.0;
         for (uint32_t k = 0; k < DIMENSIONS-1; ++k) {
@@ -201,7 +185,7 @@ namespace locusta {
             const TFloat z = pow(y*y + y_1*y_1, c4);
 
             const TFloat tmp = sin(50*pow(z, c5));
-            reduction_sum += pow(z, c4) + pow(z, c4) * tmp*tmp;
+            reduction_sum += pow(z, 0.5) + pow(z, 0.5) * tmp*tmp;
 
             y = y_1;
         }
@@ -209,7 +193,6 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat ackley(const uint32_t DIMENSIONS,
                          const uint32_t DIMENSION_OFFSET,
                          const TFloat * evaluation_vector) {
@@ -225,6 +208,7 @@ namespace locusta {
         TFloat reduction_sum_a = 0.0;
         TFloat reduction_sum_b = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum_a, reduction_sum_b)
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
@@ -241,11 +225,9 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat weierstrass(const uint32_t DIMENSIONS,
                               const uint32_t DIMENSION_OFFSET,
                               const TFloat * evaluation_vector) {
-        const TFloat ONE = 1.0;
         const TFloat PI = 3.14159;
         const TFloat beta = 0.5;
         const TFloat c1 = 10.0;
@@ -269,9 +251,10 @@ namespace locusta {
             const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
             const TFloat y = asy_x * pow(c1, c2*k/(DIMENSIONS-1)/c3);
 
+#pragma omp simd reduction(+:reduction_sum_b, reduction_sum_c)
             for (uint32_t it = 0; it <= it_max; ++it) {
-                reduction_sum_b += pow(a, it*ONE) * cos(c3*PI*pow(b, it*ONE)*(y + c4));
-                reduction_sum_c += pow(a, it*ONE) * cos(c3*PI*pow(b, it*ONE)*c4);
+                reduction_sum_b += pow(a, it) * cos(c3*PI*pow(b, it)*(y + c4));
+                reduction_sum_c += pow(a, it) * cos(c3*PI*pow(b, it)*c4);
             }
 
             reduction_sum_a += reduction_sum_b;
@@ -280,7 +263,6 @@ namespace locusta {
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat griewank(const uint32_t DIMENSIONS,
                            const uint32_t DIMENSION_OFFSET,
                            const TFloat * evaluation_vector) {
@@ -293,18 +275,17 @@ namespace locusta {
         TFloat reduction_sum = 0.0;
         TFloat reduction_prod = 1.0;
 
+#pragma omp simd reduction(+:reduction_sum) reduction(*:reduction_prod)
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat y = x*pow(c1, c2*k/(DIMENSIONS-1)/c3);
             reduction_sum += y*y;
             reduction_prod *= cos(y/sqrt(c2+k));
-
         }
         return c4 + reduction_sum/c5 - reduction_prod;
     }
 
     template<typename TFloat>
-    __device__
     inline TFloat rastrigin(const uint32_t DIMENSIONS,
                             const uint32_t DIMENSION_OFFSET,
                             const TFloat * evaluation_vector) {
@@ -318,6 +299,7 @@ namespace locusta {
 
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
@@ -330,106 +312,7 @@ namespace locusta {
         return reduction_sum;
     }
 
-
-    template <typename TFloat>
-    __global__
-    void benchmark_kernel
-    (const uint32_t DIMENSIONS,
-     const bool F_NEGATE_EVALUATION,
-     const uint32_t FUNC_ID,
-     const TFloat EVALUATION_BIAS,
-     const TFloat * __restrict__ SHIFT_ORIGIN,
-     const bool F_ROTATE,
-     const TFloat * __restrict__ ROTATION_MATRIX,
-     const TFloat * __restrict__ evaluation_data,
-     TFloat * __restrict__ evaluation_results,
-     curandState * __restrict__ local_generator) {
-
-        const uint32_t isle = blockIdx.x;
-        const uint32_t agent = threadIdx.x;
-
-        const uint32_t ISLES = gridDim.x;
-        const uint32_t AGENTS = blockDim.x;
-
-        const uint32_t genome_base = isle * AGENTS + agent;
-        const uint32_t OFFSET = ISLES * AGENTS;
-
-        const TFloat * genome = evaluation_data + genome_base;
-        TFloat result = 0;
-
-        for(uint32_t r = 0; r < REPETITIONS; ++r) {
-            switch (FUNC_ID) {
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_ELLIPS:
-                result = ellips(DIMENSIONS,
-                                OFFSET,
-                                genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_BENT_CIGAR:
-                result = bent_cigar(DIMENSIONS,
-                                    OFFSET,
-                                    genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_DISCUS:
-                result = discus(DIMENSIONS,
-                                OFFSET,
-                                genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::DIFF_POWERS:
-                result = diff_powers(DIMENSIONS,
-                                     OFFSET,
-                                     genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_ROSENBROCK:
-                result = rosenbrock(DIMENSIONS,
-                                    OFFSET,
-                                    genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_SCHAFFER:
-                result = schaffer(DIMENSIONS,
-                                  OFFSET,
-                                  genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_ACKLEY:
-                result = ackley(DIMENSIONS,
-                                OFFSET,
-                                genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_WEIERSTRASS:
-                result = weierstrass(DIMENSIONS,
-                                     OFFSET,
-                                     genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_GRIEWANK:
-                result = griewank(DIMENSIONS,
-                                  OFFSET,
-                                  genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::RASTRIGIN:
-                result = rastrigin(DIMENSIONS,
-                                   OFFSET,
-                                   genome);
-                break;
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_RASTRIGIN:
-                result = rastrigin(DIMENSIONS,
-                                   OFFSET,
-                                   genome);
-                break;
-
-            case BenchmarkCudaFunctor<TFloat>::FUNCTION_IDENTIFIERS::SPHERE:
-            default:
-                result = sphere(DIMENSIONS,
-                                OFFSET,
-                                genome);
-                break;
-            }
-        }
-
-        const uint32_t fitness_idx = isle * AGENTS + agent;
-        evaluation_results[fitness_idx] = F_NEGATE_EVALUATION ?
-            -result : result;
-    }
-
-    template <typename TFloat>
+    template<typename TFloat>
     void benchmark_dispatch
     (const uint32_t ISLES,
      const uint32_t AGENTS,
@@ -442,57 +325,93 @@ namespace locusta {
      const TFloat * ROTATION_MATRIX,
      const TFloat * evaluation_data,
      TFloat * evaluation_results,
-     prngenerator_cuda<TFloat> * local_generator) {
+     prngenerator_cpu<TFloat> * local_generator) {
 
+        const uint32_t REPETITIONS = 1e2;
 
-        curandState * device_generators = local_generator->get_device_generator_states();
+#pragma omp parallel for collapse(2)
+        for(uint32_t i = 0; i < ISLES; ++i) {
+            for(uint32_t j = 0; j < AGENTS; ++j) {
+                const uint32_t isle = i;
+                const uint32_t agent = j;
+                const uint32_t OFFSET = 1;
 
-        benchmark_kernel
-            <<<ISLES, AGENTS>>>
-            (DIMENSIONS,
-             F_NEGATE_EVALUATION,
-             FUNC_ID,
-             EVALUATION_BIAS,
-             SHIFT_ORIGIN,
-             F_ROTATE,
-             ROTATION_MATRIX,
-             evaluation_data,
-             evaluation_results,
-             device_generators);
+                TFloat result = 0;
+                const TFloat * genome = evaluation_data + i * AGENTS * DIMENSIONS + j * DIMENSIONS;
+                for(uint32_t r = 0; r < REPETITIONS; ++r) {
+                    switch (FUNC_ID) {
 
-        CudaCheckError();
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_ELLIPS:
+                        result = ellips(DIMENSIONS,
+                                        OFFSET,
+                                        genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_BENT_CIGAR:
+                        result = bent_cigar(DIMENSIONS,
+                                            OFFSET,
+                                            genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_DISCUS:
+                        result = discus(DIMENSIONS,
+                                        OFFSET,
+                                        genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::DIFF_POWERS:
+                        result = diff_powers(DIMENSIONS,
+                                             OFFSET,
+                                             genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_ROSENBROCK:
+                        result = rosenbrock(DIMENSIONS,
+                                            OFFSET,
+                                            genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_SCHAFFER:
+                        result = schaffer(DIMENSIONS,
+                                          OFFSET,
+                                          genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_ACKLEY:
+                        result = ackley(DIMENSIONS,
+                                        OFFSET,
+                                        genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_WEIERSTRASS:
+                        result = weierstrass(DIMENSIONS,
+                                             OFFSET,
+                                             genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_GRIEWANK:
+                        result = griewank(DIMENSIONS,
+                                          OFFSET,
+                                          genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::RASTRIGIN:
+                        result = rastrigin(DIMENSIONS,
+                                           OFFSET,
+                                           genome);
+                        break;
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::ROT_RASTRIGIN:
+                        result = rastrigin(DIMENSIONS,
+                                           OFFSET,
+                                           genome);
+                        break;
+
+                    case BenchmarkFunctor<TFloat>::FUNCTION_IDENTIFIERS::SPHERE:
+                    default:
+                        result = sphere(DIMENSIONS,
+                                        OFFSET,
+                                        genome);
+                        break;
+                    }
+                }
+
+                evaluation_results[isle * AGENTS + agent] = F_NEGATE_EVALUATION ?
+                    -result : result;
+            }
+        }
     }
 
-    // Template Specialization (float)
-    template
-    void benchmark_dispatch<float>
-    (const uint32_t ISLES,
-     const uint32_t AGENTS,
-     const uint32_t DIMENSIONS,
-     const bool F_NEGATE_EVALUATION,
-     const uint32_t FUNC_ID,
-     const float EVALUATION_BIAS,
-     const float * SHIFT_ORIGIN,
-     const bool F_ROTATE,
-     const float * ROTATION_MATRIX,
-     const float * evaluation_data,
-     float * evaluation_results,
-     prngenerator_cuda<float> * local_generator);
-
-    // Template Specialization (double)
-    template
-    void benchmark_dispatch<double>
-    (const uint32_t ISLES,
-     const uint32_t AGENTS,
-     const uint32_t DIMENSIONS,
-     const bool F_NEGATE_EVALUATION,
-     const uint32_t FUNC_ID,
-     const double EVALUATION_BIAS,
-     const double * SHIFT_ORIGIN,
-     const bool F_ROTATE,
-     const double * ROTATION_MATRIX,
-     const double * evaluation_data,
-     double * evaluation_results,
-     prngenerator_cuda<double> * local_generator);
-
 }
+
+#endif /* _BENCHMARKS_CPU_IMPL */

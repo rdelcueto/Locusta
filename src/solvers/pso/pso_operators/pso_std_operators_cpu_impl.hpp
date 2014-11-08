@@ -26,7 +26,7 @@ namespace locusta {
                 TFloat * position_record = solver->_cognitive_position_vector; // (Cognitive)
                 TFloat * fitness_record = solver->_cognitive_fitness_vector; // (Cognitive
                                                                                     // Fitness)
-
+#pragma omp parallel for collapse(2)
                 for(uint32_t i = 0; i < ISLES; i++) {
                     for(uint32_t j = 0; j < AGENTS; j++) {
                         const uint32_t agent_idx = i * AGENTS + j;
@@ -82,11 +82,13 @@ namespace locusta {
                 const uint32_t RND_OFFSET = DIMENSIONS * 2;
                 const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[pso_solver_cpu<TFloat>::SPEED_UPDATE_SET]);
 
+#pragma omp parallel for collapse(2)
                 for(uint32_t i = 0; i < ISLES; i++) {
-                    const uint32_t isle_position_record_offset = i * DIMENSIONS;
                     for(uint32_t j = 0; j < AGENTS; j++) {
+                        const uint32_t isle_position_record_offset = i * DIMENSIONS;
                         const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
                         const uint32_t particle_offset = i * AGENTS * DIMENSIONS + j * DIMENSIONS;
+
                         for(uint32_t k = 0; k < DIMENSIONS; k++) {
                             const TFloat c_rnd = (*agents_prns++);
                             const TFloat s_rnd = (*agents_prns++);
@@ -125,9 +127,11 @@ namespace locusta {
 
                 TFloat * new_positions = solver->_population->_transformed_data_array;
 
+#pragma omp parallel for collapse(2)
                 for(uint32_t i = 0; i < ISLES; i++) {
                     for(uint32_t j = 0; j < AGENTS; j++) {
                         const uint32_t genome_offset = i * AGENTS * DIMENSIONS + j * DIMENSIONS;
+                        #pragma omp simd
                         for(uint32_t k = 0; k < DIMENSIONS; k++) {
                             const uint32_t curr_gene = genome_offset + k;
 
