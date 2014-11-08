@@ -46,10 +46,10 @@ public:
     }
     // Override this to define how to tear down the environment.
     virtual void TearDown() {
-        const time_t end_time = time(NULL);
-        const time_t elapsed_time = end_time - start_time;
+        // const time_t end_time = time(NULL);
+        // const time_t elapsed_time = end_time - start_time;
 
-        std::cout << "Elapsed Time" << elapsed_time << std::endl;
+        // std::cout << "Elapsed Time" << elapsed_time << std::endl;
         //RecordProperty("Elapsed Time", elapsed_time);
     }
 
@@ -57,11 +57,11 @@ public:
 
     time_t start_time;
 
-    const uint32_t BENCHMARK_FUNC_ID = 1;
+    const uint32_t BENCHMARK_FUNC_ID = 8;
     const uint64_t SEED = 1;
-    const uint32_t GENERATIONS = 2e2;
-    const uint32_t ISLES = 2;
-    const uint32_t AGENTS = 8;
+    const uint32_t GENERATIONS = 2e3;
+    const uint32_t ISLES = 1;
+    const uint32_t AGENTS = 256;
     const uint32_t DIMENSIONS = 8;
 
     float * upper_bounds_ptr;

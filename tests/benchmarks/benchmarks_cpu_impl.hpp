@@ -56,6 +56,7 @@ namespace locusta {
                          const TFloat * evaluation_vector) {
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             reduction_sum += x * x;
@@ -72,6 +73,7 @@ namespace locusta {
 
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
@@ -89,6 +91,7 @@ namespace locusta {
         const TFloat c2 = 6.0;
         TFloat reduction_sum = 0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
@@ -111,6 +114,7 @@ namespace locusta {
 
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
@@ -130,6 +134,7 @@ namespace locusta {
         const TFloat c1 = 0.5;
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             reduction_sum += pow(fabs(x), 2+4*k/(DIMENSIONS-1));
@@ -203,6 +208,7 @@ namespace locusta {
         TFloat reduction_sum_a = 0.0;
         TFloat reduction_sum_b = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum_a, reduction_sum_b)
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
@@ -245,6 +251,7 @@ namespace locusta {
             const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
             const TFloat y = asy_x * pow(c1, c2*k/(DIMENSIONS-1)/c3);
 
+#pragma omp simd reduction(+:reduction_sum_b, reduction_sum_c)
             for (uint32_t it = 0; it <= it_max; ++it) {
                 reduction_sum_b += pow(a, it) * cos(c3*PI*pow(b, it)*(y + c4));
                 reduction_sum_c += pow(a, it) * cos(c3*PI*pow(b, it)*c4);
@@ -268,12 +275,12 @@ namespace locusta {
         TFloat reduction_sum = 0.0;
         TFloat reduction_prod = 1.0;
 
+#pragma omp simd reduction(+:reduction_sum) reduction(*:reduction_prod)
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat y = x*pow(c1, c2*k/(DIMENSIONS-1)/c3);
             reduction_sum += y*y;
             reduction_prod *= cos(y/sqrt(c2+k));
-
         }
         return c4 + reduction_sum/c5 - reduction_prod;
     }
@@ -292,6 +299,7 @@ namespace locusta {
 
         TFloat reduction_sum = 0.0;
 
+#pragma omp simd reduction(+:reduction_sum) linear(evaluation_vector:DIMENSION_OFFSET*sizeof(TFloat))
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
             const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
             const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
@@ -321,8 +329,8 @@ namespace locusta {
 
         const uint32_t REPETITIONS = 1e2;
 
+#pragma omp parallel for collapse(2)
         for(uint32_t i = 0; i < ISLES; ++i) {
-#pragma omp parallel for
             for(uint32_t j = 0; j < AGENTS; ++j) {
                 const uint32_t isle = i;
                 const uint32_t agent = j;

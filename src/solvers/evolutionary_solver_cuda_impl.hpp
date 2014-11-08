@@ -110,7 +110,7 @@ namespace locusta {
                 _min_agent_genome[i + k * _ISLES] =
                     0;
                 // TODO: Define correct initialize value.
-                    //std::numeric_limits<TFloat>::quiet_NaN();
+                //std::numeric_limits<TFloat>::quiet_NaN();
             }
        }
 
@@ -173,10 +173,12 @@ namespace locusta {
     template<typename TFloat>
     void evolutionary_solver_cuda<TFloat>::initialize_vector(TFloat * dst_vec)
     {
-        // Initialize vector data, within given bounds.
         const uint32_t TOTAL_GENES = _population->_TOTAL_GENES;
-        TFloat * tmp_vec = _dev_population->_dev_transformed_data_array;
 
+        TFloat * tmp_vec;
+        CudaSafeCall(cudaMalloc((void **) &(tmp_vec), TOTAL_GENES * sizeof(TFloat)));
+
+        // Initialize vector data, within given bounds.
         _dev_bulk_prn_generator->_generate(TOTAL_GENES, tmp_vec);
 
         initialize_vector_dispatch(_ISLES,
@@ -186,6 +188,8 @@ namespace locusta {
                                    _DEV_VAR_RANGES,
                                    tmp_vec,
                                    dst_vec);
+
+        CudaSafeCall(cudaFree(tmp_vec));
     }
 
     template<typename TFloat>

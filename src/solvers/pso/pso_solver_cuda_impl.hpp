@@ -2,6 +2,13 @@
 
 namespace locusta {
 
+    template<typename TFloat>
+    void reset_velocity_dispatch(const uint32_t ISLES,
+                                 const uint32_t AGENTS,
+                                 const uint32_t DIMENSIONS,
+                                 TFloat * velocity_vector,
+                                 TFloat reset_value);
+
     ///Interface for Genetic Algorithm solvers
     template<typename TFloat>
     pso_solver_cuda<TFloat>::pso_solver_cuda(population_set_cuda<TFloat> * population,
@@ -81,8 +88,12 @@ namespace locusta {
                                 TOTAL_AGENTS * sizeof(TFloat),
                                 cudaMemcpyDeviceToDevice));
 
-        // TODO: Fill array with zeroes
-        //CudaSafeCall(cudaMemset(_dev_velocity_vector, 0, TOTAL_GENES * sizeof(TFloat)));
+        const TFloat zero_value = 0;
+        reset_velocity_dispatch(_ISLES,
+                                _AGENTS,
+                                _DIMENSIONS,
+                                _dev_velocity_vector,
+                                zero_value);
 
         evolutionary_solver_cuda<TFloat>::setup_solver();
     }

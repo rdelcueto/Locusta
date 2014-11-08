@@ -25,6 +25,7 @@ set(CUFILES
   prngenerator/kernel/prngenerator_cuda.cu
   population/kernel/population_set_cuda.cu
   solvers/kernel/evolutionary_solver_cuda.cu
+  solvers/pso/kernel/pso_solver_cuda.cu
   solvers/pso/pso_operators/kernel/pso_std_operators_cuda.cu
   solvers/ga/kernel/ga_solver_cuda.cu
   solvers/ga/ga_operators/kernel/ga_std_operators_cuda.cu

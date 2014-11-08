@@ -80,8 +80,9 @@ namespace locusta {
                temporal_data_fitness,
                TOTAL_AGENTS * sizeof(TFloat));
 
+        const TFloat zero_value = 0;
         // Initialize Velocity to 0
-        std::fill(_velocity_vector, _velocity_vector + TOTAL_GENES, 0);
+        std::fill(_velocity_vector, _velocity_vector + TOTAL_GENES, zero_value);
 
         evolutionary_solver_cpu<TFloat>::setup_solver();
     }

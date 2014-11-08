@@ -138,17 +138,18 @@ namespace locusta {
                         k;
 
                     // TODO: Flexible bound crop method
-                    TFloat c_value = vec[data_idx];
-                    const TFloat value = c_value;
+                    const TFloat curr_value = vec[data_idx];
                     const TFloat low_bound = _LOWER_BOUNDS[k];
                     const TFloat high_bound = _UPPER_BOUNDS[k];
 
-                    c_value = c_value < low_bound ? low_bound : c_value;
-                    c_value = c_value > high_bound ? high_bound : c_value;
+                    TFloat crop_value = curr_value;
 
-                    if(value != c_value) {
-                        // Crop
-                        vec[data_idx] = c_value;
+                    crop_value = crop_value < low_bound ? low_bound : crop_value;
+                    crop_value = crop_value > high_bound ? high_bound : crop_value;
+
+                    // Crop
+                    if(curr_value != crop_value) {
+                        vec[data_idx] = crop_value;
                     }
                 }
             }
@@ -157,8 +158,8 @@ namespace locusta {
     template<typename TFloat>
     void evolutionary_solver_cpu<TFloat>::initialize_vector(TFloat * dst_vec) {
 
-        TFloat * tmp_vec = _population->_transformed_data_array;
         const uint32_t TOTAL_GENES = _population->_TOTAL_GENES;
+        TFloat * tmp_vec = new TFloat[TOTAL_GENES];
         _bulk_prn_generator->_generate(TOTAL_GENES, tmp_vec);
 
         for(uint32_t i = 0; i < _ISLES; ++i) {
@@ -170,13 +171,14 @@ namespace locusta {
                         i * _AGENTS * _DIMENSIONS +
                         j * _DIMENSIONS +
                         k;
-                    dst_vec[data_idx] = tmp_vec[data_idx];
 
-                    // dst_vec[data_idx] = _LOWER_BOUNDS[k] +
-                    //     (_VAR_RANGES[k] * tmp_vec[data_idx]);
+                    dst_vec[data_idx] = _LOWER_BOUNDS[k] +
+                        (_VAR_RANGES[k] * tmp_vec[data_idx]);
                 }
             }
         }
+
+        delete [] tmp_vec;
     }
 
     template<typename TFloat>
