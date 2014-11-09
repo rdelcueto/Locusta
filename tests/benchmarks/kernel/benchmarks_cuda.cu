@@ -25,9 +25,10 @@ namespace locusta {
     __device__
     inline TFloat asy(const TFloat x, const TFloat beta, const uint32_t i, const uint32_t k) {
         const TFloat ONE = 1.0;
-        const TFloat HALF = 0.5;
+        //const TFloat HALF = 0.5;
         if(x > 0) {
-            return pow(x, ONE + beta*i/(k-1)*pow(x, HALF));
+            //return pow(x, ONE + beta*i/(k-1)*pow(x, HALF));
+            return pow(x, ONE + beta*i/(k-1)*sqrt(x));
         } else {
             return x;
         }
@@ -145,7 +146,7 @@ namespace locusta {
                               const uint32_t DIMENSION_OFFSET,
                               const TFloat * evaluation_vector) {
         const TFloat ONE = 1.0;
-        const TFloat c1 = 0.5;
+        //const TFloat c1 = 0.5;
         TFloat reduction_sum = 0.0;
 
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
@@ -153,7 +154,8 @@ namespace locusta {
             reduction_sum += pow(fabs(x), 2+4*k/(DIMENSIONS-1)*ONE);
         }
 
-        reduction_sum = pow(reduction_sum, c1);
+        //reduction_sum = pow(reduction_sum, c1);
+        reduction_sum = sqrt(reduction_sum);
         return reduction_sum;
     }
 
@@ -185,7 +187,7 @@ namespace locusta {
         const TFloat c1 = 10.0;
         const TFloat c2 = 1.0;
         const TFloat c3 = 2.0;
-        const TFloat c4 = 0.5;
+        //const TFloat c4 = 0.5;
         const TFloat c5 = 0.2;
 
         const TFloat x = evaluation_vector[0];
@@ -197,11 +199,12 @@ namespace locusta {
         for (uint32_t k = 0; k < DIMENSIONS-1; ++k) {
             const TFloat x_1 = evaluation_vector[(k+1) * DIMENSION_OFFSET];
             const TFloat asy_x_1 = asy<TFloat>(x_1, beta, (k+1), DIMENSIONS);
-            const TFloat y_1 = asy_x * pow(c1, c2*k/(DIMENSIONS-1)/c3);
-            const TFloat z = pow(y*y + y_1*y_1, c4);
+            const TFloat y_1 = asy_x_1 * pow(c1, c2*k/(DIMENSIONS-1)/c3);
+            const TFloat z = sqrt(y*y + y_1*y_1);
 
             const TFloat tmp = sin(50*pow(z, c5));
-            reduction_sum += pow(z, c4) + pow(z, c4) * tmp*tmp;
+            //reduction_sum += pow(z, c4) + pow(z, c4) * tmp*tmp;
+            reduction_sum += sqrt(z) + sqrt(z) * tmp*tmp;
 
             y = y_1;
         }
@@ -245,7 +248,6 @@ namespace locusta {
     inline TFloat weierstrass(const uint32_t DIMENSIONS,
                               const uint32_t DIMENSION_OFFSET,
                               const TFloat * evaluation_vector) {
-        const TFloat ONE = 1.0;
         const TFloat PI = 3.14159;
         const TFloat beta = 0.5;
         const TFloat c1 = 10.0;
@@ -255,6 +257,7 @@ namespace locusta {
 
         const TFloat a = 0.5;
         const TFloat b = 3.0;
+
         const uint32_t it_max = 20;
 
         TFloat reduction_sum_a = 0.0;
@@ -269,14 +272,20 @@ namespace locusta {
             const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
             const TFloat y = asy_x * pow(c1, c2*k/(DIMENSIONS-1)/c3);
 
+            TFloat pow_a = 1;
+            TFloat pow_b = 1;
+
             for (uint32_t it = 0; it <= it_max; ++it) {
-                reduction_sum_b += pow(a, it*ONE) * cos(c3*PI*pow(b, it*ONE)*(y + c4));
-                reduction_sum_c += pow(a, it*ONE) * cos(c3*PI*pow(b, it*ONE)*c4);
+                reduction_sum_b += pow_a * cos(c3*PI*pow_b*(y + c4));
+                reduction_sum_c += pow_a * cos(c3*PI*pow_b*c4);
+
+                pow_a *= a;
+                pow_b *= b;
             }
 
-            reduction_sum_a += reduction_sum_b;
+            reduction_sum_a += reduction_sum_b - DIMENSIONS * reduction_sum_c;
         }
-        return reduction_sum_a - DIMENSIONS * reduction_sum_c;
+        return reduction_sum_a;
     }
 
     template<typename TFloat>
