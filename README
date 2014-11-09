@@ -18,6 +18,6 @@ strenghts of each targeted architecture.
 
 Current metaheuristics implementations:
 
+  * Particle Swarm Optimization (Working prototype)
   * Genetic Algorithm (Working prototype)
-  * Differential Evolution (Working prototype)
-  * Particle Swarm Optimization (NOT IMPLEMENTED)
+  * Differential Evolution (NOT IMPLEMENTED)
