@@ -14,7 +14,7 @@ LIST(APPEND CUDA_NVCC_FLAGS -std=c++11)
 
 # Flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra -g -pg -D_DEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -ffast-math")
 
 # OpenMP
 find_package(OpenMP)
@@ -32,7 +32,7 @@ find_cuda_helper_libs(curand)
 
 # CUDA Arch Target
 #LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
-LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20 --use_fast_math)
 
 option(BUILD_SHARED_LIBS
   "On to build shared libraries, off for static libraries."

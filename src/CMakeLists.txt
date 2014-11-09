@@ -12,14 +12,15 @@ set(HPPFILES
   solvers/evolutionary_solver_cpu.hpp
   solvers/evolutionary_solver_cuda.hpp
   solvers/pso/pso_solver_cpu.hpp
-  solvers/pso/pso_operators/pso_operators_cpu.hpp
+  solvers/pso/pso_operators/pso_operators.hpp
   solvers/pso/pso_solver_cuda.hpp
   solvers/pso/pso_operators/pso_operators_cuda.hpp
   solvers/ga/ga_solver_cpu.hpp
-  solvers/pso/pso_operators/ga_operators_cpu.hpp
+  solvers/ga/ga_operators/ga_operators.hpp
   solvers/ga/ga_solver_cuda.hpp
-  solvers/pso/pso_operators/ga_operators_cuda.hpp
+  solvers/ga/ga_operators/ga_operators_cuda.hpp
   )
+
 
 set(CUFILES
   prngenerator/kernel/prngenerator_cuda.cu
@@ -31,7 +32,7 @@ set(CUFILES
   solvers/ga/ga_operators/kernel/ga_std_operators_cuda.cu
   )
 
-source_group("CUDA Source Files" FILES ${CUFILES})
+source_group("Locusta Source Files" FILES ${CUFILES} {HPPFILES})
 
 if (CUDA_VERBOSE_PTXAS)
   set(VERBOSE_PTXAS --ptxas-options=-v)
@@ -43,8 +44,6 @@ cuda_add_library(locusta-cuda
   ${CUFILES}
 )
 
-INSTALL(FILES ${HPPFILES}
-  DESTINATION include)
 INSTALL(FILES "${CMAKE_BINARY_DIR}/liblocusta-cuda.so"
   DESTINATION lib)
 
