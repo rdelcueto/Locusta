@@ -1,8 +1,10 @@
 project(locusta_test)
 
-set(locusta_VERSION_MAJOR 0)
-set(locusta_VERSION_MINOR 1)
-set(locusta_VERSION_PATCH 0)
+# The project version number.
+set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
+set(VERSION_MINOR   1   CACHE STRING "Project minor version number.")
+set(VERSION_PATCH   0   CACHE STRING "Project patch version number.")
+mark_as_advanced(VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -27,12 +29,24 @@ if (OPENMP_FOUND)
 endif()
 
 # CUDA
+set(CUDA_HOST_COMPILER /usr/bin/gcc-5)
 find_package(CUDA REQUIRED)
 find_cuda_helper_libs(curand)
 
 # CUDA Arch Target
+
+# PRE-FERMI (DEPRECATED)
 #LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
-LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20 --use_fast_math)
+
+# ALL POST-FERMI
+LIST(APPEND CUDA_NVCC_FLAGS
+# -gencode=arch=compute_20,code=sm_20
+# -gencode=arch=compute_30,code=sm_30
+# -gencode=arch=compute_35,code=sm_35
+# -gencode=arch=compute_50,code=sm_50
+-gencode=arch=compute_52,code=sm_52
+--use_fast_math
+)
 
 option(BUILD_SHARED_LIBS
   "On to build shared libraries, off for static libraries."
@@ -75,7 +89,7 @@ add_subdirectory (src)
 # Testing
 option(BUILD_TESTS
   "On to build test suite."
-  OFF
+  ON
   )
 
 if (BUILD_TESTS)
@@ -96,10 +110,22 @@ option(BUILD_DOCS
 
 if(BUILD_DOCS)
   find_package(Doxygen REQUIRED)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(doc ALL
-    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating API documentation with Doxygen" VERBATIM
-    )
+
+    if(NOT DOXYGEN_FOUND)
+        message(FATAL_ERROR "Doxygen is needed to build the documentation.")
+    endif()
+
+    set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+
+    add_custom_target(doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM)
+
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc)
+
 endif()

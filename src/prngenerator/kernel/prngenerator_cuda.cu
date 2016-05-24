@@ -1,5 +1,7 @@
-#include "cuda_common/cuPrintf.cu"
 #include <iostream>
+
+// Apparently using cuPrintf is not longer a thing...
+//#include "cuda_common/cuPrintf.cu"
 
 #include "../prngenerator_cuda.hpp"
 
