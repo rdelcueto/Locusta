@@ -19,6 +19,11 @@ set(HPPFILES
   solvers/ga/ga_operators/ga_operators.hpp
   solvers/ga/ga_solver_cuda.hpp
   solvers/ga/ga_operators/ga_operators_cuda.hpp
+  solvers/ga/de_solver_cpu.hpp
+  solvers/ga/de_operators/de_operators.hpp
+  solvers/ga/de_solver_cuda.hpp
+  solvers/ga/de_operators/de_operators_cuda.hpp
+
   )
 
 
@@ -30,6 +35,8 @@ set(CUFILES
   solvers/pso/pso_operators/kernel/pso_std_operators_cuda.cu
   solvers/ga/kernel/ga_solver_cuda.cu
   solvers/ga/ga_operators/kernel/ga_std_operators_cuda.cu
+  solvers/de/kernel/de_solver_cuda.cu
+  solvers/de/de_operators/kernel/de_std_operators_cuda.cu
   )
 
 source_group("Locusta Source Files" FILES ${CUFILES} {HPPFILES})

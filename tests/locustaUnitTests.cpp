@@ -25,6 +25,12 @@
 #include "solvers/ga/ga_operators/ga_std_operators_cpu_impl.hpp"
 #include "solvers/ga/ga_operators/ga_std_operators_cuda_impl.hpp"
 
+#include "solvers/de/de_solver_cpu.hpp"
+#include "solvers/de/de_solver_cuda.hpp"
+
+#include "solvers/de/de_operators/de_std_operators_cpu_impl.hpp"
+#include "solvers/de/de_operators/de_std_operators_cuda_impl.hpp"
+
 #include "cuda_runtime.h"
 
 using namespace locusta;
@@ -263,8 +269,55 @@ protected:
 public:
     ga_solver_cuda<float> * ga_solver_cuda_ptr;
 
-// Benchmark Setup
 };
+
+class CPUDifferentialEvolutionTest : public CPULocustaTest {
+protected:
+    virtual void SetUp() {
+        CPULocustaTest::SetUp();
+        de_solver_cpu_ptr = new de_solver_cpu<float>(population_cpu_ptr,
+                                                     evaluator_cpu_ptr,
+                                                     prngenerator_cpu_ptr,
+                                                     GENERATIONS,
+                                                     upper_bounds_ptr,
+                                                     lower_bounds_ptr);
+    }
+
+    virtual void TearDown() {
+        delete de_solver_cpu_ptr;
+        de_solver_cpu_ptr = NULL;
+        CPULocustaTest::TearDown();
+    }
+
+public:
+    de_solver_cpu<float> * de_solver_cpu_ptr;
+
+};
+
+class GPUDifferentialEvolutionTest : public GPULocustaTest {
+protected:
+    virtual void SetUp() {
+        GPULocustaTest::SetUp();
+        de_solver_cuda_ptr = new de_solver_cuda<float>(population_cuda_ptr,
+                                                       evaluator_cuda_ptr,
+                                                       prngenerator_cuda_ptr,
+                                                       GENERATIONS,
+                                                       upper_bounds_ptr,
+                                                       lower_bounds_ptr);
+    }
+
+    virtual void TearDown() {
+        delete de_solver_cuda_ptr;
+        de_solver_cuda_ptr = NULL;
+        GPULocustaTest::TearDown();
+    }
+
+public:
+    de_solver_cuda<float> * de_solver_cuda_ptr;
+
+};
+
+// Benchmark Setup
 
 TEST_F(CPUParticleSwarmTest, BenchmarkCpu) {
     pso_solver_cpu_ptr->setup_operators(new CanonicalParticleRecordUpdate<float>(),
@@ -283,6 +336,15 @@ TEST_F(CPUGeneticAlgorithmTest, BenchmarkCpu) {
     //ga_solver_cpu_ptr->print_solutions();
 }
 
+TEST_F(CPUDifferentialEvolutionTest, BenchmarkCpu) {
+  de_solver_cpu_ptr->setup_operators(new DeWholeCrossover<float>(),
+                                     new DeTournamentSelection<float>());
+  de_solver_cpu_ptr->setup_solver();
+  de_solver_cpu_ptr->run();
+  //de_solver_cpu_ptr->print_solutions();
+}
+
+
 TEST_F(GPUParticleSwarmTest, BenchmarkCuda) {
     pso_solver_cuda_ptr->setup_operators(new CanonicalParticleRecordUpdateCuda<float>(),
                                          new CanonicalSpeedUpdateCuda<float>(),
@@ -299,6 +361,16 @@ TEST_F(GPUGeneticAlgorithmTest, BenchmarkCuda) {
     ga_solver_cuda_ptr->run();
     // ga_solver_cuda_ptr->print_population();
 }
+
+TEST_F(GPUDifferentialEvolutionTest, BenchmarkCuda) {
+  de_solver_cuda_ptr->setup_operators(new DeWholeCrossoverCuda<float>(),
+                                      new DeTournamentSelectionCuda<float>());
+  de_solver_cuda_ptr->setup_solver();
+  de_solver_cuda_ptr->run();
+  // de_solver_cuda_ptr->print_population();
+}
+
+
 
 // int main(int argc, char **argv) {
 //     ::testing::InitGoogleTest(&argc, argv);
