@@ -108,6 +108,7 @@ namespace locusta {
       const uint32_t isle_record_positions_idx = k * ISLES + i;
       p_g[k] = isle_record_positions[isle_record_positions_idx];
     }
+    __syncthreads();
 
     // Each thread iterates over a single particle.
     for(uint32_t k = 0; k < DIMENSIONS; k++) {
