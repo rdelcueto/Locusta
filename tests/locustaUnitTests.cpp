@@ -63,12 +63,12 @@ public:
 
     time_t start_time;
 
-    const uint32_t BENCHMARK_FUNC_ID = 8;
+    const uint32_t BENCHMARK_FUNC_ID = 1;
     const uint64_t SEED = 0;
-    const uint32_t GENERATIONS = 2e4;
-    const uint32_t ISLES = 1;
-    const uint32_t AGENTS = 256;
-    const uint32_t DIMENSIONS = 8;
+    const uint32_t GENERATIONS = 1e3;
+    const uint32_t ISLES = 8;
+    const uint32_t AGENTS = 64;
+    const uint32_t DIMENSIONS = 16;
 
     float * upper_bounds_ptr;
     float * lower_bounds_ptr;
@@ -338,7 +338,7 @@ TEST_F(CPUGeneticAlgorithmTest, BenchmarkCpu) {
 
 TEST_F(CPUDifferentialEvolutionTest, BenchmarkCpu) {
   de_solver_cpu_ptr->setup_operators(new DeWholeCrossover<float>(),
-                                     new DeTournamentSelection<float>());
+                                     new DeRandomSelection<float>());
   de_solver_cpu_ptr->setup_solver();
   de_solver_cpu_ptr->run();
   //de_solver_cpu_ptr->print_solutions();
@@ -364,7 +364,7 @@ TEST_F(GPUGeneticAlgorithmTest, BenchmarkCuda) {
 
 TEST_F(GPUDifferentialEvolutionTest, BenchmarkCuda) {
   de_solver_cuda_ptr->setup_operators(new DeWholeCrossoverCuda<float>(),
-                                      new DeTournamentSelectionCuda<float>());
+                                      new DeRandomSelectionCuda<float>());
   de_solver_cuda_ptr->setup_solver();
   de_solver_cuda_ptr->run();
   // de_solver_cuda_ptr->print_population();

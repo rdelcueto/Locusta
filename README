@@ -20,4 +20,4 @@ Current metaheuristics implementations:
 
   * Particle Swarm Optimization (Working prototype)
   * Genetic Algorithm (Working prototype)
-  * Differential Evolution (NOT IMPLEMENTED)
+  * Differential Evolution (Working prototype)

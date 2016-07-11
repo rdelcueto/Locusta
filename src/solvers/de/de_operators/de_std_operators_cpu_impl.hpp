@@ -6,190 +6,245 @@
 
 namespace locusta {
 
-    template<typename TFloat>
-    struct DeWholeCrossover : DeBreedFunctor<TFloat> {
+  template<typename TFloat>
+  struct DeWholeCrossover : DeBreedFunctor<TFloat> {
 
-        uint32_t required_prns(de_solver_cpu<TFloat> * solver) {
-            const uint32_t ISLES = solver->_ISLES;
-            const uint32_t AGENTS = solver->_AGENTS;
-            const uint32_t DIMENSIONS = solver->_DIMENSIONS;
+    uint32_t required_prns(de_solver_cpu<TFloat> * solver) {
+      const uint32_t ISLES = solver->_ISLES;
+      const uint32_t AGENTS = solver->_AGENTS;
+      const uint32_t DIMENSIONS = solver->_DIMENSIONS;
 
-            return ISLES * (AGENTS * (1 + DIMENSIONS));
-        }
+      return ISLES * AGENTS * (1 + DIMENSIONS);
+    }
 
-        void operator()(de_solver_cpu<TFloat> * solver)
-            {
-                const uint32_t ISLES = solver->_ISLES;
-                const uint32_t AGENTS = solver->_AGENTS;
-                const uint32_t DIMENSIONS = solver->_DIMENSIONS;
-                const TFloat * VAR_RANGES = solver->_VAR_RANGES;
+    void operator()(de_solver_cpu<TFloat> * solver)
+    {
+      const uint32_t ISLES = solver->_ISLES;
+      const uint32_t AGENTS = solver->_AGENTS;
+      const uint32_t DIMENSIONS = solver->_DIMENSIONS;
+      const TFloat * VAR_RANGES = solver->_VAR_RANGES;
 
-                const TFloat DEVIATION = 0.2;
+      // const TFloat DEVIATION = 0.2;
 
-                const uint32_t RND_OFFSET = 1 + DIMENSIONS;
-                const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[de_solver_cpu<TFloat>::BREEDING_SET]);
-                prngenerator<TFloat> * const local_generator = solver->_bulk_prn_generator;
+      const uint32_t RND_OFFSET = 1 + DIMENSIONS;
+      const uint32_t TRIAL_SELECTION_OFFSET = 3;
+      const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[de_solver_cpu<TFloat>::BREEDING_SET]);
+      prngenerator<TFloat> * const local_generator = solver->_bulk_prn_generator;
 
-                const TFloat CROSSOVER_RATE = solver->_crossover_rate;
-                const TFloat MUTATION_RATE = solver->_mutation_rate;
-                const uint32_t DIST_LIMIT = solver->_mut_dist_iterations;
-                const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
+      const TFloat CROSSOVER_RATE = solver->_crossover_rate;
+      const TFloat DIFFERENTIAL_SCALE_FACTOR = solver->_differential_scale_factor;
+      // const uint32_t DIST_LIMIT = solver->_mut_dist_iterations;
+      // const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
 
-                const TFloat * parent_genomes = const_cast<TFloat *>(solver->_population->_data_array);
-                TFloat * offspring_genomes = solver->_population->_transformed_data_array;
+      const TFloat * current_vectors = const_cast<TFloat *>(solver->_population->_data_array);
+      TFloat * trial_vectors = solver->_population->_transformed_data_array;
 
-                const uint32_t * couple_selection = const_cast<uint32_t *>(solver->_couples_idx_array);
+      const uint32_t * trial_selection = const_cast<uint32_t *>(solver->_recombination_idx_array);
 
 #pragma omp for collapse(2)
-                for(uint32_t i = 0; i < ISLES; ++i) {
-                    for(uint32_t j = 0; j < AGENTS; ++j) {
-                        const uint32_t ISLE_OFFSET = AGENTS * DIMENSIONS;
-                        const uint32_t BASE_IDX = i * ISLE_OFFSET + j * DIMENSIONS;
+      for(uint32_t i = 0; i < ISLES; ++i) {
+        for(uint32_t j = 0; j < AGENTS; ++j) {
+          const uint32_t ISLE_OFFSET = AGENTS * DIMENSIONS;
+          const uint32_t BASE_OFFSET = i * ISLE_OFFSET + j * DIMENSIONS;
 
-                        const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
+          const TFloat * target_vector = current_vectors + BASE_OFFSET;
+          TFloat * trial_vector = trial_vectors + BASE_OFFSET;
 
-                        TFloat * offspring = offspring_genomes + BASE_IDX;
-                        const TFloat * parentA = parent_genomes + BASE_IDX;
+          const uint32_t DIFFERENCE_VECTOR_A_IDX = trial_selection[i * AGENTS + j];
+          const uint32_t DIFFERENCE_VECTOR_B_IDX = trial_selection[i * AGENTS + j + 1];
+          const uint32_t BASE_VECTOR_IDX = trial_selection[i * AGENTS + j + 2];
 
-                        for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-                            offspring[k] = parentA[k];
-                        }
+          const uint32_t DIFFERENCE_A_OFFSET = i * ISLE_OFFSET + DIFFERENCE_VECTOR_A_IDX * DIMENSIONS;
+          const uint32_t DIFFERENCE_B_OFFSET = i * ISLE_OFFSET + DIFFERENCE_VECTOR_B_IDX * DIMENSIONS;
+          const uint32_t BASE_VECTOR_OFFSET = i * ISLE_OFFSET + BASE_VECTOR_IDX * DIMENSIONS;
 
-                        const bool CROSSOVER_FLAG = (*agents_prns) < CROSSOVER_RATE;
-                        agents_prns++;
+          const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
+          const bool FORCE_PARAMETER_COPY_FLAG = (*agents_prns);
+          agents_prns++;
 
-                        if(CROSSOVER_FLAG) {
-                            const uint32_t COUPLE_IDX = couple_selection[i * AGENTS + j];
-                            const uint32_t COUPLE_BASE_IDX = i * ISLE_OFFSET + COUPLE_IDX * DIMENSIONS;
-                            const TFloat * parentB = parent_genomes + COUPLE_BASE_IDX;
+          // TODO: Profile case:
+          //         Assume CROSSOVER operations for all genes/dimensions. (with SIMD, this should be very fast)
+          //         Then only replace genes/dimensions with those in target vector, if the criteria wasn't met
+          //         Since this case is the least probable, this implementation might help branch predictions performance,
+          //         while taking advantage of SIMD operations
+          const TFloat * difference_a_vector = current_vectors + DIFFERENCE_A_OFFSET;
+          const TFloat * difference_b_vector = current_vectors + DIFFERENCE_B_OFFSET;
+          const TFloat * base_vector = current_vectors + BASE_VECTOR_OFFSET;
 
-                            #pragma omp simd
-                            for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-                                offspring[k] *= 0.5;
-                                offspring[k] += parentB[k] * 0.5;
-                            }
-                        }
+#pragma omp simd
+          for(uint32_t k = 0; k < DIMENSIONS; ++k) {
+              trial_vector[k] = difference_a_vector[k];
+              trial_vector[k] -= difference_b_vector[k];
+              trial_vector[k] *= DIFFERENTIAL_SCALE_FACTOR;
+              trial_vector[k] += base_vector[k];
+          }
 
-                        for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-                            const bool GENE_MUTATE_FLAG = (*agents_prns) < MUTATION_RATE;
+          for(uint32_t k = 0; k < DIMENSIONS; ++k) {
+            const bool CROSSOVER_FLAG = (agents_prns[k]) >= CROSSOVER_RATE;
 
-                            agents_prns++;
-                            if(GENE_MUTATE_FLAG) {
-                                const TFloat & range = VAR_RANGES[k];
-
-                                TFloat x = 0.0;
-                                for(uint32_t n = 0; n < DIST_LIMIT; ++n) {
-                                    x += local_generator->_generate();
-                                }
-
-                                x *= INV_DIST_LIMIT;
-                                x -= 0.5;
-                                x *= DEVIATION * range;
-
-                                offspring[k] += x;
-                            }
-                        }
-                    }
-                }
-
-           }
-    };
-
-    template<typename TFloat>
-    struct DeTournamentSelection : DeSelectionFunctor<TFloat> {
-
-        uint32_t required_prns(de_solver_cpu<TFloat> * solver) {
-            const uint32_t ISLES = solver->_ISLES;
-            const uint32_t AGENTS = solver->_AGENTS;
-            const uint32_t SELECTION_SIZE = solver->_selection_size;
-
-            return ISLES * AGENTS *
-                ((AGENTS - (1 + SELECTION_SIZE)) +
-                 (SELECTION_SIZE - 1));
-        }
-
-        void operator()(de_solver_cpu<TFloat> * solver)
-            {
-                const uint32_t ISLES = solver->_ISLES;
-                const uint32_t AGENTS = solver->_AGENTS;
-
-                const uint32_t SELECTION_SIZE = solver->_selection_size;
-                const TFloat SELECTION_P = solver->_selection_stochastic_factor;
-
-                const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[de_solver_cpu<TFloat>::SELECTION_SET]);
-                const uint32_t RND_OFFSET = ((AGENTS - (1 + SELECTION_SIZE)) +
-                                             (SELECTION_SIZE - 1));
-
-                const TFloat * fitness_array = const_cast<TFloat *>(solver->_population->_fitness_array);
-
-                uint32_t * couple_idx_array = solver->_couples_idx_array;
-
-                #pragma omp parallel for collapse(2)
-                for(uint32_t i = 0; i < ISLES; ++i) {
-                    for(uint32_t j = 0; j < AGENTS; ++j) {
-                    const uint32_t ISLE_OFFSET = i * AGENTS;
-
-                        const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
-                        const uint32_t idx = ISLE_OFFSET + j;
-
-                        // Resevoir Sampling
-                        uint32_t candidates[SELECTION_SIZE];
-                        // * Fill
-                        for (uint32_t k = 0; k < SELECTION_SIZE; ++k) {
-                            candidates[k] = k < j ? k : k + 1;
-                        }
-
-                        // * Replace
-                        uint32_t selection_idx;
-                        const uint32_t iter_limit = AGENTS - 1;
-
-                        // TODO: Check prng cardinality.
-                        // AGENTS - (1 + SELECTION_SIZE)
-
-                        for(uint32_t k = SELECTION_SIZE; k < iter_limit; ++k) {
-                            selection_idx = (AGENTS - 1) *
-                                (*agents_prns);
-                            agents_prns++;
-
-                            if(selection_idx <= SELECTION_SIZE) {
-                                candidates[selection_idx] = k < j ? k : k + 1;
-                            }
-                        }
-
-                        // Prefetch candidates fitness
-                        TFloat candidates_fitness[SELECTION_SIZE];
-                        for(uint32_t k = 0; k < SELECTION_SIZE; ++k) {
-                            candidates_fitness[k] = fitness_array[candidates[k] + ISLE_OFFSET];
-                        }
-
-                        // Tournament
-                        bool switch_flag;
-                        TFloat best_fitness = candidates_fitness[0];
-
-                        // TODO: Check prng cardinality.
-                        // SELECTION_SIZE - 1
-
-                        for(uint32_t k = 1; k < SELECTION_SIZE; ++k) {
-                            const TFloat candidate = candidates_fitness[k];
-                            switch_flag = (candidate > best_fitness);
-
-                            if((SELECTION_P != 0.0f) &&
-                               (SELECTION_P >= (*agents_prns))) {
-                                switch_flag = !switch_flag;
-                            }
-
-                            agents_prns++; // Advance pointer
-
-                            if(switch_flag) {
-                                best_fitness = candidate;
-                                candidates[0] = candidates[k];
-                            }
-                        }
-                        couple_idx_array[idx] = candidates[0];
-                    }
-                }
+            if((k != FORCE_PARAMETER_COPY_FLAG) && !CROSSOVER_FLAG) {
+              trial_vector[k] = target_vector[k];
             }
-    };
+          }
+        }
+      }
+    }
+  };
+
+  template<typename TFloat>
+  struct DeRandomSelection : DeSelectionFunctor<TFloat> {
+
+    uint32_t required_prns(de_solver_cpu<TFloat> * solver) {
+      const uint32_t ISLES = solver->_ISLES;
+      const uint32_t AGENTS = solver->_AGENTS;
+      const uint32_t RANDOM_VECTORS = 3;
+
+      return ISLES * AGENTS * (AGENTS - (1 + RANDOM_VECTORS));
+    }
+
+    void operator()(de_solver_cpu<TFloat> * solver)
+    {
+      const uint32_t ISLES = solver->_ISLES;
+      const uint32_t AGENTS = solver->_AGENTS;
+
+      const uint32_t RANDOM_VECTORS = 3;
+
+      const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[de_solver_cpu<TFloat>::SELECTION_SET]);
+      const uint32_t RND_OFFSET = ((AGENTS - (1 + RANDOM_VECTORS)) +
+                                   (RANDOM_VECTORS - 1));
+
+      uint32_t * recombination_idx_array = solver->_recombination_idx_array;
+
+#pragma omp parallel for collapse(2)
+      for(uint32_t i = 0; i < ISLES; ++i) {
+        for(uint32_t j = 0; j < AGENTS; ++j) {
+          const uint32_t ISLE_OFFSET = i * AGENTS;
+
+          const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
+
+          // Resevoir Sampling
+          const uint32_t SAMPLE_SIZE = RANDOM_VECTORS;
+          uint32_t candidates[SAMPLE_SIZE];
+
+          for(uint32_t k = 0; k < (AGENTS - 1); ++k) {
+            if (k < RANDOM_VECTORS) {
+              // Fill
+              candidates[k] = k < j ? k : k + 1;
+            } else {
+              uint32_t r;
+              r = (*agents_prns++) * (k + 1);
+              if (r < SAMPLE_SIZE) {
+                // Replace
+                candidates[r] = k < j ? k : k + 1;
+              }
+            }
+          }
+
+          const uint32_t idx = ISLE_OFFSET + j;
+          for (uint32_t k = 0; k < RANDOM_VECTORS; ++k) {
+            recombination_idx_array[idx + k] = candidates[k];
+          }
+        }
+      }
+    }
+  };
+
+  template<typename TFloat>
+  struct DeTournamentSelection : DeSelectionFunctor<TFloat> {
+
+    uint32_t required_prns(de_solver_cpu<TFloat> * solver) {
+      const uint32_t ISLES = solver->_ISLES;
+      const uint32_t AGENTS = solver->_AGENTS;
+      const uint32_t SELECTION_SIZE = solver->_selection_size;
+
+      return ISLES * AGENTS *
+        ((AGENTS - (1 + SELECTION_SIZE)) +
+         (SELECTION_SIZE - 1));
+    }
+
+    void operator()(de_solver_cpu<TFloat> * solver)
+    {
+      const uint32_t ISLES = solver->_ISLES;
+      const uint32_t AGENTS = solver->_AGENTS;
+
+      const uint32_t RANDOM_VECTORS = solver->_selection_size;
+      const TFloat SELECTION_P = solver->_selection_stochastic_factor;
+
+      const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[de_solver_cpu<TFloat>::SELECTION_SET]);
+      const uint32_t RND_OFFSET = ((AGENTS - (1 + RANDOM_VECTORS)) +
+                                   (RANDOM_VECTORS - 1));
+
+      const TFloat * fitness_array = const_cast<TFloat *>(solver->_population->_fitness_array);
+
+      uint32_t * recombination_idx_array = solver->_recombination_idx_array;
+
+#pragma omp parallel for collapse(2)
+      for(uint32_t i = 0; i < ISLES; ++i) {
+        for(uint32_t j = 0; j < AGENTS; ++j) {
+          const uint32_t ISLE_OFFSET = i * AGENTS;
+
+          const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
+          const uint32_t idx = ISLE_OFFSET + j;
+
+          // Resevoir Sampling
+          uint32_t candidates[RANDOM_VECTORS];
+          // * Fill
+          for (uint32_t k = 0; k < RANDOM_VECTORS; ++k) {
+            candidates[k] = k < j ? k : k + 1;
+          }
+
+          // * Replace
+          uint32_t selection_idx;
+          const uint32_t iter_limit = AGENTS - 1;
+
+          // TODO: Check prng cardinality.
+          // AGENTS - (1 + RANDOM_VECTORS)
+
+          for(uint32_t k = RANDOM_VECTORS; k < iter_limit; ++k) {
+            selection_idx = (AGENTS - 1) *
+              (*agents_prns);
+            agents_prns++;
+
+            if(selection_idx <= RANDOM_VECTORS) {
+              candidates[selection_idx] = k < j ? k : k + 1;
+            }
+          }
+
+          // Prefetch candidates fitness
+          TFloat candidates_fitness[RANDOM_VECTORS];
+          for(uint32_t k = 0; k < RANDOM_VECTORS; ++k) {
+            candidates_fitness[k] = fitness_array[candidates[k] + ISLE_OFFSET];
+          }
+
+          // Tournament
+          bool switch_flag;
+          TFloat best_fitness = candidates_fitness[0];
+
+          // TODO: Check prng cardinality.
+          // RANDOM_VECTORS - 1
+
+          for(uint32_t k = 1; k < RANDOM_VECTORS; ++k) {
+            const TFloat candidate = candidates_fitness[k];
+            switch_flag = (candidate > best_fitness);
+
+            if((SELECTION_P != 0.0f) &&
+               (SELECTION_P >= (*agents_prns))) {
+              switch_flag = !switch_flag;
+            }
+
+            agents_prns++; // Advance pointer
+
+            if(switch_flag) {
+              best_fitness = candidate;
+              candidates[0] = candidates[k];
+            }
+          }
+          recombination_idx_array[idx] = candidates[0];
+        }
+      }
+    }
+  };
+
 }
 
 #endif
