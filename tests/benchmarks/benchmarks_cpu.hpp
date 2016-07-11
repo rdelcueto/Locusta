@@ -25,7 +25,7 @@ namespace locusta {
     struct BenchmarkFunctor : EvaluationFunctor<TFloat> {
 
         enum FUNCTION_IDENTIFIERS {
-            SPHERE = 1,
+            SPHERE = 1,      // 1
             ROT_ELLIPS,      // 2
             ROT_BENT_CIGAR,  // 3
             ROT_DISCUS,      // 4
@@ -53,10 +53,24 @@ namespace locusta {
             // TODO: Load CEC transformation matrices/vectors.
 
             switch (function_id) {
+            case ROT_ELLIPS:
+              _EVALUATION_BIAS = -1300.0;
+              _ROT_FLAG = 1;
+              break;
+            case ROT_BENT_CIGAR:
+              _EVALUATION_BIAS = -1200.0;
+              _ROT_FLAG = 1;
+              break;
+            case ROT_DISCUS:
+              _EVALUATION_BIAS = -1100.0;
+              _ROT_FLAG = 1;
+              break;
+            case DIFF_POWERS:
+              _EVALUATION_BIAS = -1000.0;
+              break;
             default: // SPHERE DEFAULT FUNC
-                _EVALUATION_BIAS = -1400.0;
-                _ROT_FLAG = 0;
-                break;
+              _EVALUATION_BIAS = -1400.0;
+              break;
             }
 
             _SHIFT_ORIGIN = new TFloat[_DIMENSIONS];

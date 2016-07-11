@@ -433,6 +433,8 @@ namespace locusta {
             }
         }
 
+        result += EVALUATION_BIAS;
+
         const uint32_t fitness_idx = isle * AGENTS + agent;
         evaluation_results[fitness_idx] = F_NEGATE_EVALUATION ?
             -result : result;

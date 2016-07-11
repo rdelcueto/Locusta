@@ -337,7 +337,7 @@ namespace locusta {
      TFloat * evaluation_results,
      prngenerator_cpu<TFloat> * local_generator) {
 
-        const uint32_t REPETITIONS = 1e2;
+      const uint32_t REPETITIONS = 1e2;
 
 #pragma omp parallel for collapse(2)
         for(uint32_t i = 0; i < ISLES; ++i) {
@@ -415,6 +415,8 @@ namespace locusta {
                         break;
                     }
                 }
+
+                result += EVALUATION_BIAS;
 
                 evaluation_results[isle * AGENTS + agent] = F_NEGATE_EVALUATION ?
                     -result : result;

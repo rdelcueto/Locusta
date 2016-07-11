@@ -27,18 +27,18 @@ namespace locusta {
     struct BenchmarkCudaFunctor : EvaluationCudaFunctor<TFloat> {
 
         enum FUNCTION_IDENTIFIERS {
-            SPHERE = 1,
-            ROT_ELLIPS,
-            ROT_BENT_CIGAR,
-            ROT_DISCUS,
-            DIFF_POWERS,
-            ROT_ROSENBROCK,
-            ROT_SCHAFFER,
-            ROT_ACKLEY,
-            ROT_WEIERSTRASS,
-            ROT_GRIEWANK,
-            RASTRIGIN,
-            ROT_RASTRIGIN
+            SPHERE = 1,      // 1
+            ROT_ELLIPS,      // 2
+            ROT_BENT_CIGAR,  // 3
+            ROT_DISCUS,      // 4
+            DIFF_POWERS,     // 5
+            ROT_ROSENBROCK,  // 6
+            ROT_SCHAFFER,    // 7
+            ROT_ACKLEY,      // 8
+            ROT_WEIERSTRASS, // 9
+            ROT_GRIEWANK,    // 10
+            RASTRIGIN,       // 11
+            ROT_RASTRIGIN    // 12
         };
 
         const uint32_t _FUNCTION_ID;
