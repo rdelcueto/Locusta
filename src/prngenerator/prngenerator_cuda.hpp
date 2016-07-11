@@ -11,34 +11,34 @@
 
 namespace locusta {
 
-    template <typename TFloat>
-    struct prngenerator_cuda : prngenerator<TFloat> {
+  template <typename TFloat>
+  struct prngenerator_cuda : prngenerator<TFloat> {
 
-        prngenerator_cuda();
-        prngenerator_cuda(uint32_t num_engines);
+    prngenerator_cuda();
+    prngenerator_cuda(uint32_t num_engines);
 
-        virtual ~prngenerator_cuda();
+    virtual ~prngenerator_cuda();
 
-        /// Initialize engines state
-        virtual void _initialize_engines(uint64_t seed);
+    /// Initialize engines state
+    virtual void _initialize_engines(uint64_t seed);
 
-        /// Generate n pseudo random numbers into output array.
-        virtual void _generate(uint32_t n, TFloat * output);
+    /// Generate n pseudo random numbers into output array.
+    virtual void _generate(uint32_t n, TFloat * output);
 
-        /// Generate and return a pseudo random number.
-        virtual TFloat _generate();
+    /// Generate and return a pseudo random number.
+    virtual TFloat _generate();
 
-        /// Returns cuda device engine states.
-        virtual curandState * get_device_generator_states() const;
+    /// Returns cuda device engine states.
+    virtual curandState * get_device_generator_states() const;
 
-        using prngenerator<TFloat>::_NUM_ENGINES;
+    using prngenerator<TFloat>::_NUM_ENGINES;
 
-        /// CUDA bulk prng engine.
-        curandGenerator_t _dev_bulk_prng_engine;
+    /// CUDA bulk prng engine.
+    curandGenerator_t _dev_bulk_prng_engine;
 
-        /// CUDA prng kernel engines.
-        curandState *_dev_prng_engines;
-    };
+    /// CUDA prng kernel engines.
+    curandState *_dev_prng_engines;
+  };
 
 }
 

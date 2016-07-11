@@ -5,13 +5,13 @@
 
 namespace locusta {
 
-    template<typename TFloat>
-    struct evolutionary_solver;
+  template<typename TFloat>
+  struct evolutionary_solver;
 
-    template<typename TFloat>
-    struct EvaluationFunctor {
-        virtual void operator()(evolutionary_solver<TFloat> * solver) {};
-    };
+  template<typename TFloat>
+  struct EvaluationFunctor {
+    virtual void operator()(evolutionary_solver<TFloat> * solver) {};
+  };
 }
 
 #endif

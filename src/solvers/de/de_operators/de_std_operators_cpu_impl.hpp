@@ -73,10 +73,10 @@ namespace locusta {
 
 #pragma omp simd
           for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-              trial_vector[k] = difference_a_vector[k];
-              trial_vector[k] -= difference_b_vector[k];
-              trial_vector[k] *= DIFFERENTIAL_SCALE_FACTOR;
-              trial_vector[k] += base_vector[k];
+            trial_vector[k] = difference_a_vector[k];
+            trial_vector[k] -= difference_b_vector[k];
+            trial_vector[k] *= DIFFERENTIAL_SCALE_FACTOR;
+            trial_vector[k] += base_vector[k];
           }
 
           for(uint32_t k = 0; k < DIMENSIONS; ++k) {
