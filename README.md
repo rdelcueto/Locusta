@@ -1,4 +1,18 @@
-Locusta 0.1.0
+# Locusta
+
+This is the main source code repository for [Locusta].
+It contains the library code, and documentation.
+
+## Building from Source
+
+1. TODO
+
+## Building Documentation
+
+1. TODO
+
+## Notes
+
 A Massively Parallel Evolutionary Computation Metaheuristic Framework.
 
 Locusta provides a framework to build various population based evolutionary metaheuristics.
@@ -16,8 +30,14 @@ vary widely in implementation. The framework provides a way to compare and measu
 the performance throughoutput of each implementation, taking into account the
 strenghts of each targeted architecture.
 
-Current metaheuristics implementations:
+| Metaheuristic Solver           | OMP |  CUDA |
+|--------------------------------|-----|-------|
+| Particle Swarm Optimization    | ✓   | ✓    |
+| Genetic Algorithm              | ✓   | ✓    |
+| Differential Evolution         | ✓   | ✓    |
 
-  * Particle Swarm Optimization (Working prototype)
-  * Genetic Algorithm (Working prototype)
-  * Differential Evolution (Working prototype)
+## License
+
+Locusta is distributed under the terms of the GNU Lesser General Public Licence
+
+See [LICENSE-LGPL-3.0](LICENSE-LGPL-3.0)
