@@ -4,8 +4,7 @@
 namespace locusta {
 
     /// GPU Kernels Shared Memory Pointer.
-    extern __shared__ int evaluator_shared_memory[];
-    const uint32_t REPETITIONS = 1e2;
+    extern __shared__ int pso_operators_shared_memory[];
 
     template <typename TFloat>
     __global__
@@ -102,9 +101,16 @@ namespace locusta {
         const uint32_t prng_offset = ISLES * AGENTS * DIMENSIONS;
         const uint32_t locus_offset = i * AGENTS + j;
 
+        TFloat * p_g = (TFloat*) &pso_operators_shared_memory[0];
+
+        // Fill common isle records on shared memory
+        for(uint32_t k = 0; k < DIMENSIONS; k++) {
+          const uint32_t isle_record_positions_idx = k * ISLES + i;
+          p_g[k] = isle_record_positions[isle_record_positions_idx];
+        }
+
         // Each thread iterates over a single particle.
         for(uint32_t k = 0; k < DIMENSIONS; k++) {
-            const uint32_t isle_record_positions_idx = k * ISLES + i;
             const uint32_t particle_gene_idx = k * ISLES * AGENTS + locus_offset;
 
             const TFloat p_i = record_positions[particle_gene_idx];
@@ -115,13 +121,10 @@ namespace locusta {
             const TFloat c_rnd = prng_vector[particle_gene_idx];
             const TFloat s_rnd = prng_vector[particle_gene_idx + prng_offset];
 
-            // TODO: Move to Shared memory
-            const TFloat p_g = isle_record_positions[isle_record_positions_idx];
-
             velocities[particle_gene_idx] =
                 inertia_factor * v_i +
                 cognitive_factor * c_rnd * (p_i - x_i) +
-                social_factor * s_rnd * (p_g - x_i);
+                social_factor * s_rnd * (p_g[k] - x_i);
         }
     }
 
@@ -140,7 +143,7 @@ namespace locusta {
      TFloat * velocities)
     {
         canonical_speed_update_kernel
-                     <<<ISLES, AGENTS>>>
+          <<<ISLES, AGENTS, DIMENSIONS * sizeof(TFloat)>>>
                      (DIMENSIONS,
                       inertia_factor,
                       cognitive_factor,

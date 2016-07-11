@@ -86,16 +86,18 @@ namespace locusta {
                 for(uint32_t i = 0; i < ISLES; i++) {
                     for(uint32_t j = 0; j < AGENTS; j++) {
                         const uint32_t isle_position_record_offset = i * DIMENSIONS;
-                        const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
                         const uint32_t particle_offset = i * AGENTS * DIMENSIONS + j * DIMENSIONS;
+                        const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
 
+#pragma omp simd
                         for(uint32_t k = 0; k < DIMENSIONS; k++) {
-                            const TFloat c_rnd = (*agents_prns++);
-                            const TFloat s_rnd = (*agents_prns++);
+                            const uint32_t prn_idx = k * 2;
+                            const TFloat c_rnd = agents_prns[prn_idx];
+                            const TFloat s_rnd = agents_prns[prn_idx + 1];
 
                             const TFloat p_g = isle_position_record[isle_position_record_offset + k];
                             const TFloat p_i = position_record[particle_offset + k];
-                                                const TFloat x_i = positions[particle_offset + k];
+                            const TFloat x_i = positions[particle_offset + k];
 
                             const TFloat v_i = velocities[particle_offset + k];
                             // Compute new velocity
@@ -131,7 +133,7 @@ namespace locusta {
                 for(uint32_t i = 0; i < ISLES; i++) {
                     for(uint32_t j = 0; j < AGENTS; j++) {
                         const uint32_t genome_offset = i * AGENTS * DIMENSIONS + j * DIMENSIONS;
-                        #pragma omp simd
+#pragma omp simd
                         for(uint32_t k = 0; k < DIMENSIONS; k++) {
                             const uint32_t curr_gene = genome_offset + k;
 

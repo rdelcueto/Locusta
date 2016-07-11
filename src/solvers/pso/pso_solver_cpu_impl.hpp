@@ -21,7 +21,7 @@ namespace locusta {
         _migration_step = 0;
         _migration_size = 1;
         _migration_selection_size = 2;
-        _inertia_factor = 0.8;
+        _inertia_factor = 0.5;
         _cognitive_factor = 2.0;
         _social_factor = 2.0;
 
