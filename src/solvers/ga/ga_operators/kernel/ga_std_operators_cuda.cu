@@ -5,7 +5,6 @@ namespace locusta {
 
     /// GPU Kernels Shared Memory Pointer.
     extern __shared__ int ga_operators_shared_memory[];
-    const uint32_t REPETITIONS = 1e2;
 
     template <typename TFloat>
     __global__
@@ -171,26 +170,19 @@ namespace locusta {
         uint32_t * local_candidates = candidates_reservoir_array + BASE_IDX;
 
         // Resevoir Sampling
-        // * Fill
-        for (uint32_t k = 0; k < SELECTION_SIZE; ++k) {
+        for(uint32_t k = 0; k < (AGENTS - 1); ++k) {
+          if (k < SELECTION_SIZE) {
+            // Fill
             local_candidates[k * THREAD_OFFSET] = k < j ? k : k + 1;
-        }
-
-        // * Replace
-        uint32_t selection_idx;
-        const uint32_t iter_limit = AGENTS - 1;
-
-        // TODO: Check prng cardinality.
-        // AGENTS - (1 + SELECTION_SIZE)
-
-        for(uint32_t k = SELECTION_SIZE; k < iter_limit; ++k) {
-            selection_idx = (AGENTS - 1) * (*agent_prns);
-
+          } else {
+            uint32_t r;
+            r = (*agent_prns) * (k + 1);
             agent_prns += THREAD_OFFSET; // Advance pointer
-
-            if(selection_idx <= SELECTION_SIZE) {
-                local_candidates[selection_idx * THREAD_OFFSET] = k < j ? k : k + 1;
+            if (r < SELECTION_SIZE) {
+              // Replace
+              local_candidates[r * THREAD_OFFSET] = k < j ? k : k + 1;
             }
+          }
         }
 
         // Tournament

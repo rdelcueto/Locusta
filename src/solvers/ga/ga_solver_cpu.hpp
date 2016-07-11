@@ -31,7 +31,7 @@ namespace locusta {
 
         virtual void elite_population_replace();
 
-        /// Set Particle Swarm Optimization solver operators.
+        /// Set Genetic Algorithm solver operators.
         virtual void setup_operators(BreedFunctor<TFloat> * breed_functor_ptr,
                                      SelectionFunctor<TFloat> * select_functor_ptr);
 

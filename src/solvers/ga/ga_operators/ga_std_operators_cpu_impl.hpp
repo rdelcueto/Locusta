@@ -127,33 +127,25 @@ namespace locusta {
                 #pragma omp parallel for collapse(2)
                 for(uint32_t i = 0; i < ISLES; ++i) {
                     for(uint32_t j = 0; j < AGENTS; ++j) {
-                    const uint32_t ISLE_OFFSET = i * AGENTS;
-
+                        const uint32_t ISLE_OFFSET = i * AGENTS;
                         const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
                         const uint32_t idx = ISLE_OFFSET + j;
 
                         // Resevoir Sampling
                         uint32_t candidates[SELECTION_SIZE];
-                        // * Fill
-                        for (uint32_t k = 0; k < SELECTION_SIZE; ++k) {
+
+                        for(uint32_t k = 0; k < (AGENTS - 1); ++k) {
+                          if (k < SELECTION_SIZE) {
+                            // Fill
                             candidates[k] = k < j ? k : k + 1;
-                        }
-
-                        // * Replace
-                        uint32_t selection_idx;
-                        const uint32_t iter_limit = AGENTS - 1;
-
-                        // TODO: Check prng cardinality.
-                        // AGENTS - (1 + SELECTION_SIZE)
-
-                        for(uint32_t k = SELECTION_SIZE; k < iter_limit; ++k) {
-                            selection_idx = (AGENTS - 1) *
-                                (*agents_prns);
-                            agents_prns++;
-
-                            if(selection_idx <= SELECTION_SIZE) {
-                                candidates[selection_idx] = k < j ? k : k + 1;
+                          } else {
+                            uint32_t r;
+                            r = (*agents_prns++) * (k + 1);
+                            if (r < SELECTION_SIZE) {
+                              // Replace
+                              candidates[r] = k < j ? k : k + 1;
                             }
+                          }
                         }
 
                         // Prefetch candidates fitness
@@ -166,9 +158,8 @@ namespace locusta {
                         bool switch_flag;
                         TFloat best_fitness = candidates_fitness[0];
 
-                        // TODO: Check prng cardinality.
-                        // SELECTION_SIZE - 1
-
+                        // Prng cardinality:
+                        //   SELECTION_SIZE - 1
                         for(uint32_t k = 1; k < SELECTION_SIZE; ++k) {
                             const TFloat candidate = candidates_fitness[k];
                             switch_flag = (candidate > best_fitness);
