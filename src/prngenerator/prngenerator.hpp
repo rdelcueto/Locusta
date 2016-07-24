@@ -18,9 +18,6 @@ namespace locusta {
     /// Generate n pseudo random numbers into output array.
     virtual void _generate(uint32_t n, TFloat * output) = 0;
 
-    /// Generate and return a pseudo random number.
-    virtual TFloat _generate() = 0;
-
     /// Number of prng engines.
     const uint32_t _NUM_ENGINES;
   };

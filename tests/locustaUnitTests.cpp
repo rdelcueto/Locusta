@@ -65,9 +65,9 @@ public:
 
   const uint32_t BENCHMARK_FUNC_ID = 1;
   const uint64_t SEED = 0;
-  const uint32_t GENERATIONS = 1e3;
-  const uint32_t ISLES = 8;
-  const uint32_t AGENTS = 64;
+  const uint32_t GENERATIONS = 1e2;
+  const uint32_t ISLES = 256;
+  const uint32_t AGENTS = 256;
   const uint32_t DIMENSIONS = 16;
 
   float * upper_bounds_ptr;
@@ -89,8 +89,8 @@ protected:
                                                  DIMENSIONS);
 
     // Single prng generator for CPU solver seems to perform better.
-    prngenerator_cpu_ptr = new prngenerator_cpu<float>(1);
-    //prngenerator_cpu_ptr = new prngenerator_cpu<float>(omp_get_max_threads());
+    //prngenerator_cpu_ptr = new prngenerator_cpu<float>(1);
+    prngenerator_cpu_ptr = new prngenerator_cpu<float>(omp_get_max_threads());
 
     prngenerator_cpu_ptr->_initialize_engines(SEED);
 

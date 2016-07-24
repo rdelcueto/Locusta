@@ -4,6 +4,9 @@
 #include "de_operators.hpp"
 #include "prngenerator/prngenerator_cpu.hpp"
 
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+
 namespace locusta {
 
   template<typename TFloat>
@@ -13,8 +16,9 @@ namespace locusta {
       const uint32_t ISLES = solver->_ISLES;
       const uint32_t AGENTS = solver->_AGENTS;
       const uint32_t DIMENSIONS = solver->_DIMENSIONS;
+      const uint32_t GENOME_RND_OFFSET = 1 + DIMENSIONS;
 
-      return ISLES * AGENTS * (1 + DIMENSIONS);
+      return ISLES * AGENTS * GENOME_RND_OFFSET;
     }
 
     void operator()(de_solver_cpu<TFloat> * solver)
@@ -24,17 +28,12 @@ namespace locusta {
       const uint32_t DIMENSIONS = solver->_DIMENSIONS;
       const TFloat * VAR_RANGES = solver->_VAR_RANGES;
 
-      // const TFloat DEVIATION = 0.2;
+      const uint32_t GENOME_RND_OFFSET = 1 + DIMENSIONS;
 
-      const uint32_t RND_OFFSET = 1 + DIMENSIONS;
-      const uint32_t TRIAL_SELECTION_OFFSET = 3;
       const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[de_solver_cpu<TFloat>::BREEDING_SET]);
-      prngenerator<TFloat> * const local_generator = solver->_bulk_prn_generator;
 
       const TFloat CROSSOVER_RATE = solver->_crossover_rate;
       const TFloat DIFFERENTIAL_SCALE_FACTOR = solver->_differential_scale_factor;
-      // const uint32_t DIST_LIMIT = solver->_mut_dist_iterations;
-      // const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
 
       const TFloat * current_vectors = const_cast<TFloat *>(solver->_population->_data_array);
       TFloat * trial_vectors = solver->_population->_transformed_data_array;
@@ -58,9 +57,8 @@ namespace locusta {
           const uint32_t DIFFERENCE_B_OFFSET = i * ISLE_OFFSET + DIFFERENCE_VECTOR_B_IDX * DIMENSIONS;
           const uint32_t BASE_VECTOR_OFFSET = i * ISLE_OFFSET + BASE_VECTOR_IDX * DIMENSIONS;
 
-          const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
-          const bool FORCE_PARAMETER_COPY_FLAG = (*agents_prns);
-          agents_prns++;
+          const TFloat * agents_prns = prn_array + i * AGENTS * GENOME_RND_OFFSET + j * GENOME_RND_OFFSET;
+          const bool FORCE_PARAMETER_COPY_FLAG = (*agents_prns++);
 
           // TODO: Profile case:
           //         Assume CROSSOVER operations for all genes/dimensions. (with SIMD, this should be very fast)
@@ -72,9 +70,8 @@ namespace locusta {
           const TFloat * base_vector = current_vectors + BASE_VECTOR_OFFSET;
 
 #pragma omp simd
-          for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-            trial_vector[k] = difference_a_vector[k];
-            trial_vector[k] -= difference_b_vector[k];
+          for (uint32_t k = 0; k < DIMENSIONS; ++k) {
+            trial_vector[k] = difference_a_vector[k] - difference_b_vector[k];
             trial_vector[k] *= DIFFERENTIAL_SCALE_FACTOR;
             trial_vector[k] += base_vector[k];
           }
@@ -82,7 +79,7 @@ namespace locusta {
           for(uint32_t k = 0; k < DIMENSIONS; ++k) {
             const bool CROSSOVER_FLAG = (agents_prns[k]) >= CROSSOVER_RATE;
 
-            if((k != FORCE_PARAMETER_COPY_FLAG) && !CROSSOVER_FLAG) {
+            if(unlikely((k != FORCE_PARAMETER_COPY_FLAG) && !CROSSOVER_FLAG)) {
               trial_vector[k] = target_vector[k];
             }
           }
@@ -110,7 +107,7 @@ namespace locusta {
       const uint32_t RANDOM_VECTORS = 3;
 
       const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[de_solver_cpu<TFloat>::SELECTION_SET]);
-      const uint32_t RND_OFFSET = ((AGENTS - (1 + RANDOM_VECTORS)) +
+      const uint32_t GENOME_RND_OFFSET = ((AGENTS - (1 + RANDOM_VECTORS)) +
                                    (RANDOM_VECTORS - 1));
 
       uint32_t * recombination_idx_array = solver->_recombination_idx_array;
@@ -120,7 +117,7 @@ namespace locusta {
         for(uint32_t j = 0; j < AGENTS; ++j) {
           const uint32_t ISLE_OFFSET = i * AGENTS;
 
-          const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
+          const TFloat * agents_prns = prn_array + (i * AGENTS * GENOME_RND_OFFSET) + (j * GENOME_RND_OFFSET);
 
           // Resevoir Sampling
           const uint32_t SAMPLE_SIZE = RANDOM_VECTORS;
@@ -183,7 +180,7 @@ namespace locusta {
         for(uint32_t j = 0; j < AGENTS; ++j) {
           const uint32_t ISLE_OFFSET = i * AGENTS;
 
-          const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
+          const TFloat * agents_prns = prn_array + (i * AGENTS * RND_OFFSET) + (j * RND_OFFSET);
           const uint32_t idx = ISLE_OFFSET + j;
 
           // Resevoir Sampling

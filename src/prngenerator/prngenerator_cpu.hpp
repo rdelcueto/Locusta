@@ -15,7 +15,7 @@ namespace locusta {
   struct prngenerator_cpu : prngenerator<TFloat> {
 
     typedef std::mt19937 mersenne_twister;
-    typedef std::uniform_real_distribution<TFloat> uni_real_dist;
+    typedef std::uniform_real_distribution<TFloat> uni_real_distribution;
 
     prngenerator_cpu();
     prngenerator_cpu(uint32_t num_engines);
@@ -28,11 +28,10 @@ namespace locusta {
     /// Generate n pseudo random numbers into output array.
     virtual void _generate(uint32_t n, TFloat * output);
 
-    /// Generate and return a pseudo random number.
-    virtual TFloat _generate();
-
     using prngenerator<TFloat>::_NUM_ENGINES;
+
     mersenne_twister *_prng_engines;
+    uni_real_distribution *_prng_distributions;
   };
 }
 #include "prngenerator_cpu_impl.hpp"

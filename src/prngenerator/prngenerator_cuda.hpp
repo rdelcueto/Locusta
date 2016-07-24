@@ -25,9 +25,6 @@ namespace locusta {
     /// Generate n pseudo random numbers into output array.
     virtual void _generate(uint32_t n, TFloat * output);
 
-    /// Generate and return a pseudo random number.
-    virtual TFloat _generate();
-
     /// Returns cuda device engine states.
     virtual curandState * get_device_generator_states() const;
 

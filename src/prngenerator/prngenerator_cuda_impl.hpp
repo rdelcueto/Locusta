@@ -52,12 +52,6 @@ namespace locusta {
   }
 
   template<typename TFloat>
-  TFloat prngenerator_cuda<TFloat>::_generate() {
-    // NOT IMPLEMENTED
-    return 0;
-  }
-
-  template<typename TFloat>
   curandState * prngenerator_cuda<TFloat>::get_device_generator_states() const {
     return _dev_prng_engines;
   }

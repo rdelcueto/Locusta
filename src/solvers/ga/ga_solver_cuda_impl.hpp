@@ -35,7 +35,6 @@ namespace locusta {
     _selection_stochastic_factor = 0;
     _crossover_rate = 0.9;
     _mutation_rate = 0.1;
-    _mut_dist_iterations = 3;
 
     // Allocate GA resources
     const size_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;
@@ -86,8 +85,7 @@ namespace locusta {
                                              uint32_t selection_size,
                                              TFloat selection_stochastic_factor,
                                              TFloat crossover_rate,
-                                             TFloat mutation_rate,
-                                             uint32_t mut_dist_iterations) {
+                                             TFloat mutation_rate) {
     _migration_step = migration_step;
     _migration_size = migration_size;
     _migration_selection_size = migration_selection_size;
@@ -95,7 +93,6 @@ namespace locusta {
     _selection_stochastic_factor = selection_stochastic_factor;
     _crossover_rate = crossover_rate;
     _mutation_rate = mutation_rate;
-    _mut_dist_iterations = mut_dist_iterations;
   }
 
   template<typename TFloat>

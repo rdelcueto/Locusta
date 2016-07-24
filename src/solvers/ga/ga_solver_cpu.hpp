@@ -42,8 +42,7 @@ namespace locusta {
                                uint32_t selection_size,
                                TFloat selection_stochastic_factor,
                                TFloat crossover_rate,
-                               TFloat mutation_rate,
-                               uint32_t mut_dist_iterations);
+                               TFloat mutation_rate);
 
     /// Population crossover + mutation operator.
     BreedFunctor<TFloat> * _breed_functor_ptr;
@@ -62,9 +61,6 @@ namespace locusta {
 
     /// Mutation rate.
     TFloat _mutation_rate;
-
-    /// Mutation operator, distribution operator.
-    uint32_t _mut_dist_iterations;
 
     /// Couple selection array.
     uint32_t * _couples_idx_array;

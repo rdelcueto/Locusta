@@ -4,94 +4,92 @@
 #include "ga_operators.hpp"
 #include "prngenerator/prngenerator_cpu.hpp"
 
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+
 namespace locusta {
 
   template<typename TFloat>
   struct WholeCrossover : BreedFunctor<TFloat> {
 
+    const uint32_t DIST_LIMIT = 3;
+    const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
+    const TFloat DEVIATION = 0.2;
+
     uint32_t required_prns(ga_solver_cpu<TFloat> * solver) {
       const uint32_t ISLES = solver->_ISLES;
       const uint32_t AGENTS = solver->_AGENTS;
       const uint32_t DIMENSIONS = solver->_DIMENSIONS;
+      const uint32_t GENOME_RND_OFFSET = (1 + 1 + DIST_LIMIT) * DIMENSIONS;
 
-      return ISLES * (AGENTS * (1 + DIMENSIONS));
+      return ISLES * AGENTS * GENOME_RND_OFFSET;
     }
 
     void operator()(ga_solver_cpu<TFloat> * solver)
     {
-      const uint32_t ISLES = solver->_ISLES;
-      const uint32_t AGENTS = solver->_AGENTS;
-      const uint32_t DIMENSIONS = solver->_DIMENSIONS;
-      const TFloat * VAR_RANGES = solver->_VAR_RANGES;
+#pragma omp parallel default(none) shared(solver)
+      {
+        const uint32_t ISLES = solver->_ISLES;
+        const uint32_t AGENTS = solver->_AGENTS;
+        const uint32_t DIMENSIONS = solver->_DIMENSIONS;
+        const TFloat * VAR_RANGES = solver->_VAR_RANGES;
 
-      const TFloat DEVIATION = 0.2;
+        const uint32_t GENOME_RND_OFFSET = (1 + 1 + DIST_LIMIT) * DIMENSIONS;
 
-      const uint32_t RND_OFFSET = 1 + DIMENSIONS;
-      const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[ga_solver_cpu<TFloat>::BREEDING_SET]);
-      prngenerator<TFloat> * const local_generator = solver->_bulk_prn_generator;
+        const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[ga_solver_cpu<TFloat>::BREEDING_SET]);
 
-      const TFloat CROSSOVER_RATE = solver->_crossover_rate;
-      const TFloat MUTATION_RATE = solver->_mutation_rate;
-      const uint32_t DIST_LIMIT = solver->_mut_dist_iterations;
-      const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
+        const TFloat CROSSOVER_RATE = solver->_crossover_rate;
+        const TFloat MUTATION_RATE = solver->_mutation_rate;
 
-      const TFloat * parent_genomes = const_cast<TFloat *>(solver->_population->_data_array);
-      TFloat * offspring_genomes = solver->_population->_transformed_data_array;
+        const TFloat * parent_genomes = const_cast<TFloat *>(solver->_population->_data_array);
+        TFloat * offspring_genomes = solver->_population->_transformed_data_array;
 
-      const uint32_t * couple_selection = const_cast<uint32_t *>(solver->_couples_idx_array);
+        const uint32_t * couple_selection = const_cast<uint32_t *>(solver->_couples_idx_array);
 
-#pragma omp for collapse(2)
-      for(uint32_t i = 0; i < ISLES; ++i) {
-        for(uint32_t j = 0; j < AGENTS; ++j) {
-          const uint32_t ISLE_OFFSET = AGENTS * DIMENSIONS;
-          const uint32_t BASE_IDX = i * ISLE_OFFSET + j * DIMENSIONS;
-
-          const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
-
-          TFloat * offspring = offspring_genomes + BASE_IDX;
-          const TFloat * parentA = parent_genomes + BASE_IDX;
-
-          for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-            offspring[k] = parentA[k];
-          }
-
-          const bool CROSSOVER_FLAG = (*agents_prns) < CROSSOVER_RATE;
-          agents_prns++;
-
-          if(CROSSOVER_FLAG) {
+#pragma omp parallel for
+        for(uint32_t i = 0; i < ISLES; ++i) {
+          for(uint32_t j = 0; j < AGENTS; ++j) {
+            const uint32_t ISLE_OFFSET = AGENTS * DIMENSIONS;
+            const uint32_t BASE_IDX = i * ISLE_OFFSET + j * DIMENSIONS;
             const uint32_t COUPLE_IDX = couple_selection[i * AGENTS + j];
             const uint32_t COUPLE_BASE_IDX = i * ISLE_OFFSET + COUPLE_IDX * DIMENSIONS;
+
+            const TFloat * agents_prns = prn_array + (i * AGENTS * GENOME_RND_OFFSET) + (j * GENOME_RND_OFFSET);
+
+            TFloat * offspring = offspring_genomes + BASE_IDX;
+            const TFloat * parentA = parent_genomes + BASE_IDX;
             const TFloat * parentB = parent_genomes + COUPLE_BASE_IDX;
 
-#pragma omp simd
+            // TODO: Profile case:
+            //         Assume CROSSOVER operations for all genes/dimensions. (with SIMD, this should be very fast)
             for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-              offspring[k] *= 0.5;
-              offspring[k] += parentB[k] * 0.5;
-            }
-          }
-
-          for(uint32_t k = 0; k < DIMENSIONS; ++k) {
-            const bool GENE_MUTATE_FLAG = (*agents_prns) < MUTATION_RATE;
-
-            agents_prns++;
-            if(GENE_MUTATE_FLAG) {
               const TFloat & range = VAR_RANGES[k];
+              const bool GENE_CROSSOVER_FLAG = *(agents_prns++) < CROSSOVER_RATE;
+              const bool GENE_MUTATE_FLAG = *(agents_prns++) < MUTATION_RATE;
 
-              TFloat x = 0.0;
-              for(uint32_t n = 0; n < DIST_LIMIT; ++n) {
-                x += local_generator->_generate();
+              offspring[k] = (0.5f * parentA[k]) +  (0.5f * parentB[k]);
+
+              if (unlikely(!GENE_CROSSOVER_FLAG)) {
+                offspring[k] = parentA[k];
               }
 
-              x *= INV_DIST_LIMIT;
-              x -= 0.5;
-              x *= DEVIATION * range;
+              if (unlikely(GENE_MUTATE_FLAG)) {
+                TFloat x = 0.0;
+#pragma unroll
+                for(uint32_t n = 0; n < DIST_LIMIT; ++n) {
+                  x += *(agents_prns++);
+                }
 
-              offspring[k] += x;
+                x *= INV_DIST_LIMIT;
+                x -= 0.5;
+                x *= DEVIATION * range;
+
+                offspring[k] += x;
+              }
             }
           }
         }
       }
-
     }
   };
 
@@ -102,10 +100,11 @@ namespace locusta {
       const uint32_t ISLES = solver->_ISLES;
       const uint32_t AGENTS = solver->_AGENTS;
       const uint32_t SELECTION_SIZE = solver->_selection_size;
+      const uint32_t GENOME_RND_OFFSET = ((AGENTS - (1 + SELECTION_SIZE)) +
+                                          (SELECTION_SIZE - 1));
 
-      return ISLES * AGENTS *
-        ((AGENTS - (1 + SELECTION_SIZE)) +
-         (SELECTION_SIZE - 1));
+
+      return ISLES * AGENTS * GENOME_RND_OFFSET;
     }
 
     void operator()(ga_solver_cpu<TFloat> * solver)
@@ -116,9 +115,11 @@ namespace locusta {
       const uint32_t SELECTION_SIZE = solver->_selection_size;
       const TFloat SELECTION_P = solver->_selection_stochastic_factor;
 
+      const uint32_t GENOME_RND_OFFSET = ((AGENTS - (1 + SELECTION_SIZE)) +
+                                          (SELECTION_SIZE - 1));
+
+
       const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[ga_solver_cpu<TFloat>::SELECTION_SET]);
-      const uint32_t RND_OFFSET = ((AGENTS - (1 + SELECTION_SIZE)) +
-                                   (SELECTION_SIZE - 1));
 
       const TFloat * fitness_array = const_cast<TFloat *>(solver->_population->_fitness_array);
 
@@ -128,7 +129,7 @@ namespace locusta {
       for(uint32_t i = 0; i < ISLES; ++i) {
         for(uint32_t j = 0; j < AGENTS; ++j) {
           const uint32_t ISLE_OFFSET = i * AGENTS;
-          const TFloat * agents_prns = prn_array + i * AGENTS * RND_OFFSET + j * RND_OFFSET;
+          const TFloat * agents_prns = prn_array + (i * AGENTS * GENOME_RND_OFFSET) + (j * GENOME_RND_OFFSET);
           const uint32_t idx = ISLE_OFFSET + j;
 
           // Resevoir Sampling

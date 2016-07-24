@@ -36,6 +36,9 @@ namespace locusta {
   template <typename TFloat>
   struct WholeCrossoverCuda : BreedCudaFunctor<TFloat> {
 
+    const TFloat DEVIATION = 0.2;
+    const uint32_t DIST_LIMIT = 3;
+
     uint32_t required_prns(ga_solver_cuda<TFloat> * solver) {
       const uint32_t ISLES = solver->_ISLES;
       const uint32_t AGENTS = solver->_AGENTS;
@@ -50,13 +53,10 @@ namespace locusta {
       const uint32_t DIMENSIONS = solver->_DIMENSIONS;
       const TFloat * VAR_RANGES = solver->_DEV_VAR_RANGES;
 
-      const TFloat DEVIATION = 0.2;
-
       const TFloat * prn_array = const_cast<TFloat *>(solver->_prn_sets[ga_solver_cuda<TFloat>::BREEDING_SET]);
 
       const TFloat CROSSOVER_RATE = solver->_crossover_rate;
       const TFloat MUTATION_RATE = solver->_mutation_rate;
-      const uint32_t DIST_LIMIT = solver->_mut_dist_iterations;
 
       const uint32_t * couple_selection = const_cast<uint32_t *>(solver->_dev_couples_idx_array);
 
