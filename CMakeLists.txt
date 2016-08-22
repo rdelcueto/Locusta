@@ -11,25 +11,55 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake/cuda" ${CMAKE_MODULE_PATH})
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+# C/C++ Flags
 add_definitions(-std=c++11)
-LIST(APPEND CUDA_NVCC_FLAGS -std=c++11)
+set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
+set(CMAKE_C_FLAGS_RELEASE "-O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffast-math -march=native -mtune=native")
 
-# Flags
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g -pg -D_DEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -g -pg -ffast-math")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ffast-math -march=native -mtune=native")
+
 
 # OpenMP
 find_package(OpenMP)
 if (OPENMP_FOUND)
- set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -fopenmp-simd -fdump-tree-all")
- set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp-simd -fdump-tree-all")
+ set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
- #  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -fno-openmp-simd -fdump-tree-all")
-#  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fno-openmp-simd -fdump-tree-all")
+# ENABLE_SIMD
+option(ENABLE_SIMD
+  "On to compile with SIMD instructions."
+  ON
+  )
+
+if (ENABLE_SIMD)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
+else ()
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-tree-vectorize -fno-tree-loop-vectorize")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-tree-vectorize -fno-tree-loop-vectorize")
+endif()
+
+# OpenMP SIMD
+if (OPENMP_FOUND)
+  if (ENABLE_SIMD)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp-simd")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-simd")
+  else()
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-openmp-simd")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-openmp-simd")
+  endif()
 endif()
 
 # CUDA
-set(CUDA_HOST_COMPILER /usr/bin/gcc-5)
+set(CUDA_HOST_COMPILER /usr/bin/g++-5)
 find_package(CUDA REQUIRED)
 find_cuda_helper_libs(curand)
 
@@ -48,6 +78,7 @@ LIST(APPEND CUDA_NVCC_FLAGS
 --use_fast_math
 )
 
+LIST(APPEND CUDA_NVCC_FLAGS -std=c++11)
 option(BUILD_SHARED_LIBS
   "On to build shared libraries, off for static libraries."
   OFF
