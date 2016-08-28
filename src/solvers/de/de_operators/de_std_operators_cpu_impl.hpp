@@ -24,8 +24,7 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
     return trial_gene;
   }
 
-  inline TFloat GeneCrop(const TFloat trial_gene,
-                         const TFloat lower_bound,
+  inline TFloat GeneCrop(const TFloat trial_gene, const TFloat lower_bound,
                          const TFloat upper_bound)
   {
     TFloat cropped_gene = trial_gene;
@@ -109,8 +108,8 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
 #pragma omp simd
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
           const bool CROSSOVER_FLAG = (agents_prns[k]) >= CROSSOVER_RATE;
-          const TFloat &lower_bound = solver->_LOWER_BOUNDS[k];
-          const TFloat &upper_bound = solver->_UPPER_BOUNDS[k];
+          const TFloat& lower_bound = solver->_LOWER_BOUNDS[k];
+          const TFloat& upper_bound = solver->_UPPER_BOUNDS[k];
 
           TFloat trial_gene =
             GeneCrossOver(difference_a_vector[k], difference_b_vector[k],

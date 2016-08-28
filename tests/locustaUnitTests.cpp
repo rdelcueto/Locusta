@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include <time.h>
 
 #include "./benchmarks/benchmarks_cpu.hpp"
@@ -35,11 +35,13 @@
 
 using namespace locusta;
 
-class LocustaTestEnvironment : public testing::Environment {
+class LocustaTestEnvironment : public testing::Environment
+{
 public:
   virtual ~LocustaTestEnvironment() {}
   // Override this to define how to set up the environment.
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
     upper_bounds_ptr = new float[DIMENSIONS];
     lower_bounds_ptr = new float[DIMENSIONS];
 
@@ -51,53 +53,56 @@ public:
     start_time = time(NULL);
   }
   // Override this to define how to tear down the environment.
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     // const time_t end_time = time(NULL);
     // const time_t elapsed_time = end_time - start_time;
 
     // std::cout << "Elapsed Time" << elapsed_time << std::endl;
-    //RecordProperty("Elapsed Time", elapsed_time);
+    // RecordProperty("Elapsed Time", elapsed_time);
   }
 
 public:
-
   time_t start_time;
 
   const uint32_t BENCHMARK_FUNC_ID = 1;
-  const uint64_t SEED = 0;
-  const uint32_t GENERATIONS = 1e2;
-  const uint32_t ISLES = 256;
+  const uint64_t SEED = 314;
+  const uint32_t GENERATIONS = 1e3;
+  const uint32_t ISLES = 64;
   const uint32_t AGENTS = 256;
-  const uint32_t DIMENSIONS = 16;
+  const uint32_t DIMENSIONS = 32;
 
-  float * upper_bounds_ptr;
-  float * lower_bounds_ptr;
-
+  float* upper_bounds_ptr;
+  float* lower_bounds_ptr;
 };
 
 LocustaTestEnvironment* const locusta_glb_env = new LocustaTestEnvironment;
-::testing::Environment* const locusta_env = ::testing::AddGlobalTestEnvironment(locusta_glb_env);
+::testing::Environment* const locusta_env =
+  ::testing::AddGlobalTestEnvironment(locusta_glb_env);
 
-class CPULocustaTest : public testing::Test {
+class CPULocustaTest : public testing::Test
+{
 protected:
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
 
-    evaluation_functor_cpu_ptr = new BenchmarkFunctor<float>(BENCHMARK_FUNC_ID, DIMENSIONS);
-    evaluator_cpu_ptr = new evaluator_cpu<float>(evaluation_functor_cpu_ptr,
-                                                 true,
-                                                 BoundMapKind::CropBounds,
-                                                 DIMENSIONS);
+    evaluation_functor_cpu_ptr =
+      new BenchmarkFunctor<float>(BENCHMARK_FUNC_ID, DIMENSIONS);
+    evaluator_cpu_ptr = new evaluator_cpu<float>(
+      evaluation_functor_cpu_ptr, true, BoundMapKind::CropBounds, DIMENSIONS);
 
     // Single prng generator for CPU solver seems to perform better.
-    //prngenerator_cpu_ptr = new prngenerator_cpu<float>(1);
+    // prngenerator_cpu_ptr = new prngenerator_cpu<float>(1);
     prngenerator_cpu_ptr = new prngenerator_cpu<float>(omp_get_max_threads());
 
     prngenerator_cpu_ptr->_initialize_engines(SEED);
 
-    population_cpu_ptr = new population_set_cpu<float>(ISLES, AGENTS, DIMENSIONS);
+    population_cpu_ptr =
+      new population_set_cpu<float>(ISLES, AGENTS, DIMENSIONS);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     delete population_cpu_ptr;
     population_cpu_ptr = NULL;
     delete evaluator_cpu_ptr;
@@ -109,7 +114,6 @@ protected:
   }
 
 public:
-
   const uint32_t BENCHMARK_FUNC_ID = locusta_glb_env->BENCHMARK_FUNC_ID;
   const uint32_t SEED = locusta_glb_env->SEED;
   const uint32_t GENERATIONS = locusta_glb_env->GENERATIONS;
@@ -117,36 +121,39 @@ public:
   const uint32_t AGENTS = locusta_glb_env->AGENTS;
   const uint32_t DIMENSIONS = locusta_glb_env->DIMENSIONS;
 
-  float * upper_bounds_ptr = locusta_glb_env->upper_bounds_ptr;
-  float * lower_bounds_ptr = locusta_glb_env->lower_bounds_ptr;
+  float* upper_bounds_ptr = locusta_glb_env->upper_bounds_ptr;
+  float* lower_bounds_ptr = locusta_glb_env->lower_bounds_ptr;
 
   // Pseudo Random Number Generators
-  prngenerator_cpu<float> * prngenerator_cpu_ptr;
+  prngenerator_cpu<float>* prngenerator_cpu_ptr;
   // Evaluator
-  evaluator_cpu<float> * evaluator_cpu_ptr;
-  EvaluationFunctor<float> * evaluation_functor_cpu_ptr;
+  evaluator_cpu<float>* evaluator_cpu_ptr;
+  EvaluationFunctor<float>* evaluation_functor_cpu_ptr;
   // Population
-  population_set_cpu<float> * population_cpu_ptr;
+  population_set_cpu<float>* population_cpu_ptr;
 };
 
-class GPULocustaTest : public testing::Test {
+class GPULocustaTest : public testing::Test
+{
 protected:
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
     __setup_cuda();
 
-    evaluation_functor_cuda_ptr = new BenchmarkCudaFunctor<float>(BENCHMARK_FUNC_ID, DIMENSIONS);
-    evaluator_cuda_ptr = new evaluator_cuda<float>(evaluation_functor_cuda_ptr,
-                                                   true,
-                                                   BoundMapKind::CropBounds,
-                                                   DIMENSIONS);
+    evaluation_functor_cuda_ptr =
+      new BenchmarkCudaFunctor<float>(BENCHMARK_FUNC_ID, DIMENSIONS);
+    evaluator_cuda_ptr = new evaluator_cuda<float>(
+      evaluation_functor_cuda_ptr, true, BoundMapKind::CropBounds, DIMENSIONS);
 
     prngenerator_cuda_ptr = new prngenerator_cuda<float>(ISLES * AGENTS);
     prngenerator_cuda_ptr->_initialize_engines(SEED);
 
-    population_cuda_ptr = new population_set_cuda<float>(ISLES, AGENTS, DIMENSIONS);
+    population_cuda_ptr =
+      new population_set_cuda<float>(ISLES, AGENTS, DIMENSIONS);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     delete population_cuda_ptr;
     population_cuda_ptr = NULL;
     delete evaluator_cuda_ptr;
@@ -158,7 +165,6 @@ protected:
   }
 
 public:
-
   const uint32_t BENCHMARK_FUNC_ID = locusta_glb_env->BENCHMARK_FUNC_ID;
   const uint32_t SEED = locusta_glb_env->SEED;
   const uint32_t GENERATIONS = locusta_glb_env->GENERATIONS;
@@ -166,195 +172,194 @@ public:
   const uint32_t AGENTS = locusta_glb_env->AGENTS;
   const uint32_t DIMENSIONS = locusta_glb_env->DIMENSIONS;
 
-  float * upper_bounds_ptr = locusta_glb_env->upper_bounds_ptr;
-  float * lower_bounds_ptr = locusta_glb_env->lower_bounds_ptr;
+  float* upper_bounds_ptr = locusta_glb_env->upper_bounds_ptr;
+  float* lower_bounds_ptr = locusta_glb_env->lower_bounds_ptr;
 
   // Pseudo Random Number Generators
-  prngenerator_cuda<float> * prngenerator_cuda_ptr;
+  prngenerator_cuda<float>* prngenerator_cuda_ptr;
   // Evaluator
-  EvaluationCudaFunctor<float> * evaluation_functor_cuda_ptr;
-  evaluator_cuda<float> * evaluator_cuda_ptr;
+  EvaluationCudaFunctor<float>* evaluation_functor_cuda_ptr;
+  evaluator_cuda<float>* evaluator_cuda_ptr;
   // Population
-  population_set_cuda<float> * population_cuda_ptr;
+  population_set_cuda<float>* population_cuda_ptr;
 };
 
-class CPUParticleSwarmTest : public CPULocustaTest {
+class CPUParticleSwarmTest : public CPULocustaTest
+{
 protected:
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
 
     CPULocustaTest::SetUp();
-    pso_solver_cpu_ptr = new pso_solver_cpu<float>(population_cpu_ptr,
-                                                   evaluator_cpu_ptr,
-                                                   prngenerator_cpu_ptr,
-                                                   GENERATIONS,
-                                                   upper_bounds_ptr,
-                                                   lower_bounds_ptr);
+    pso_solver_cpu_ptr = new pso_solver_cpu<float>(
+      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
+      upper_bounds_ptr, lower_bounds_ptr);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     delete pso_solver_cpu_ptr;
     pso_solver_cpu_ptr = NULL;
     CPULocustaTest::TearDown();
   }
 
 public:
-  pso_solver_cpu<float> * pso_solver_cpu_ptr;
-
+  pso_solver_cpu<float>* pso_solver_cpu_ptr;
 };
 
-class GPUParticleSwarmTest : public GPULocustaTest {
+class GPUParticleSwarmTest : public GPULocustaTest
+{
 protected:
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
     GPULocustaTest::SetUp();
-    pso_solver_cuda_ptr = new pso_solver_cuda<float>(population_cuda_ptr,
-                                                     evaluator_cuda_ptr,
-                                                     prngenerator_cuda_ptr,
-                                                     GENERATIONS,
-                                                     upper_bounds_ptr,
-                                                     lower_bounds_ptr);
+    pso_solver_cuda_ptr = new pso_solver_cuda<float>(
+      population_cuda_ptr, evaluator_cuda_ptr, prngenerator_cuda_ptr,
+      GENERATIONS, upper_bounds_ptr, lower_bounds_ptr);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     delete pso_solver_cuda_ptr;
     pso_solver_cuda_ptr = NULL;
     GPULocustaTest::TearDown();
   }
 
 public:
-  pso_solver_cuda<float> * pso_solver_cuda_ptr;
-
+  pso_solver_cuda<float>* pso_solver_cuda_ptr;
 };
 
-class CPUGeneticAlgorithmTest : public CPULocustaTest {
+class CPUGeneticAlgorithmTest : public CPULocustaTest
+{
 protected:
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
     CPULocustaTest::SetUp();
-    ga_solver_cpu_ptr = new ga_solver_cpu<float>(population_cpu_ptr,
-                                                 evaluator_cpu_ptr,
-                                                 prngenerator_cpu_ptr,
-                                                 GENERATIONS,
-                                                 upper_bounds_ptr,
-                                                 lower_bounds_ptr);
+    ga_solver_cpu_ptr = new ga_solver_cpu<float>(
+      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
+      upper_bounds_ptr, lower_bounds_ptr);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     delete ga_solver_cpu_ptr;
     ga_solver_cpu_ptr = NULL;
     CPULocustaTest::TearDown();
   }
 
 public:
-  ga_solver_cpu<float> * ga_solver_cpu_ptr;
-
+  ga_solver_cpu<float>* ga_solver_cpu_ptr;
 };
 
-class GPUGeneticAlgorithmTest : public GPULocustaTest {
+class GPUGeneticAlgorithmTest : public GPULocustaTest
+{
 protected:
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
     GPULocustaTest::SetUp();
-    ga_solver_cuda_ptr = new ga_solver_cuda<float>(population_cuda_ptr,
-                                                   evaluator_cuda_ptr,
-                                                   prngenerator_cuda_ptr,
-                                                   GENERATIONS,
-                                                   upper_bounds_ptr,
-                                                   lower_bounds_ptr);
+    ga_solver_cuda_ptr = new ga_solver_cuda<float>(
+      population_cuda_ptr, evaluator_cuda_ptr, prngenerator_cuda_ptr,
+      GENERATIONS, upper_bounds_ptr, lower_bounds_ptr);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     delete ga_solver_cuda_ptr;
     ga_solver_cuda_ptr = NULL;
     GPULocustaTest::TearDown();
   }
 
 public:
-  ga_solver_cuda<float> * ga_solver_cuda_ptr;
-
+  ga_solver_cuda<float>* ga_solver_cuda_ptr;
 };
 
-class CPUDifferentialEvolutionTest : public CPULocustaTest {
+class CPUDifferentialEvolutionTest : public CPULocustaTest
+{
 protected:
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
     CPULocustaTest::SetUp();
-    de_solver_cpu_ptr = new de_solver_cpu<float>(population_cpu_ptr,
-                                                 evaluator_cpu_ptr,
-                                                 prngenerator_cpu_ptr,
-                                                 GENERATIONS,
-                                                 upper_bounds_ptr,
-                                                 lower_bounds_ptr);
+    de_solver_cpu_ptr = new de_solver_cpu<float>(
+      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
+      upper_bounds_ptr, lower_bounds_ptr);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     delete de_solver_cpu_ptr;
     de_solver_cpu_ptr = NULL;
     CPULocustaTest::TearDown();
   }
 
 public:
-  de_solver_cpu<float> * de_solver_cpu_ptr;
-
+  de_solver_cpu<float>* de_solver_cpu_ptr;
 };
 
-class GPUDifferentialEvolutionTest : public GPULocustaTest {
+class GPUDifferentialEvolutionTest : public GPULocustaTest
+{
 protected:
-  virtual void SetUp() {
+  virtual void SetUp()
+  {
     GPULocustaTest::SetUp();
-    de_solver_cuda_ptr = new de_solver_cuda<float>(population_cuda_ptr,
-                                                   evaluator_cuda_ptr,
-                                                   prngenerator_cuda_ptr,
-                                                   GENERATIONS,
-                                                   upper_bounds_ptr,
-                                                   lower_bounds_ptr);
+    de_solver_cuda_ptr = new de_solver_cuda<float>(
+      population_cuda_ptr, evaluator_cuda_ptr, prngenerator_cuda_ptr,
+      GENERATIONS, upper_bounds_ptr, lower_bounds_ptr);
   }
 
-  virtual void TearDown() {
+  virtual void TearDown()
+  {
     delete de_solver_cuda_ptr;
     de_solver_cuda_ptr = NULL;
     GPULocustaTest::TearDown();
   }
 
 public:
-  de_solver_cuda<float> * de_solver_cuda_ptr;
-
+  de_solver_cuda<float>* de_solver_cuda_ptr;
 };
 
 // Benchmark Setup
 
-TEST_F(CPUParticleSwarmTest, BenchmarkCpu) {
-  pso_solver_cpu_ptr->setup_operators(new CanonicalParticleRecordUpdate<float>(),
-                                      new CanonicalSpeedUpdate<float>(),
-                                      new CanonicalPositionUpdate<float>());
+TEST_F(CPUParticleSwarmTest, BenchmarkCpu)
+{
+  pso_solver_cpu_ptr->setup_operators(
+    new CanonicalParticleRecordUpdate<float>(),
+    new CanonicalSpeedUpdate<float>(), new CanonicalPositionUpdate<float>());
   pso_solver_cpu_ptr->setup_solver();
   pso_solver_cpu_ptr->run();
-  //pso_solver_cpu_ptr->print_solutions();
+  // pso_solver_cpu_ptr->print_solutions();
 }
 
-TEST_F(CPUGeneticAlgorithmTest, BenchmarkCpu) {
+TEST_F(CPUGeneticAlgorithmTest, BenchmarkCpu)
+{
   ga_solver_cpu_ptr->setup_operators(new WholeCrossover<float>(),
                                      new TournamentSelection<float>());
   ga_solver_cpu_ptr->setup_solver();
   ga_solver_cpu_ptr->run();
-  //ga_solver_cpu_ptr->print_solutions();
+  // ga_solver_cpu_ptr->print_solutions();
 }
 
-TEST_F(CPUDifferentialEvolutionTest, BenchmarkCpu) {
+TEST_F(CPUDifferentialEvolutionTest, BenchmarkCpu)
+{
   de_solver_cpu_ptr->setup_operators(new DeWholeCrossover<float>(),
                                      new DeRandomSelection<float>());
   de_solver_cpu_ptr->setup_solver();
   de_solver_cpu_ptr->run();
-  //de_solver_cpu_ptr->print_solutions();
+  // de_solver_cpu_ptr->print_solutions();
 }
 
-
-TEST_F(GPUParticleSwarmTest, BenchmarkCuda) {
-  pso_solver_cuda_ptr->setup_operators(new CanonicalParticleRecordUpdateCuda<float>(),
-                                       new CanonicalSpeedUpdateCuda<float>(),
-                                       new CanonicalPositionUpdateCuda<float>());
+TEST_F(GPUParticleSwarmTest, BenchmarkCuda)
+{
+  pso_solver_cuda_ptr->setup_operators(
+    new CanonicalParticleRecordUpdateCuda<float>(),
+    new CanonicalSpeedUpdateCuda<float>(),
+    new CanonicalPositionUpdateCuda<float>());
   pso_solver_cuda_ptr->setup_solver();
   pso_solver_cuda_ptr->run();
   // pso_solver_cuda_ptr->print_population();
 }
 
-TEST_F(GPUGeneticAlgorithmTest, BenchmarkCuda) {
+TEST_F(GPUGeneticAlgorithmTest, BenchmarkCuda)
+{
   ga_solver_cuda_ptr->setup_operators(new WholeCrossoverCuda<float>(),
                                       new TournamentSelectionCuda<float>());
   ga_solver_cuda_ptr->setup_solver();
@@ -362,15 +367,14 @@ TEST_F(GPUGeneticAlgorithmTest, BenchmarkCuda) {
   // ga_solver_cuda_ptr->print_population();
 }
 
-TEST_F(GPUDifferentialEvolutionTest, BenchmarkCuda) {
+TEST_F(GPUDifferentialEvolutionTest, BenchmarkCuda)
+{
   de_solver_cuda_ptr->setup_operators(new DeWholeCrossoverCuda<float>(),
                                       new DeRandomSelectionCuda<float>());
   de_solver_cuda_ptr->setup_solver();
   de_solver_cuda_ptr->run();
   // de_solver_cuda_ptr->print_population();
 }
-
-
 
 // int main(int argc, char **argv) {
 //     ::testing::InitGoogleTest(&argc, argv);
