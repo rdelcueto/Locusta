@@ -16,13 +16,12 @@ add_definitions(-std=c++11)
 set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffast-math -march=native -mtune=native")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC -fstrict-aliasing -Wstrict-aliasing=2")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ffast-math -march=native -mtune=native")
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC -fstrict-aliasing -Wstrict-aliasing=2")
 
 # OpenMP
 find_package(OpenMP)
@@ -40,8 +39,8 @@ option(ENABLE_SIMD
 if (ENABLE_SIMD)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
+  #set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
+  #set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
 else ()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-tree-vectorize -fno-tree-loop-vectorize")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-tree-vectorize -fno-tree-loop-vectorize")
@@ -70,13 +69,20 @@ find_cuda_helper_libs(curand)
 
 # ALL POST-FERMI
 LIST(APPEND CUDA_NVCC_FLAGS
-# -gencode=arch=compute_20,code=sm_20
-# -gencode=arch=compute_30,code=sm_30
-# -gencode=arch=compute_35,code=sm_35
-# -gencode=arch=compute_50,code=sm_50
--gencode=arch=compute_52,code=sm_52
---use_fast_math
-)
+  -Xcompiler -fPIC
+  -Xptxas -v
+  # -gencode=arch=compute_20,code=sm_20
+  # -gencode=arch=compute_30,code=sm_30
+  # -gencode=arch=compute_35,code=sm_35
+  # -gencode=arch=compute_50,code=sm_50
+  -gencode=arch=compute_52,code=sm_52
+  #--ptxas-options=-v
+  --use_fast_math
+  --restrict
+  -O3
+  -pg
+  -G
+  )
 
 LIST(APPEND CUDA_NVCC_FLAGS -std=c++11)
 option(BUILD_SHARED_LIBS
