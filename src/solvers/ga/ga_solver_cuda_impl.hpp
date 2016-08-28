@@ -110,10 +110,6 @@ ga_solver_cuda<TFloat>::transform()
 
   (*_selection_functor_ptr)(this);
   (*_breed_functor_ptr)(this);
-
-  // Crop transformation vector
-  // evolutionary_solver_cuda<TFloat>::crop_vector(
-  //   _dev_population->_dev_transformed_data_array);
 }
 
 template <typename TFloat>

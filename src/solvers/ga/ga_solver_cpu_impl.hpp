@@ -4,15 +4,16 @@ namespace locusta {
 
 /// Interface for Genetic Algorithm solvers
 template <typename TFloat>
-ga_solver_cpu<TFloat>::ga_solver_cpu(population_set_cpu<TFloat> *population,
-                                     evaluator_cpu<TFloat> *evaluator,
-                                     prngenerator_cpu<TFloat> *prn_generator,
+ga_solver_cpu<TFloat>::ga_solver_cpu(population_set_cpu<TFloat>* population,
+                                     evaluator_cpu<TFloat>* evaluator,
+                                     prngenerator_cpu<TFloat>* prn_generator,
                                      uint32_t generation_target,
-                                     TFloat *upper_bounds, TFloat *lower_bounds)
+                                     TFloat* upper_bounds, TFloat* lower_bounds)
 
-    : evolutionary_solver_cpu<TFloat>(population, evaluator, prn_generator,
-                                      generation_target, upper_bounds,
-                                      lower_bounds) {
+  : evolutionary_solver_cpu<TFloat>(population, evaluator, prn_generator,
+                                    generation_target, upper_bounds,
+                                    lower_bounds)
+{
   // Defaults
   _migration_step = 0;
   _migration_size = 1;
@@ -29,11 +30,16 @@ ga_solver_cpu<TFloat>::ga_solver_cpu(population_set_cpu<TFloat> *population,
   _couples_idx_array = new uint32_t[TOTAL_AGENTS];
 }
 
-template <typename TFloat> ga_solver_cpu<TFloat>::~ga_solver_cpu() {
+template <typename TFloat>
+ga_solver_cpu<TFloat>::~ga_solver_cpu()
+{
   delete[] _couples_idx_array;
 }
 
-template <typename TFloat> void ga_solver_cpu<TFloat>::setup_solver() {
+template <typename TFloat>
+void
+ga_solver_cpu<TFloat>::setup_solver()
+{
   // Pseudo random number allocation.
   const uint32_t SELECTION_OFFSET = _selection_functor_ptr->required_prns(this);
   const uint32_t BREEDING_OFFSET = _breed_functor_ptr->required_prns(this);
@@ -41,34 +47,41 @@ template <typename TFloat> void ga_solver_cpu<TFloat>::setup_solver() {
   _bulk_size = SELECTION_OFFSET + BREEDING_OFFSET;
   _bulk_prns = new TFloat[_bulk_size];
 
-  _prn_sets = new TFloat *[2];
+  _prn_sets = new TFloat*[2];
   _prn_sets[SELECTION_SET] = _bulk_prns;
   _prn_sets[BREEDING_SET] = _bulk_prns + SELECTION_OFFSET;
 
   evolutionary_solver_cpu<TFloat>::setup_solver();
 }
 
-template <typename TFloat> void ga_solver_cpu<TFloat>::teardown_solver() {
+template <typename TFloat>
+void
+ga_solver_cpu<TFloat>::teardown_solver()
+{
   delete[] _prn_sets;
   delete[] _bulk_prns;
 }
 
 template <typename TFloat>
-void ga_solver_cpu<TFloat>::setup_operators(
-    BreedFunctor<TFloat> *breed_functor_ptr,
-    SelectionFunctor<TFloat> *selection_functor_ptr) {
+void
+ga_solver_cpu<TFloat>::setup_operators(
+  BreedFunctor<TFloat>* breed_functor_ptr,
+  SelectionFunctor<TFloat>* selection_functor_ptr)
+{
   _breed_functor_ptr = breed_functor_ptr;
   _selection_functor_ptr = selection_functor_ptr;
 }
 
 template <typename TFloat>
-void ga_solver_cpu<TFloat>::solver_config(uint32_t migration_step,
-                                          uint32_t migration_size,
-                                          uint32_t migration_selection_size,
-                                          uint32_t selection_size,
-                                          TFloat selection_stochastic_factor,
-                                          TFloat crossover_rate,
-                                          TFloat mutation_rate) {
+void
+ga_solver_cpu<TFloat>::solver_config(uint32_t migration_step,
+                                     uint32_t migration_size,
+                                     uint32_t migration_selection_size,
+                                     uint32_t selection_size,
+                                     TFloat selection_stochastic_factor,
+                                     TFloat crossover_rate,
+                                     TFloat mutation_rate)
+{
   _migration_step = migration_step;
   _migration_size = migration_size;
   _migration_selection_size = migration_selection_size;
@@ -78,7 +91,10 @@ void ga_solver_cpu<TFloat>::solver_config(uint32_t migration_step,
   _mutation_rate = mutation_rate;
 }
 
-template <typename TFloat> void ga_solver_cpu<TFloat>::transform() {
+template <typename TFloat>
+void
+ga_solver_cpu<TFloat>::transform()
+{
   elite_population_replace();
 
   (*_selection_functor_ptr)(this);
@@ -90,9 +106,11 @@ template <typename TFloat> void ga_solver_cpu<TFloat>::transform() {
 }
 
 template <typename TFloat>
-void ga_solver_cpu<TFloat>::elite_population_replace() {
-  TFloat *genomes = _population->_data_array;
-  TFloat *fitness = _population->_fitness_array;
+void
+ga_solver_cpu<TFloat>::elite_population_replace()
+{
+  TFloat* genomes = _population->_data_array;
+  TFloat* fitness = _population->_fitness_array;
 
   // Scan population
   for (uint32_t i = 0; i < _ISLES; i++) {
@@ -100,9 +118,9 @@ void ga_solver_cpu<TFloat>::elite_population_replace() {
 
     fitness[i * _AGENTS + min_idx] = _max_agent_fitness[i];
 
-    const TFloat *max_genome = _max_agent_genome + i * _DIMENSIONS;
-    TFloat *min_genome =
-        genomes + i * _AGENTS * _DIMENSIONS + min_idx * _DIMENSIONS;
+    const TFloat* max_genome = _max_agent_genome + i * _DIMENSIONS;
+    TFloat* min_genome =
+      genomes + i * _AGENTS * _DIMENSIONS + min_idx * _DIMENSIONS;
 
     for (uint32_t k = 0; k < _DIMENSIONS; k++) {
       min_genome[k] = max_genome[k];
