@@ -16,12 +16,12 @@ add_definitions(-std=c++11)
 set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC -fstrict-aliasing -Wstrict-aliasing=2")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC -fstrict-aliasing -Wstrict-aliasing=2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC")
 
 # OpenMP
 find_package(OpenMP)
@@ -37,8 +37,6 @@ option(ENABLE_SIMD
   )
 
 if (ENABLE_SIMD)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
   #set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
   #set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
 else ()
@@ -55,6 +53,17 @@ if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-openmp-simd")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-openmp-simd")
   endif()
+endif()
+
+# ENABLE Prefetched loops
+option(ENABLE_PREFETCH
+  "On to compile with loop prefetching."
+  ON
+  )
+
+if (ENABLE_PREFETCH)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprefetch-loop-arrays")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprefetch-loop-arrays")
 endif()
 
 # CUDA
