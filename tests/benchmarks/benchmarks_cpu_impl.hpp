@@ -359,7 +359,7 @@ benchmark_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
                    prngenerator_cpu<TFloat>* local_generator)
 {
 
-  const uint32_t REPETITIONS = 1e2;
+  const uint32_t REPETITIONS = 1e0;
   TFloat (*benchmark_function)(const uint32_t, const uint32_t, const TFloat*);
 
   switch (FUNC_ID) {
@@ -415,7 +415,7 @@ benchmark_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
         evaluation_data + i * AGENTS * DIMENSIONS + j * DIMENSIONS;
 
       for (uint32_t r = 0; r < REPETITIONS; ++r) {
-        benchmark_function(DIMENSIONS, OFFSET, genome);
+        result = benchmark_function(DIMENSIONS, OFFSET, genome);
       }
 
       result += EVALUATION_BIAS;

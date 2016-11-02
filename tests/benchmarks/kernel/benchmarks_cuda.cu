@@ -7,7 +7,7 @@ namespace locusta {
 
 /// GPU Kernels Shared Memory Pointer.
 extern __shared__ int evaluator_shared_memory[];
-const uint32_t REPETITIONS = 1e2;
+const uint32_t REPETITIONS = 1e0;
 
 template <typename TFloat>
 __device__ inline TFloat
