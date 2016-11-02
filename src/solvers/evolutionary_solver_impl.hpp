@@ -73,7 +73,7 @@ evolutionary_solver<TFloat>::run()
     // print_transformation_diff();
     advance();
   } while (_generation_count % _generation_target != 0);
-  print_solutions();
+  // print_solutions();
 }
 
 template <typename TFloat>

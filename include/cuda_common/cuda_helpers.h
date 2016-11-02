@@ -77,7 +77,7 @@ namespace locusta {
         return;
     }
 
-    inline void __setup_cuda() {
+  inline void __setup_cuda(int deviceId, int cudaDeviceCacheConfig) {
         cudaDeviceReset();
 
         int deviceCount = 0;
@@ -100,16 +100,24 @@ namespace locusta {
 
         if (!gpuDeviceCount) {
             std::cerr << "No available CUDA Devices found\n";
-        }
-        else {
-            std::cout << gpuDeviceCount << " GPU CUDA device(s) found\n";
-            cudaDeviceProp prop;
-            CudaSafeCall(cudaGetDeviceProperties(&prop, 0));
-
-            std::cout << "Using " << prop.name << std::endl;
+            return;
         }
 
-    }
+        std::cout << gpuDeviceCount << " GPU CUDA device(s) found\n";
+        cudaDeviceProp prop;
+
+        if (deviceId < gpuDeviceCount) {
+          CudaSafeCall(cudaGetDeviceProperties(&prop, deviceId));
+        } else {
+          CudaSafeCall(cudaGetDeviceProperties(&prop, 0));
+        }
+
+        if (cudaDeviceCacheConfig) {
+          CudaSafeCall(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
+        }
+
+        std::cout << "Using " << prop.name << std::endl;
+  }
 }
 
 #endif /* _CUDA_HELPERS_H_ */

@@ -16,6 +16,8 @@ namespace locusta {
 
   template<typename TFloat>
   prngenerator_cpu<TFloat>::~prngenerator_cpu() {
+    delete [] _prng_distributions;
+    delete [] _prng_engines;
   }
 
   template<typename TFloat>

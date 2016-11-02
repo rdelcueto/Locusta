@@ -23,9 +23,9 @@ namespace locusta {
   template <typename TFloat>
   population_set<TFloat>::~population_set()
   {
-    delete [] _data_array;
-    delete [] _transformed_data_array;
     delete [] _fitness_array;
+    delete [] _transformed_data_array;
+    delete [] _data_array;
   }
 
   /// Swaps pointers between data set and transformed data set.

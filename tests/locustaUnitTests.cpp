@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <vector>
+#include <tuple>
 #include <time.h>
 
 #include "./benchmarks/benchmarks_cpu.hpp"
@@ -35,11 +37,22 @@
 
 using namespace locusta;
 
-class LocustaTestEnvironment : public testing::Environment
+std::vector<uint32_t> BenchmarkFunctions;
+std::vector<uint32_t> IslesCombinations;
+std::vector<uint32_t> AgentsCombinations;
+std::vector<uint32_t> DimensionsCombinations;
+
+const uint32_t GLOBAL_SEED = 314;
+const uint32_t GLOBAL_EVALUATIONS = (256*256*256)*1e1;
+
+class CPULocustaTest : public testing::TestWithParam<
+  std::tr1::tuple<uint32_t, uint32_t, uint32_t, uint32_t>>
 {
+
 public:
-  virtual ~LocustaTestEnvironment() {}
-  // Override this to define how to set up the environment.
+  virtual ~CPULocustaTest() {}
+
+protected:
   virtual void SetUp()
   {
     upper_bounds_ptr = new float[DIMENSIONS];
@@ -49,45 +62,9 @@ public:
     std::fill(upper_bounds_ptr, upper_bounds_ptr + DIMENSIONS, 100.0f);
     std::fill(lower_bounds_ptr, lower_bounds_ptr + DIMENSIONS, -100.0f);
 
-    // Init timer
-    start_time = time(NULL);
-  }
-  // Override this to define how to tear down the environment.
-  virtual void TearDown()
-  {
-    // const time_t end_time = time(NULL);
-    // const time_t elapsed_time = end_time - start_time;
-
-    // std::cout << "Elapsed Time" << elapsed_time << std::endl;
-    // RecordProperty("Elapsed Time", elapsed_time);
-  }
-
-public:
-  time_t start_time;
-
-  const uint32_t BENCHMARK_FUNC_ID = 1;
-  const uint64_t SEED = 314;
-  const uint32_t GENERATIONS = 1e3;
-  const uint32_t ISLES = 64;
-  const uint32_t AGENTS = 256;
-  const uint32_t DIMENSIONS = 32;
-
-  float* upper_bounds_ptr;
-  float* lower_bounds_ptr;
-};
-
-LocustaTestEnvironment* const locusta_glb_env = new LocustaTestEnvironment;
-::testing::Environment* const locusta_env =
-  ::testing::AddGlobalTestEnvironment(locusta_glb_env);
-
-class CPULocustaTest : public testing::Test
-{
-protected:
-  virtual void SetUp()
-  {
-
     evaluation_functor_cpu_ptr =
       new BenchmarkFunctor<float>(BENCHMARK_FUNC_ID, DIMENSIONS);
+
     evaluator_cpu_ptr = new evaluator_cpu<float>(
       evaluation_functor_cpu_ptr, true, BoundMapKind::CropBounds, DIMENSIONS);
 
@@ -99,30 +76,48 @@ protected:
 
     population_cpu_ptr =
       new population_set_cpu<float>(ISLES, AGENTS, DIMENSIONS);
+
+    std::cout << "FuncId: " << BENCHMARK_FUNC_ID
+              << ", Generations: " << GENERATIONS
+              << ", Isles: " << ISLES
+              << ", Agents: " << AGENTS
+              << ", Dimensions: " << DIMENSIONS << std::endl;
   }
 
   virtual void TearDown()
   {
     delete population_cpu_ptr;
     population_cpu_ptr = NULL;
-    delete evaluator_cpu_ptr;
-    evaluator_cpu_ptr = NULL;
-    delete evaluation_functor_cpu_ptr;
-    evaluation_functor_cpu_ptr = NULL;
+
     delete prngenerator_cpu_ptr;
     prngenerator_cpu_ptr = NULL;
+
+    delete evaluator_cpu_ptr;
+    evaluator_cpu_ptr = NULL;
+
+    delete evaluation_functor_cpu_ptr;
+    evaluation_functor_cpu_ptr = NULL;
+
+    delete [] lower_bounds_ptr;
+    lower_bounds_ptr = NULL;
+
+    delete [] upper_bounds_ptr;
+    upper_bounds_ptr = NULL;
   }
 
 public:
-  const uint32_t BENCHMARK_FUNC_ID = locusta_glb_env->BENCHMARK_FUNC_ID;
-  const uint32_t SEED = locusta_glb_env->SEED;
-  const uint32_t GENERATIONS = locusta_glb_env->GENERATIONS;
-  const uint32_t ISLES = locusta_glb_env->ISLES;
-  const uint32_t AGENTS = locusta_glb_env->AGENTS;
-  const uint32_t DIMENSIONS = locusta_glb_env->DIMENSIONS;
+  const uint64_t SEED = GLOBAL_SEED;
 
-  float* upper_bounds_ptr = locusta_glb_env->upper_bounds_ptr;
-  float* lower_bounds_ptr = locusta_glb_env->lower_bounds_ptr;
+  uint32_t const BENCHMARK_FUNC_ID = std::tr1::get<0>(GetParam());
+  uint32_t const ISLES = std::tr1::get<1>(GetParam());
+  uint32_t const AGENTS = std::tr1::get<2>(GetParam());
+  uint32_t const DIMENSIONS = std::tr1::get<3>(GetParam());
+
+  uint32_t const FUNC_WEIGHT = BENCHMARK_FUNC_ID == 1 ? 1e1 : 2e0;
+  const uint32_t GENERATIONS = DIMENSIONS <= 2 ? 1 : (FUNC_WEIGHT * GLOBAL_EVALUATIONS) / (ISLES * AGENTS * DIMENSIONS);
+
+  float* upper_bounds_ptr;
+  float* lower_bounds_ptr;
 
   // Pseudo Random Number Generators
   prngenerator_cpu<float>* prngenerator_cpu_ptr;
@@ -133,15 +128,28 @@ public:
   population_set_cpu<float>* population_cpu_ptr;
 };
 
-class GPULocustaTest : public testing::Test
+class GPULocustaTest : public testing::TestWithParam<
+  std::tr1::tuple<uint32_t, uint32_t, uint32_t, uint32_t>>
 {
+
+public:
+  virtual ~GPULocustaTest() {}
+
 protected:
   virtual void SetUp()
   {
-    __setup_cuda();
+    __setup_cuda(0, 1);
+
+    upper_bounds_ptr = new float[DIMENSIONS];
+    lower_bounds_ptr = new float[DIMENSIONS];
+
+    // Bounds definition
+    std::fill(upper_bounds_ptr, upper_bounds_ptr + DIMENSIONS, 100.0f);
+    std::fill(lower_bounds_ptr, lower_bounds_ptr + DIMENSIONS, -100.0f);
 
     evaluation_functor_cuda_ptr =
       new BenchmarkCudaFunctor<float>(BENCHMARK_FUNC_ID, DIMENSIONS);
+
     evaluator_cuda_ptr = new evaluator_cuda<float>(
       evaluation_functor_cuda_ptr, true, BoundMapKind::CropBounds, DIMENSIONS);
 
@@ -150,30 +158,49 @@ protected:
 
     population_cuda_ptr =
       new population_set_cuda<float>(ISLES, AGENTS, DIMENSIONS);
+
+    std::cout << "FuncId: " << BENCHMARK_FUNC_ID
+              << ", Generations: " << GENERATIONS
+              << ", Isles: " << ISLES
+              << ", Agents: " << AGENTS
+              << ", Dimensions: " << DIMENSIONS << std::endl;
   }
 
   virtual void TearDown()
   {
     delete population_cuda_ptr;
     population_cuda_ptr = NULL;
-    delete evaluator_cuda_ptr;
-    evaluator_cuda_ptr = NULL;
-    delete evaluation_functor_cuda_ptr;
-    evaluation_functor_cuda_ptr = NULL;
+
     delete prngenerator_cuda_ptr;
     prngenerator_cuda_ptr = NULL;
+
+    delete evaluator_cuda_ptr;
+    evaluator_cuda_ptr = NULL;
+
+    delete evaluation_functor_cuda_ptr;
+    evaluation_functor_cuda_ptr = NULL;
+
+    delete [] lower_bounds_ptr;
+    lower_bounds_ptr = NULL;
+
+    delete [] upper_bounds_ptr;
+    upper_bounds_ptr = NULL;
   }
 
 public:
-  const uint32_t BENCHMARK_FUNC_ID = locusta_glb_env->BENCHMARK_FUNC_ID;
-  const uint32_t SEED = locusta_glb_env->SEED;
-  const uint32_t GENERATIONS = locusta_glb_env->GENERATIONS;
-  const uint32_t ISLES = locusta_glb_env->ISLES;
-  const uint32_t AGENTS = locusta_glb_env->AGENTS;
-  const uint32_t DIMENSIONS = locusta_glb_env->DIMENSIONS;
+  const uint64_t SEED = GLOBAL_SEED;
 
-  float* upper_bounds_ptr = locusta_glb_env->upper_bounds_ptr;
-  float* lower_bounds_ptr = locusta_glb_env->lower_bounds_ptr;
+  uint32_t const BENCHMARK_FUNC_ID = std::tr1::get<0>(GetParam());
+  uint32_t const ISLES = std::tr1::get<1>(GetParam());
+  uint32_t const AGENTS = std::tr1::get<2>(GetParam());
+  uint32_t const DIMENSIONS = std::tr1::get<3>(GetParam());
+
+  uint32_t const GPU_FACTOR = 1e0;
+  uint32_t const FUNC_WEIGHT = BENCHMARK_FUNC_ID == 1 ? 1e1 : 2e0;
+  const uint32_t GENERATIONS = DIMENSIONS <= 2 ? 1 : (GPU_FACTOR * FUNC_WEIGHT * GLOBAL_EVALUATIONS) / (ISLES * AGENTS * DIMENSIONS);
+
+  float* upper_bounds_ptr;
+  float* lower_bounds_ptr;
 
   // Pseudo Random Number Generators
   prngenerator_cuda<float>* prngenerator_cuda_ptr;
@@ -186,10 +213,13 @@ public:
 
 class CPUParticleSwarmTest : public CPULocustaTest
 {
+
+public:
+  virtual ~CPUParticleSwarmTest() {}
+
 protected:
   virtual void SetUp()
   {
-
     CPULocustaTest::SetUp();
     pso_solver_cpu_ptr = new pso_solver_cpu<float>(
       population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
@@ -209,6 +239,10 @@ public:
 
 class GPUParticleSwarmTest : public GPULocustaTest
 {
+
+public:
+  virtual ~GPUParticleSwarmTest() {}
+
 protected:
   virtual void SetUp()
   {
@@ -231,6 +265,9 @@ public:
 
 class CPUGeneticAlgorithmTest : public CPULocustaTest
 {
+public:
+  virtual ~CPUGeneticAlgorithmTest() {}
+
 protected:
   virtual void SetUp()
   {
@@ -253,6 +290,9 @@ public:
 
 class GPUGeneticAlgorithmTest : public GPULocustaTest
 {
+public:
+  virtual ~GPUGeneticAlgorithmTest() {}
+
 protected:
   virtual void SetUp()
   {
@@ -275,6 +315,9 @@ public:
 
 class CPUDifferentialEvolutionTest : public CPULocustaTest
 {
+public:
+  virtual ~CPUDifferentialEvolutionTest() {}
+
 protected:
   virtual void SetUp()
   {
@@ -297,6 +340,9 @@ public:
 
 class GPUDifferentialEvolutionTest : public GPULocustaTest
 {
+public:
+  virtual ~GPUDifferentialEvolutionTest() {}
+
 protected:
   virtual void SetUp()
   {
@@ -317,67 +363,164 @@ public:
   de_solver_cuda<float>* de_solver_cuda_ptr;
 };
 
-// Benchmark Setup
-
-TEST_F(CPUParticleSwarmTest, BenchmarkCpu)
+TEST_P(CPUParticleSwarmTest, BenchmarkCpu)
 {
-  pso_solver_cpu_ptr->setup_operators(
-    new CanonicalParticleRecordUpdate<float>(),
-    new CanonicalSpeedUpdate<float>(), new CanonicalPositionUpdate<float>());
+  CanonicalParticleRecordUpdate<float> cpru;
+  CanonicalSpeedUpdate<float> csu;
+  CanonicalPositionUpdate<float> cpu;
+
+  pso_solver_cpu_ptr->setup_operators(&cpru, &csu, &cpu);
+
   pso_solver_cpu_ptr->setup_solver();
   pso_solver_cpu_ptr->run();
   // pso_solver_cpu_ptr->print_solutions();
+  pso_solver_cpu_ptr->teardown_solver();
 }
 
-TEST_F(CPUGeneticAlgorithmTest, BenchmarkCpu)
+TEST_P(CPUGeneticAlgorithmTest, BenchmarkCpu)
 {
-  ga_solver_cpu_ptr->setup_operators(new WholeCrossover<float>(),
-                                     new TournamentSelection<float>());
+  WholeCrossover<float> wc;
+  TournamentSelection<float> ts;
+
+  ga_solver_cpu_ptr->setup_operators(&wc, &ts);
+
   ga_solver_cpu_ptr->setup_solver();
   ga_solver_cpu_ptr->run();
   // ga_solver_cpu_ptr->print_solutions();
+  ga_solver_cpu_ptr->teardown_solver();
 }
 
-TEST_F(CPUDifferentialEvolutionTest, BenchmarkCpu)
+TEST_P(CPUDifferentialEvolutionTest, BenchmarkCpu)
 {
-  de_solver_cpu_ptr->setup_operators(new DeWholeCrossover<float>(),
-                                     new DeRandomSelection<float>());
+  DeWholeCrossover<float> dwc;
+  DeRandomSelection<float> drs;
+
+  de_solver_cpu_ptr->setup_operators(&dwc, &drs);
+
   de_solver_cpu_ptr->setup_solver();
   de_solver_cpu_ptr->run();
   // de_solver_cpu_ptr->print_solutions();
+  de_solver_cpu_ptr->teardown_solver();
 }
 
-TEST_F(GPUParticleSwarmTest, BenchmarkCuda)
+TEST_P(GPUParticleSwarmTest, BenchmarkCuda)
 {
-  pso_solver_cuda_ptr->setup_operators(
-    new CanonicalParticleRecordUpdateCuda<float>(),
-    new CanonicalSpeedUpdateCuda<float>(),
-    new CanonicalPositionUpdateCuda<float>());
+  CanonicalParticleRecordUpdateCuda<float> cpru;
+  CanonicalSpeedUpdateCuda<float> csu;
+  CanonicalPositionUpdateCuda<float> cpu;
+
+  pso_solver_cuda_ptr->setup_operators(&cpru, &csu, &cpu);
+
   pso_solver_cuda_ptr->setup_solver();
   pso_solver_cuda_ptr->run();
   // pso_solver_cuda_ptr->print_population();
+  pso_solver_cuda_ptr->teardown_solver();
 }
 
-TEST_F(GPUGeneticAlgorithmTest, BenchmarkCuda)
+TEST_P(GPUGeneticAlgorithmTest, BenchmarkCuda)
 {
-  ga_solver_cuda_ptr->setup_operators(new WholeCrossoverCuda<float>(),
-                                      new TournamentSelectionCuda<float>());
+  WholeCrossoverCuda<float> wc;
+  TournamentSelectionCuda<float> ts;
+  ga_solver_cuda_ptr->setup_operators(&wc, &ts);
+
   ga_solver_cuda_ptr->setup_solver();
   ga_solver_cuda_ptr->run();
   // ga_solver_cuda_ptr->print_population();
+  ga_solver_cuda_ptr->teardown_solver();
 }
 
-TEST_F(GPUDifferentialEvolutionTest, BenchmarkCuda)
+TEST_P(GPUDifferentialEvolutionTest, BenchmarkCuda)
 {
-  de_solver_cuda_ptr->setup_operators(new DeWholeCrossoverCuda<float>(),
-                                      new DeRandomSelectionCuda<float>());
+  DeWholeCrossoverCuda<float> dwc;
+  DeRandomSelectionCuda<float> drs;
+  de_solver_cuda_ptr->setup_operators(&dwc, &drs);
+
   de_solver_cuda_ptr->setup_solver();
   de_solver_cuda_ptr->run();
   // de_solver_cuda_ptr->print_population();
+  de_solver_cuda_ptr->teardown_solver();
 }
 
-// int main(int argc, char **argv) {
-//     ::testing::InitGoogleTest(&argc, argv);
-//     ::testing::AddGlobalTestEnvironment(new Environment());
-//     return RUN_ALL_TESTS();
-// }
+// CPU Benchmarks
+INSTANTIATE_TEST_CASE_P(CPUParticleSwarmTestSuite,
+                        CPUParticleSwarmTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+INSTANTIATE_TEST_CASE_P(CPUGeneticAlgorithmTestSuite,
+                        CPUGeneticAlgorithmTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+INSTANTIATE_TEST_CASE_P(CPUDifferentialEvolutionTestSuite,
+                        CPUDifferentialEvolutionTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+// GPU Benchmarks
+INSTANTIATE_TEST_CASE_P(GPUParticleSwarmTestSuite,
+                        GPUParticleSwarmTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+INSTANTIATE_TEST_CASE_P(GPUGeneticAlgorithmTestSuite,
+                        GPUGeneticAlgorithmTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+INSTANTIATE_TEST_CASE_P(GPUDifferentialEvolutionTestSuite,
+                        GPUDifferentialEvolutionTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+int main(int argc, char **argv) {
+  // Parallel Compare
+  BenchmarkFunctions = {1, 9};
+
+  IslesCombinations = {1, 16, 256};
+
+  AgentsCombinations = {32, 64, 128, 256, 512};
+
+  DimensionsCombinations = {2,  16,   24,   32,   40,   48,   56,   64,   72,   80,   88,   96, 104,  112,  120,  128};
+
+  // CPU Cache Assoc test
+  // BenchmarkFunctions = {1, 9};
+  // IslesCombinations = {4};
+  // AgentsCombinations = {64, 128, 256};
+
+  // DimensionsCombinations = {
+  //   16,   24,   32,   40,   48,   56,   64,   72,   80,   88,   96,
+  //   104,  112,  120,  128,  136,  144,  152,  160,  168,  176,  184,
+  //   192,  200,  208,  216,  224,  232,  240,  248,  256,  264,  272,
+  //   280,  288,  296,  304,  312,  320,  328,  336,  344,  352,  360,
+  //   368,  376,  384,  392,  400,  408,  416,  424,  432,  440,  448,
+  //   456,  464,  472,  480,  488,  496,  504,  512,  520,  528,  536,
+  //   544,  552,  560,  568,  576,  584,  592,  600,  608,  616,  624,
+  //   632,  640,  648,  656,  664,  672,  680,  688,  696,  704,  712,
+  //   720,  728,  736,  744,  752,  760,  768,  776,  784,  792,  800,
+  //   808,  816,  824,  832,  840,  848,  856,  864,  872,  880,  888,
+  //   896,  904,  912,  920,  928,  936,  944,  952,  960,  968,  976,
+  //   984,  992, 1000, 1008, 1016, 1024 };
+
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
