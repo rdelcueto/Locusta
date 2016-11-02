@@ -21,22 +21,22 @@ struct WholeCrossover : BreedFunctor<TFloat>
   const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
   const TFloat DEVIATION = 0.2;
 
-  inline TFloat GeneCrossOver(const TFloat* const parent_gene_a,
-                              const TFloat* const parent_gene_b,
+  inline TFloat GeneCrossOver(const TFloat parent_gene_a,
+                              const TFloat parent_gene_b,
                               const TFloat GENE_CROSSOVER_FLAG)
   {
 
-    TFloat offspring_gene = (0.5f * *parent_gene_a) + (0.5f * *parent_gene_b);
+    TFloat offspring_gene = (0.5f * parent_gene_a) + (0.5f * parent_gene_b);
 
     if (unlikely(!GENE_CROSSOVER_FLAG)) {
-      offspring_gene = *parent_gene_a;
+      offspring_gene = parent_gene_a;
     }
 
     return offspring_gene;
   }
 
-  inline TFloat GeneMutate(TFloat offspring_gene, const TFloat* agents_prns,
-                           const TFloat gene_range)
+ inline TFloat GeneMutate(const TFloat offspring_gene, const TFloat* agents_prns,
+                          const TFloat gene_range)
   {
     TFloat x = 0.0;
     TFloat mutated_gene = offspring_gene;
@@ -133,7 +133,7 @@ struct WholeCrossover : BreedFunctor<TFloat>
 
             // Apply Crossover transformation
             offspring_gene =
-              GeneCrossOver(parentA, parentB, GENE_CROSSOVER_FLAG);
+              GeneCrossOver(parentA[k], parentB[k], GENE_CROSSOVER_FLAG);
 
             // Apply Mutation
             if (unlikely(GENE_MUTATE_FLAG)) {
