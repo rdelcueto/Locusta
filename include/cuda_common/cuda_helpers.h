@@ -102,15 +102,11 @@ namespace locusta {
             std::cerr << "No available CUDA Devices found\n";
         }
         else {
-#ifdef _DEBUG
             std::cout << gpuDeviceCount << " GPU CUDA device(s) found\n";
-#endif
             cudaDeviceProp prop;
             CudaSafeCall(cudaGetDeviceProperties(&prop, 0));
 
-#ifdef _DEBUG
             std::cout << "Using " << prop.name << std::endl;
-#endif
         }
 
     }
