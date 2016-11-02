@@ -51,8 +51,21 @@ namespace locusta {
                                           n));
   }
 
+  template<>
+  inline void prngenerator_cuda<double>::_generate(const uint32_t n, double * output) {
+    // #ifdef _DEBUG
+    //     __cudaCheckMemory();
+    //     std::cout << "Generating " << n << " numbers." << std::endl;
+    // #endif
+    CurandSafeCall(curandGenerateUniformDouble (_dev_bulk_prng_engine,
+                                                output,
+                                                n));
+  }
+
   template<typename TFloat>
   curandState * prngenerator_cuda<TFloat>::get_device_generator_states() const {
     return _dev_prng_engines;
   }
+
 }
+
