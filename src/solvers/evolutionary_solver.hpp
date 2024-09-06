@@ -20,7 +20,7 @@ struct evolutionary_solver
   evolutionary_solver(population_set<TFloat>* population,
                       evaluator<TFloat>* evaluator,
                       prngenerator<TFloat>* prn_generator,
-                      uint32_t generation_target, TFloat* upper_bounds,
+                      uint64_t generation_target, TFloat* upper_bounds,
                       TFloat* lower_bounds);
 
   /// Default destructor
@@ -132,7 +132,7 @@ struct evolutionary_solver
   uint32_t _generation_count;
 
   /// Defines the solver's target generation.
-  uint32_t _generation_target;
+  uint64_t _generation_target;
 
   uint8_t _f_initialized;
 };

@@ -5,7 +5,7 @@ namespace locusta {
 template <typename TFloat>
 evolutionary_solver<TFloat>::evolutionary_solver(
   population_set<TFloat>* population, evaluator<TFloat>* evaluator,
-  prngenerator<TFloat>* prn_generator, uint32_t generation_target,
+  prngenerator<TFloat>* prn_generator, uint64_t generation_target,
   TFloat* upper_bounds, TFloat* lower_bounds)
   : _population(population)
   , _evaluator(evaluator)

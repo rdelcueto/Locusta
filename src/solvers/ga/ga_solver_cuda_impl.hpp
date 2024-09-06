@@ -13,7 +13,7 @@ template <typename TFloat>
 ga_solver_cuda<TFloat>::ga_solver_cuda(population_set_cuda<TFloat>* population,
                                        evaluator_cuda<TFloat>* evaluator,
                                        prngenerator_cuda<TFloat>* prn_generator,
-                                       uint32_t generation_target,
+                                       uint64_t generation_target,
                                        TFloat* upper_bounds,
                                        TFloat* lower_bounds)
 

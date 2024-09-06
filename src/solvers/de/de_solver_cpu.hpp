@@ -22,7 +22,7 @@ struct de_solver_cpu : evolutionary_solver_cpu<TFloat>
   de_solver_cpu(population_set_cpu<TFloat>* population,
                 evaluator_cpu<TFloat>* evaluator,
                 prngenerator_cpu<TFloat>* prn_generator,
-                uint32_t generation_target, TFloat* upper_bounds,
+                uint64_t generation_target, TFloat* upper_bounds,
                 TFloat* lower_bounds);
 
   virtual ~de_solver_cpu();

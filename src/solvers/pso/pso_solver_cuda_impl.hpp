@@ -11,7 +11,7 @@ void reset_velocity_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
 template <typename TFloat>
 pso_solver_cuda<TFloat>::pso_solver_cuda(
   population_set_cuda<TFloat>* population, evaluator_cuda<TFloat>* evaluator,
-  prngenerator_cuda<TFloat>* prn_generator, uint32_t generation_target,
+  prngenerator_cuda<TFloat>* prn_generator, uint64_t generation_target,
   TFloat* upper_bounds, TFloat* lower_bounds)
   : evolutionary_solver_cuda<TFloat>(population, evaluator, prn_generator,
                                      generation_target, upper_bounds,
