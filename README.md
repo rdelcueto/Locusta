@@ -1,15 +1,46 @@
 # Locusta
 
-This is the main source code repository for [Locusta].
-It contains the library code, and documentation.
+![Locusta Logo - Designed by: Perla Fierro @ https://perlafierro.com/locusta](./locusta-06.png)
 
-## Building from Source
+This is the main source code repository for the Locusta project.
+It contains the library code implementation, documentation and an example benchmarking application using the [GoogleTest library](https://github.com/google/googletest).
 
-1. TODO
+## Building example application.
+
+### Ubuntu & WSL
+1. Install Dependencies
+- CUDA & CUDA Toolkit. See [CUDA Quick start guide](https://docs.nvidia.com/cuda/cuda-quick-start-guide/index.html)
+
+- CMake
+> sudo apt-get install cmake
+
+- Google Test
+> sudo apt-get install libtgtest-dev
+
+2. Run Cmake
+> cmake -B build .
+
+3. Compile test application
+> cd Build
+> make -j
 
 ## Building Documentation
 
-1. TODO
+### Ubuntu
+1. Install Dependencies
+- CMake
+> sudo apt-get install cmake
+- Doxygen
+> sudo apt-get install doxygen
+- Graphviz
+> sudo apt-get install graphviz
+
+2. Run Cmake
+> cmake -B build .
+
+3. Compile
+> cd Build
+> make doc
 
 ## Notes
 

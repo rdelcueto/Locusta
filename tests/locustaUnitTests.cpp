@@ -43,10 +43,10 @@ std::vector<uint32_t> AgentsCombinations;
 std::vector<uint32_t> DimensionsCombinations;
 
 const uint32_t GLOBAL_SEED = 314;
-const uint32_t GLOBAL_EVALUATIONS = (256*256*256)*1e1;
+const uint32_t GLOBAL_EVALUATIONS = (128*128*128)*2e1;
 
 class CPULocustaTest : public testing::TestWithParam<
-  std::tr1::tuple<uint32_t, uint32_t, uint32_t, uint32_t>>
+  std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>>
 {
 
 public:
@@ -55,6 +55,8 @@ public:
 protected:
   virtual void SetUp()
   {
+    GENERATIONS = GENERATIONS != 0 ? GENERATIONS : 1;
+
     upper_bounds_ptr = new float[DIMENSIONS];
     lower_bounds_ptr = new float[DIMENSIONS];
 
@@ -71,7 +73,6 @@ protected:
     // Single prng generator for CPU solver seems to perform better.
     // prngenerator_cpu_ptr = new prngenerator_cpu<float>(1);
     prngenerator_cpu_ptr = new prngenerator_cpu<float>(omp_get_max_threads());
-
     prngenerator_cpu_ptr->_initialize_engines(SEED);
 
     population_cpu_ptr =
@@ -81,7 +82,8 @@ protected:
               << ", Generations: " << GENERATIONS
               << ", Isles: " << ISLES
               << ", Agents: " << AGENTS
-              << ", Dimensions: " << DIMENSIONS << std::endl;
+              << ", Dimensions: " << DIMENSIONS
+              << ", CV: " << (GENERATIONS * ISLES * AGENTS * DIMENSIONS) << std::endl;
   }
 
   virtual void TearDown()
@@ -108,13 +110,13 @@ protected:
 public:
   const uint64_t SEED = GLOBAL_SEED;
 
-  uint32_t const BENCHMARK_FUNC_ID = std::tr1::get<0>(GetParam());
-  uint32_t const ISLES = std::tr1::get<1>(GetParam());
-  uint32_t const AGENTS = std::tr1::get<2>(GetParam());
-  uint32_t const DIMENSIONS = std::tr1::get<3>(GetParam());
+  uint32_t const BENCHMARK_FUNC_ID = std::get<0>(GetParam());
+  uint32_t const ISLES = std::get<1>(GetParam());
+  uint32_t const AGENTS = std::get<2>(GetParam());
+  uint32_t const DIMENSIONS = std::get<3>(GetParam());
 
   uint32_t const FUNC_WEIGHT = BENCHMARK_FUNC_ID == 1 ? 1e1 : 2e0;
-  const uint32_t GENERATIONS = DIMENSIONS <= 2 ? 1 : (FUNC_WEIGHT * GLOBAL_EVALUATIONS) / (ISLES * AGENTS * DIMENSIONS);
+  uint64_t GENERATIONS = (FUNC_WEIGHT * GLOBAL_EVALUATIONS) / (ISLES * AGENTS * DIMENSIONS);
 
   float* upper_bounds_ptr;
   float* lower_bounds_ptr;
@@ -129,7 +131,7 @@ public:
 };
 
 class GPULocustaTest : public testing::TestWithParam<
-  std::tr1::tuple<uint32_t, uint32_t, uint32_t, uint32_t>>
+  std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>>
 {
 
 public:
@@ -138,6 +140,8 @@ public:
 protected:
   virtual void SetUp()
   {
+    GENERATIONS = GENERATIONS != 0 ? GENERATIONS : 1;
+
     __setup_cuda(0, 1);
 
     upper_bounds_ptr = new float[DIMENSIONS];
@@ -163,7 +167,8 @@ protected:
               << ", Generations: " << GENERATIONS
               << ", Isles: " << ISLES
               << ", Agents: " << AGENTS
-              << ", Dimensions: " << DIMENSIONS << std::endl;
+              << ", Dimensions: " << DIMENSIONS
+              << ", CV: " << (GENERATIONS * ISLES * AGENTS * DIMENSIONS) << std::endl;
   }
 
   virtual void TearDown()
@@ -190,14 +195,14 @@ protected:
 public:
   const uint64_t SEED = GLOBAL_SEED;
 
-  uint32_t const BENCHMARK_FUNC_ID = std::tr1::get<0>(GetParam());
-  uint32_t const ISLES = std::tr1::get<1>(GetParam());
-  uint32_t const AGENTS = std::tr1::get<2>(GetParam());
-  uint32_t const DIMENSIONS = std::tr1::get<3>(GetParam());
+  uint32_t const BENCHMARK_FUNC_ID = std::get<0>(GetParam());
+  uint32_t const ISLES = std::get<1>(GetParam());
+  uint32_t const AGENTS = std::get<2>(GetParam());
+  uint32_t const DIMENSIONS = std::get<3>(GetParam());
 
   uint32_t const GPU_FACTOR = 1e0;
   uint32_t const FUNC_WEIGHT = BENCHMARK_FUNC_ID == 1 ? 1e1 : 2e0;
-  const uint32_t GENERATIONS = DIMENSIONS <= 2 ? 1 : (GPU_FACTOR * FUNC_WEIGHT * GLOBAL_EVALUATIONS) / (ISLES * AGENTS * DIMENSIONS);
+  uint64_t GENERATIONS = (FUNC_WEIGHT * GLOBAL_EVALUATIONS) / (ISLES * AGENTS * DIMENSIONS);
 
   float* upper_bounds_ptr;
   float* lower_bounds_ptr;
@@ -495,11 +500,11 @@ int main(int argc, char **argv) {
   // Parallel Compare
   BenchmarkFunctions = {1, 9};
 
-  IslesCombinations = {1, 16, 256};
+  IslesCombinations = {1, 4, 8, 16};
 
   AgentsCombinations = {32, 64, 128, 256, 512};
 
-  DimensionsCombinations = {2,  16,   24,   32,   40,   48,   56,   64,   72,   80,   88,   96, 104,  112,  120,  128};
+  DimensionsCombinations = {128, 256, 512, 1024, 2048};
 
   // CPU Cache Assoc test
   // BenchmarkFunctions = {1, 9};
@@ -523,4 +528,3 @@ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
