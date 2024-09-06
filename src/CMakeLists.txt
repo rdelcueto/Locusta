@@ -47,7 +47,7 @@ endif (CUDA_VERBOSE_PTXAS)
 
 #set(CUDA_SEPARABLE_COMPILATION ON)
 #set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE OFF)
-cuda_add_library(locusta-cuda
+add_library(locusta-cuda
   ${CUFILES}
 )
 

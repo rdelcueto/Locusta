@@ -1,15 +1,11 @@
-include_directories(${CMAKE_SOURCE_DIR}/src/)
+include_directories(${CMAKE_SOURCE_DIR}/src ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 set(CUFILES
   benchmarks/kernel/benchmarks_cuda.cu
   )
 
-if (CUDA_VERBOSE_PTXAS)
-  set(VERBOSE_PTXAS --ptxas-options=-v)
-endif (CUDA_VERBOSE_PTXAS)
-
 # Unit Tests
-cuda_add_executable(runUnitTests
+add_executable(runUnitTests
   locustaUnitTests.cpp
   ${CUFILES}
 )

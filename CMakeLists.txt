@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.5)
+
 project(locusta_test)
 
 # The project version number.
@@ -6,17 +8,23 @@ set(VERSION_MINOR   1   CACHE STRING "Project minor version number.")
 set(VERSION_PATCH   0   CACHE STRING "Project patch version number.")
 mark_as_advanced(VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
 
-cmake_minimum_required(VERSION 2.8)
+find_package(CUDAToolkit)
+set(CMAKE_CUDA_COMPILER ${CUDAToolkit_NVCC_EXECUTABLE})
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake/cuda" ${CMAKE_MODULE_PATH})
+# Fix CUDA Arch Target
+set(CMAKE_CUDA_ARCHITECTURES "native")
+
+enable_language(CXX CUDA)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 14)
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # C/C++ Flags
-add_definitions(-std=c++11)
-set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
-set(CMAKE_C_FLAGS_RELEASE "-O3")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC")
+#set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
+#set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
+#set(CMAKE_C_FLAGS_RELEASE "-O3")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
@@ -66,42 +74,8 @@ if (ENABLE_PREFETCH)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprefetch-loop-arrays")
 endif()
 
-# CUDA
-set(CUDA_HOST_COMPILER /usr/bin/g++-5)
-find_package(CUDA REQUIRED)
-find_cuda_helper_libs(curand)
-
-# CUDA Arch Target
-
-# PRE-FERMI (DEPRECATED)
-#LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
-
-# ALL POST-FERMI
-LIST(APPEND CUDA_NVCC_FLAGS
-  -Xcompiler -fPIC
-  -Xptxas -v
-  -gencode=arch=compute_20,code=sm_20
-  # -gencode=arch=compute_30,code=sm_30
-  # -gencode=arch=compute_35,code=sm_35
-  # -gencode=arch=compute_50,code=sm_50
-  -gencode=arch=compute_52,code=sm_52
-  -gencode=arch=compute_61,code=sm_61
-  #--ptxas-options=-v
-  --use_fast_math
-  --restrict
-  -O3
-  -pg
-  -G
-  )
-
-LIST(APPEND CUDA_NVCC_FLAGS -std=c++11)
 option(BUILD_SHARED_LIBS
   "On to build shared libraries, off for static libraries."
-  OFF
-  )
-
-option(CUDA_VERBOSE_PTXAS
-  "On to enable verbose output from the PTXAS assembler."
   OFF
   )
 
@@ -119,15 +93,12 @@ set(LIBRARY_OUTPUT_PATH
   "Directory where all the libraries will be stored"
   )
 
-set(CMAKE_MODULE_PATH
-  ${CMAKE_SOURCE_DIR}/cmake
-  )
-
 set(locusta_INCLUDE_DIRS
   ${CMAKE_SOURCE_DIR}/include
   )
 
 include_directories(${locusta_INCLUDE_DIRS})
+#include_directories(${locusta_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 set(LIB_TYPE STATIC)
 
@@ -152,7 +123,7 @@ endif()
 # Documentation
 option(BUILD_DOCS
   "On to build doxygen documentation."
-  OFF
+  ON
   )
 
 if(BUILD_DOCS)
