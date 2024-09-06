@@ -37,7 +37,7 @@ namespace locusta {
   template<typename TFloat>
   void prngenerator_cpu<TFloat>::_generate(const uint32_t n, TFloat * output) {
 
-#pragma omp parallel default(none) shared(output)
+#pragma omp parallel firstprivate(n) shared(output)
     {
       const int nthread = omp_get_thread_num();
       uni_real_distribution &local_real_distribution = this->_prng_distributions[nthread];
