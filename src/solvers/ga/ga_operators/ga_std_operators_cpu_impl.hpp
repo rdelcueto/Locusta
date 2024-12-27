@@ -13,14 +13,30 @@
 
 namespace locusta {
 
-template <typename TFloat>
-struct WholeCrossover : BreedFunctor<TFloat>
+/**
+ * @brief Whole crossover operator.
+ *
+ * This class implements the whole crossover operator, which performs crossover
+ * between two parents to create an offspring.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
+struct WholeCrossover : GaBreedFunctor<TFloat>
 {
 
   const uint32_t DIST_LIMIT = 3;
   const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
   const TFloat DEVIATION = 0.2;
 
+  /**
+   * @brief Perform crossover between two genes.
+   *
+   * @param parent_gene_a First parent gene.
+   * @param parent_gene_b Second parent gene.
+   * @param GENE_CROSSOVER_FLAG Flag indicating whether to perform crossover.
+   * @return Offspring gene.
+   */
   inline TFloat GeneCrossOver(const TFloat parent_gene_a,
                               const TFloat parent_gene_b,
                               const TFloat GENE_CROSSOVER_FLAG)
@@ -35,8 +51,17 @@ struct WholeCrossover : BreedFunctor<TFloat>
     return offspring_gene;
   }
 
- inline TFloat GeneMutate(const TFloat offspring_gene, const TFloat* agents_prns,
-                          const TFloat gene_range)
+  /**
+   * @brief Mutate a gene.
+   *
+   * @param offspring_gene Offspring gene to mutate.
+   * @param agents_prns Array of pseudo-random numbers.
+   * @param gene_range Range of the gene.
+   * @return Mutated gene.
+   */
+  inline TFloat GeneMutate(const TFloat offspring_gene,
+                           const TFloat* agents_prns,
+                           const TFloat gene_range)
   {
     TFloat x = 0.0;
     TFloat mutated_gene = offspring_gene;
@@ -53,7 +78,16 @@ struct WholeCrossover : BreedFunctor<TFloat>
     return mutated_gene;
   }
 
-  inline TFloat GeneCrop(const TFloat offspring_gene, const TFloat lower_bound,
+  /**
+   * @brief Crop a gene to fit within the bounds.
+   *
+   * @param offspring_gene Offspring gene to crop.
+   * @param lower_bound Lower bound of the gene.
+   * @param upper_bound Upper bound of the gene.
+   * @return Cropped gene.
+   */
+  inline TFloat GeneCrop(const TFloat offspring_gene,
+                         const TFloat lower_bound,
                          const TFloat upper_bound)
   {
 
@@ -65,6 +99,12 @@ struct WholeCrossover : BreedFunctor<TFloat>
     return cropped_value;
   }
 
+  /**
+   * @brief Get the number of pseudo-random numbers required by the operator.
+   *
+   * @param solver Genetic algorithm solver.
+   * @return Number of pseudo-random numbers required.
+   */
   uint32_t required_prns(ga_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -75,6 +115,11 @@ struct WholeCrossover : BreedFunctor<TFloat>
     return ISLES * AGENTS * GENOME_RND_OFFSET;
   }
 
+  /**
+   * @brief Apply the breeding operator.
+   *
+   * @param solver Genetic algorithm solver.
+   */
   void operator()(ga_solver_cpu<TFloat>* solver)
   {
 #pragma omp parallel default(none) shared(solver)
@@ -149,10 +194,24 @@ struct WholeCrossover : BreedFunctor<TFloat>
   }
 };
 
-template <typename TFloat>
-struct TournamentSelection : SelectionFunctor<TFloat>
+/**
+ * @brief Tournament selection operator.
+ *
+ * This class implements the tournament selection operator, which selects
+ * parents from a population based on their fitness.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
+struct TournamentSelection : GaSelectionFunctor<TFloat>
 {
 
+  /**
+   * @brief Get the number of pseudo-random numbers required by the operator.
+   *
+   * @param solver Genetic algorithm solver.
+   * @return Number of pseudo-random numbers required.
+   */
   uint32_t required_prns(ga_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -164,6 +223,11 @@ struct TournamentSelection : SelectionFunctor<TFloat>
     return ISLES * AGENTS * GENOME_RND_OFFSET;
   }
 
+  /**
+   * @brief Apply the selection operator.
+   *
+   * @param solver Genetic algorithm solver.
+   */
   void operator()(ga_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;

@@ -2,16 +2,29 @@
 
 namespace locusta {
 
-/// Interface for Genetic Algorithm solvers
-template <typename TFloat>
+/**
+ * @brief Construct a new ga_solver_cpu object.
+ *
+ * @param population Population set.
+ * @param evaluator Evaluator.
+ * @param prn_generator Pseudo-random number generator.
+ * @param generation_target Target number of generations.
+ * @param upper_bounds Array of upper bounds for the genes.
+ * @param lower_bounds Array of lower bounds for the genes.
+ */
+template<typename TFloat>
 ga_solver_cpu<TFloat>::ga_solver_cpu(population_set_cpu<TFloat>* population,
                                      evaluator_cpu<TFloat>* evaluator,
                                      prngenerator_cpu<TFloat>* prn_generator,
                                      uint64_t generation_target,
-                                     TFloat* upper_bounds, TFloat* lower_bounds)
+                                     TFloat* upper_bounds,
+                                     TFloat* lower_bounds)
 
-  : evolutionary_solver_cpu<TFloat>(population, evaluator, prn_generator,
-                                    generation_target, upper_bounds,
+  : evolutionary_solver_cpu<TFloat>(population,
+                                    evaluator,
+                                    prn_generator,
+                                    generation_target,
+                                    upper_bounds,
                                     lower_bounds)
 {
   // Defaults
@@ -30,13 +43,21 @@ ga_solver_cpu<TFloat>::ga_solver_cpu(population_set_cpu<TFloat>* population,
   _couples_idx_array = new uint32_t[TOTAL_AGENTS];
 }
 
-template <typename TFloat>
+/**
+ * @brief Destroy the ga_solver_cpu object.
+ */
+template<typename TFloat>
 ga_solver_cpu<TFloat>::~ga_solver_cpu()
 {
   delete[] _couples_idx_array;
 }
 
-template <typename TFloat>
+/**
+ * @brief Set up the solver.
+ *
+ * This method initializes and allocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 ga_solver_cpu<TFloat>::setup_solver()
 {
@@ -54,7 +75,12 @@ ga_solver_cpu<TFloat>::setup_solver()
   evolutionary_solver_cpu<TFloat>::setup_solver();
 }
 
-template <typename TFloat>
+/**
+ * @brief Tear down the solver.
+ *
+ * This method terminates and deallocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 ga_solver_cpu<TFloat>::teardown_solver()
 {
@@ -62,17 +88,40 @@ ga_solver_cpu<TFloat>::teardown_solver()
   delete[] _bulk_prns;
 }
 
-template <typename TFloat>
+/**
+ * @brief Set the genetic algorithm solver operators.
+ *
+ * This method sets the genetic algorithm solver operators, including the
+ * breeding and selection operators.
+ *
+ * @param breed_functor_ptr Breeding operator.
+ * @param selection_functor_ptr Selection operator.
+ */
+template<typename TFloat>
 void
 ga_solver_cpu<TFloat>::setup_operators(
-  BreedFunctor<TFloat>* breed_functor_ptr,
-  SelectionFunctor<TFloat>* selection_functor_ptr)
+  GaBreedFunctor<TFloat>* breed_functor_ptr,
+  GaSelectionFunctor<TFloat>* selection_functor_ptr)
 {
   _breed_functor_ptr = breed_functor_ptr;
   _selection_functor_ptr = selection_functor_ptr;
 }
 
-template <typename TFloat>
+/**
+ * @brief Configure the solver.
+ *
+ * This method sets up the solver's configuration, including parameters for
+ * migration, selection, crossover, and mutation.
+ *
+ * @param migration_step Migration step size.
+ * @param migration_size Migration size.
+ * @param migration_selection_size Migration selection size.
+ * @param selection_size Selection size.
+ * @param selection_stochastic_factor Selection stochastic factor.
+ * @param crossover_rate Crossover rate.
+ * @param mutation_rate Mutation rate.
+ */
+template<typename TFloat>
 void
 ga_solver_cpu<TFloat>::solver_config(uint32_t migration_step,
                                      uint32_t migration_size,
@@ -91,7 +140,13 @@ ga_solver_cpu<TFloat>::solver_config(uint32_t migration_step,
   _mutation_rate = mutation_rate;
 }
 
-template <typename TFloat>
+/**
+ * @brief Apply the solver's population transformation.
+ *
+ * This method applies the solver's specific population transformation to
+ * generate the next generation of candidate solutions.
+ */
+template<typename TFloat>
 void
 ga_solver_cpu<TFloat>::transform()
 {
@@ -105,7 +160,13 @@ ga_solver_cpu<TFloat>::transform()
   //     _population->_transformed_data_array);
 }
 
-template <typename TFloat>
+/**
+ * @brief Replace the elite population.
+ *
+ * This method replaces the elite population with the best individuals from the
+ * current population.
+ */
+template<typename TFloat>
 void
 ga_solver_cpu<TFloat>::elite_population_replace()
 {

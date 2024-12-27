@@ -2,11 +2,24 @@
 
 namespace locusta {
 
-template <typename TFloat>
+/**
+ * @brief Construct a new evolutionary_solver object.
+ *
+ * @param population Population set.
+ * @param evaluator Evaluator.
+ * @param prn_generator Pseudo-random number generator.
+ * @param generation_target Target number of generations.
+ * @param upper_bounds Array of upper bounds for the genes.
+ * @param lower_bounds Array of lower bounds for the genes.
+ */
+template<typename TFloat>
 evolutionary_solver<TFloat>::evolutionary_solver(
-  population_set<TFloat>* population, evaluator<TFloat>* evaluator,
-  prngenerator<TFloat>* prn_generator, uint64_t generation_target,
-  TFloat* upper_bounds, TFloat* lower_bounds)
+  population_set<TFloat>* population,
+  evaluator<TFloat>* evaluator,
+  prngenerator<TFloat>* prn_generator,
+  uint64_t generation_target,
+  TFloat* upper_bounds,
+  TFloat* lower_bounds)
   : _population(population)
   , _evaluator(evaluator)
   , _bulk_prn_generator(prn_generator)
@@ -33,7 +46,10 @@ evolutionary_solver<TFloat>::evolutionary_solver(
   }
 }
 
-template <typename TFloat>
+/**
+ * @brief Destroy the evolutionary_solver object.
+ */
+template<typename TFloat>
 evolutionary_solver<TFloat>::~evolutionary_solver()
 {
   delete[] _UPPER_BOUNDS;
@@ -48,7 +64,12 @@ evolutionary_solver<TFloat>::~evolutionary_solver()
   delete[] _min_agent_idx;
 }
 
-template <typename TFloat>
+/**
+ * @brief Advance the solver by one generation step.
+ *
+ * This method evolves the population through one generation step.
+ */
+template<typename TFloat>
 void
 evolutionary_solver<TFloat>::advance()
 {
@@ -63,7 +84,13 @@ evolutionary_solver<TFloat>::advance()
   _generation_count++;
 }
 
-template <typename TFloat>
+/**
+ * @brief Run the solver.
+ *
+ * This method runs the solver until it reaches the target number of
+ * generations.
+ */
+template<typename TFloat>
 void
 evolutionary_solver<TFloat>::run()
 {
@@ -76,14 +103,25 @@ evolutionary_solver<TFloat>::run()
   // print_solutions();
 }
 
-template <typename TFloat>
+/**
+ * @brief Evaluate the genomes.
+ *
+ * This method calls the evaluator and assigns a fitness value to every genome
+ * in the population.
+ */
+template<typename TFloat>
 void
 evolutionary_solver<TFloat>::evaluate_genomes()
 {
   _evaluator->evaluate(this);
 }
 
-template <typename TFloat>
+/**
+ * @brief Regenerate the pseudo-random numbers.
+ *
+ * This method regenerates the bulk pseudo-random numbers used by the solver.
+ */
+template<typename TFloat>
 void
 evolutionary_solver<TFloat>::regenerate_prns()
 {

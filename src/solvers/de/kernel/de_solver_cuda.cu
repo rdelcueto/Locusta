@@ -5,7 +5,18 @@ namespace locusta {
 /// GPU Kernels Shared Memory Pointer.
 extern __shared__ int solver_shared_memory[];
 
-template <typename TFloat>
+/**
+ * @brief CUDA kernel for replacing the trial vector.
+ *
+ * This kernel replaces the trial vector with the best candidate solution.
+ *
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param previous_vectors Device array of previous vectors.
+ * @param previous_fitness Device array of previous fitness values.
+ * @param trial_vectors Device array of trial vectors.
+ * @param trial_fitness Device array of trial fitness values.
+ */
+template<typename TFloat>
 __global__ void
 trial_vector_replace_kernel(const uint32_t DIMENSIONS,
                             TFloat* __restrict__ previous_vectors,
@@ -35,29 +46,51 @@ trial_vector_replace_kernel(const uint32_t DIMENSIONS,
   }
 }
 
-template <typename TFloat>
+/**
+ * @brief Dispatch function for replacing the trial vector.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param previous_vectors Array of previous vectors.
+ * @param previous_fitness Array of previous fitness values.
+ * @param trial_vectors Array of trial vectors.
+ * @param trial_fitness Array of trial fitness values.
+ */
+template<typename TFloat>
 void
-trial_vector_replace_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
+trial_vector_replace_dispatch(const uint32_t ISLES,
+                              const uint32_t AGENTS,
                               const uint32_t DIMENSIONS,
                               TFloat* previous_vectors,
                               const TFloat* previous_fitness,
                               const TFloat* trial_vectors,
                               TFloat* trial_fitness)
 {
-  trial_vector_replace_kernel<<<ISLES, AGENTS>>>(DIMENSIONS, previous_vectors,
+  trial_vector_replace_kernel<<<ISLES, AGENTS>>>(DIMENSIONS,
+                                                 previous_vectors,
                                                  previous_fitness,
-                                                 trial_vectors, trial_fitness);
+                                                 trial_vectors,
+                                                 trial_fitness);
 
   CudaCheckError();
 }
 
-template void trial_vector_replace_dispatch<float>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  float* previous_vectors, const float* previous_fitness,
-  const float* trial_vectors, float* trial_fitness);
+template void
+trial_vector_replace_dispatch<float>(const uint32_t ISLES,
+                                     const uint32_t AGENTS,
+                                     const uint32_t DIMENSIONS,
+                                     float* previous_vectors,
+                                     const float* previous_fitness,
+                                     const float* trial_vectors,
+                                     float* trial_fitness);
 
-template void trial_vector_replace_dispatch<double>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  double* previous_vectors, const double* previous_fitness,
-  const double* trial_vectors, double* trial_fitness);
+template void
+trial_vector_replace_dispatch<double>(const uint32_t ISLES,
+                                      const uint32_t AGENTS,
+                                      const uint32_t DIMENSIONS,
+                                      double* previous_vectors,
+                                      const double* previous_fitness,
+                                      const double* trial_vectors,
+                                      double* trial_fitness);
 }

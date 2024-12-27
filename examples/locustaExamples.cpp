@@ -37,14 +37,43 @@
 
 using namespace locusta;
 
+/**
+ * @brief Vector of benchmark function identifiers.
+ */
 std::vector<uint32_t> BenchmarkFunctions;
+
+/**
+ * @brief Vector of isle combinations.
+ */
 std::vector<uint32_t> IslesCombinations;
+
+/**
+ * @brief Vector of agent combinations.
+ */
 std::vector<uint32_t> AgentsCombinations;
+
+/**
+ * @brief Vector of dimension combinations.
+ */
 std::vector<uint32_t> DimensionsCombinations;
 
+/**
+ * @brief Global seed for random number generation.
+ */
 const uint32_t GLOBAL_SEED = 314;
+
+/**
+ * @brief Global number of evaluations.
+ */
 const uint32_t GLOBAL_EVALUATIONS = (128*128*128)*2e1;
 
+/**
+ * @brief Test fixture for CPU-based Locusta tests.
+ *
+ * This class provides a test fixture for CPU-based Locusta tests,
+ * allowing for parameterized testing with different combinations of
+ * benchmark function identifiers, isles, agents, and dimensions.
+ */
 class CPULocustaTest : public testing::TestWithParam<
   std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>>
 {
@@ -130,6 +159,13 @@ public:
   population_set_cpu<float>* population_cpu_ptr;
 };
 
+/**
+ * @brief Test fixture for GPU-based Locusta tests.
+ *
+ * This class provides a test fixture for GPU-based Locusta tests,
+ * allowing for parameterized testing with different combinations of
+ * benchmark function identifiers, isles, agents, and dimensions.
+ */
 class GPULocustaTest : public testing::TestWithParam<
   std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>>
 {
@@ -216,6 +252,12 @@ public:
   population_set_cuda<float>* population_cuda_ptr;
 };
 
+/**
+ * @brief Test fixture for CPU-based Particle Swarm Optimization tests.
+ *
+ * This class provides a test fixture for CPU-based Particle Swarm Optimization tests,
+ * inheriting from the CPULocustaTest class and adding a PSO solver.
+ */
 class CPUParticleSwarmTest : public CPULocustaTest
 {
 
@@ -242,6 +284,12 @@ public:
   pso_solver_cpu<float>* pso_solver_cpu_ptr;
 };
 
+/**
+ * @brief Test fixture for GPU-based Particle Swarm Optimization tests.
+ *
+ * This class provides a test fixture for GPU-based Particle Swarm Optimization tests,
+ * inheriting from the GPULocustaTest class and adding a PSO solver.
+ */
 class GPUParticleSwarmTest : public GPULocustaTest
 {
 
@@ -268,6 +316,12 @@ public:
   pso_solver_cuda<float>* pso_solver_cuda_ptr;
 };
 
+/**
+ * @brief Test fixture for CPU-based Genetic Algorithm tests.
+ *
+ * This class provides a test fixture for CPU-based Genetic Algorithm tests,
+ * inheriting from the CPULocustaTest class and adding a GA solver.
+ */
 class CPUGeneticAlgorithmTest : public CPULocustaTest
 {
 public:
@@ -293,6 +347,12 @@ public:
   ga_solver_cpu<float>* ga_solver_cpu_ptr;
 };
 
+/**
+ * @brief Test fixture for GPU-based Genetic Algorithm tests.
+ *
+ * This class provides a test fixture for GPU-based Genetic Algorithm tests,
+ * inheriting from the GPULocustaTest class and adding a GA solver.
+ */
 class GPUGeneticAlgorithmTest : public GPULocustaTest
 {
 public:
@@ -318,6 +378,12 @@ public:
   ga_solver_cuda<float>* ga_solver_cuda_ptr;
 };
 
+/**
+ * @brief Test fixture for CPU-based Differential Evolution tests.
+ *
+ * This class provides a test fixture for CPU-based Differential Evolution tests,
+ * inheriting from the CPULocustaTest class and adding a DE solver.
+ */
 class CPUDifferentialEvolutionTest : public CPULocustaTest
 {
 public:
@@ -343,6 +409,12 @@ public:
   de_solver_cpu<float>* de_solver_cpu_ptr;
 };
 
+/**
+ * @brief Test fixture for GPU-based Differential Evolution tests.
+ *
+ * This class provides a test fixture for GPU-based Differential Evolution tests,
+ * inheriting from the GPULocustaTest class and adding a DE solver.
+ */
 class GPUDifferentialEvolutionTest : public GPULocustaTest
 {
 public:
@@ -368,6 +440,9 @@ public:
   de_solver_cuda<float>* de_solver_cuda_ptr;
 };
 
+/**
+ * @brief Test case for CPU-based Particle Swarm Optimization.
+ */
 TEST_P(CPUParticleSwarmTest, BenchmarkCpu)
 {
   CanonicalParticleRecordUpdate<float> cpru;
@@ -382,6 +457,9 @@ TEST_P(CPUParticleSwarmTest, BenchmarkCpu)
   pso_solver_cpu_ptr->teardown_solver();
 }
 
+/**
+ * @brief Test case for CPU-based Genetic Algorithm.
+ */
 TEST_P(CPUGeneticAlgorithmTest, BenchmarkCpu)
 {
   WholeCrossover<float> wc;
@@ -395,6 +473,9 @@ TEST_P(CPUGeneticAlgorithmTest, BenchmarkCpu)
   ga_solver_cpu_ptr->teardown_solver();
 }
 
+/**
+ * @brief Test case for CPU-based Differential Evolution.
+ */
 TEST_P(CPUDifferentialEvolutionTest, BenchmarkCpu)
 {
   DeWholeCrossover<float> dwc;
@@ -408,6 +489,9 @@ TEST_P(CPUDifferentialEvolutionTest, BenchmarkCpu)
   de_solver_cpu_ptr->teardown_solver();
 }
 
+/**
+ * @brief Test case for GPU-based Particle Swarm Optimization.
+ */
 TEST_P(GPUParticleSwarmTest, BenchmarkCuda)
 {
   CanonicalParticleRecordUpdateCuda<float> cpru;
@@ -422,6 +506,9 @@ TEST_P(GPUParticleSwarmTest, BenchmarkCuda)
   pso_solver_cuda_ptr->teardown_solver();
 }
 
+/**
+ * @brief Test fixture for GPU genetic algorithm.
+ */
 TEST_P(GPUGeneticAlgorithmTest, BenchmarkCuda)
 {
   WholeCrossoverCuda<float> wc;
@@ -434,6 +521,9 @@ TEST_P(GPUGeneticAlgorithmTest, BenchmarkCuda)
   ga_solver_cuda_ptr->teardown_solver();
 }
 
+/**
+ * @brief Test fixture for GPU differential evolution.
+ */
 TEST_P(GPUDifferentialEvolutionTest, BenchmarkCuda)
 {
   DeWholeCrossoverCuda<float> dwc;
@@ -496,6 +586,22 @@ INSTANTIATE_TEST_CASE_P(GPUDifferentialEvolutionTestSuite,
                                            ::testing::ValuesIn(DimensionsCombinations)
                                            ));
 
+/**
+ * @brief Main function for running the unit tests.
+ * 
+ * This function initializes the Google Test framework and runs all the tests.
+ * 
+ * The following parameters are used to configure the tests:
+ * 
+ *  - BenchmarkFunctions: A list of benchmark function identifiers to test.
+ *  - IslesCombinations: A list of isle combinations to test.
+ *  - AgentsCombinations: A list of agent combinations to test.
+ *  - DimensionsCombinations: A list of dimension combinations to test.
+ * 
+ * @param argc Number of command line arguments.
+ * @param argv Array of command line arguments.
+ * @return 0 if all tests pass, otherwise 1.
+ */
 int main(int argc, char **argv) {
   // Parallel Compare
   BenchmarkFunctions = {1, 9};
@@ -505,25 +611,6 @@ int main(int argc, char **argv) {
   AgentsCombinations = {32, 64, 128, 256, 512};
 
   DimensionsCombinations = {128, 256, 512, 1024, 2048};
-
-  // CPU Cache Assoc test
-  // BenchmarkFunctions = {1, 9};
-  // IslesCombinations = {4};
-  // AgentsCombinations = {64, 128, 256};
-
-  // DimensionsCombinations = {
-  //   16,   24,   32,   40,   48,   56,   64,   72,   80,   88,   96,
-  //   104,  112,  120,  128,  136,  144,  152,  160,  168,  176,  184,
-  //   192,  200,  208,  216,  224,  232,  240,  248,  256,  264,  272,
-  //   280,  288,  296,  304,  312,  320,  328,  336,  344,  352,  360,
-  //   368,  376,  384,  392,  400,  408,  416,  424,  432,  440,  448,
-  //   456,  464,  472,  480,  488,  496,  504,  512,  520,  528,  536,
-  //   544,  552,  560,  568,  576,  584,  592,  600,  608,  616,  624,
-  //   632,  640,  648,  656,  664,  672,  680,  688,  696,  704,  712,
-  //   720,  728,  736,  744,  752,  760,  768,  776,  784,  792,  800,
-  //   808,  816,  824,  832,  840,  848,  856,  864,  872,  880,  888,
-  //   896,  904,  912,  920,  928,  936,  944,  952,  960,  968,  976,
-  //   984,  992, 1000, 1008, 1016, 1024 };
 
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

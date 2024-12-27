@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(locusta_test)
+project(locusta_example)
 
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
@@ -104,19 +104,19 @@ set(LIB_TYPE STATIC)
 
 add_subdirectory (src)
 
-# Testing
-option(BUILD_TESTS
-  "On to build test suite."
+# Examples
+option(BUILD_EXAMPLES
+  "On to build example suite."
   ON
   )
 
-if (BUILD_TESTS)
+if (BUILD_EXAMPLES)
   find_package(GTest REQUIRED)
   include_directories(${GTEST_INCLUDE_DIRS})
 
   enable_testing()
 
-  add_subdirectory(tests)
+  add_subdirectory(examples)
 endif()
 
 
@@ -133,6 +133,7 @@ if(BUILD_DOCS)
         message(FATAL_ERROR "Doxygen is needed to build the documentation.")
     endif()
 
+    set(doxy_main_page "${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox")
     set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
     set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 

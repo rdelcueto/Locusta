@@ -8,18 +8,56 @@
 
 namespace locusta {
 
-template <typename TFloat>
-void benchmark_dispatch(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const bool F_NEGATE_EVALUATION, const uint32_t FUNC_ID,
-  const TFloat EVALUATION_BIAS, const TFloat* SHIFT_ORIGIN, const bool F_ROTATE,
-  const TFloat* ROTATION_MATRIX, const TFloat* evaluation_data,
-  TFloat* evaluation_results, prngenerator_cuda<TFloat>* local_generator);
+/**
+ * @brief Dispatch function for benchmark functions on the GPU.
+ *
+ * This function dispatches the evaluation of a benchmark function to the
+ * appropriate CUDA implementation.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param F_NEGATE_EVALUATION Flag indicating whether to negate the evaluation
+ * result.
+ * @param FUNC_ID Identifier of the benchmark function to evaluate.
+ * @param EVALUATION_BIAS Bias value to add to the evaluation result.
+ * @param SHIFT_ORIGIN Array of shift values to apply to the input data.
+ * @param F_ROTATE Flag indicating whether to apply a rotation to the input
+ * data.
+ * @param ROTATION_MATRIX Matrix of rotation values to apply to the input data.
+ * @param evaluation_data Input data to evaluate.
+ * @param evaluation_results Output array to store the evaluation results.
+ * @param local_generator CUDA-based pseudo-random number generator.
+ */
+template<typename TFloat>
+void
+benchmark_dispatch(const uint32_t ISLES,
+                   const uint32_t AGENTS,
+                   const uint32_t DIMENSIONS,
+                   const bool F_NEGATE_EVALUATION,
+                   const uint32_t FUNC_ID,
+                   const TFloat EVALUATION_BIAS,
+                   const TFloat* SHIFT_ORIGIN,
+                   const bool F_ROTATE,
+                   const TFloat* ROTATION_MATRIX,
+                   const TFloat* evaluation_data,
+                   TFloat* evaluation_results,
+                   prngenerator_cuda<TFloat>* local_generator);
 
-template <typename TFloat>
+/**
+ * @brief CUDA evaluation functor for benchmark functions.
+ *
+ * This class implements the EvaluationCudaFunctor interface for benchmark
+ * functions, enabling their evaluation on the GPU.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct BenchmarkCudaFunctor : EvaluationCudaFunctor<TFloat>
 {
-
+  /**
+   * @brief Enum defining the identifiers of the available benchmark functions.
+   */
   enum FUNCTION_IDENTIFIERS
   {
     SPHERE = 1,      // 1
@@ -46,6 +84,12 @@ struct BenchmarkCudaFunctor : EvaluationCudaFunctor<TFloat>
   TFloat* _DEV_ROTATION_MATRIX;
   uint32_t _ROT_FLAG;
 
+  /**
+   * @brief Construct a new BenchmarkCudaFunctor object.
+   *
+   * @param function_id Identifier of the benchmark function to evaluate.
+   * @param dimensions Number of dimensions per agent.
+   */
   BenchmarkCudaFunctor(uint32_t function_id, uint32_t dimensions)
     : EvaluationCudaFunctor<TFloat>()
     , _FUNCTION_ID(function_id)
@@ -83,7 +127,9 @@ struct BenchmarkCudaFunctor : EvaluationCudaFunctor<TFloat>
     CudaSafeCall(cudaMalloc((void**)&(_DEV_ROTATION_MATRIX),
                             _DIMENSIONS * _DIMENSIONS * sizeof(TFloat)));
   }
-
+  /**
+   * @brief Destroy the BenchmarkCudaFunctor object.
+   */
   ~BenchmarkCudaFunctor()
   {
     CudaSafeCall(cudaFree(_DEV_SHIFT_ORIGIN));
@@ -92,7 +138,14 @@ struct BenchmarkCudaFunctor : EvaluationCudaFunctor<TFloat>
     delete[] _SHIFT_ORIGIN;
     delete[] _ROTATION_MATRIX;
   }
-
+  /**
+   * @brief Function call operator.
+   *
+   * This operator evaluates the fitness of a population of candidate solutions
+   * on the GPU using a benchmark function.
+   *
+   * @param solver Evolutionary solver.
+   */
   virtual void operator()(evolutionary_solver<TFloat>* solver)
   {
     const evolutionary_solver_cuda<TFloat>* _dev_solver =
@@ -110,9 +163,17 @@ struct BenchmarkCudaFunctor : EvaluationCudaFunctor<TFloat>
     prngenerator_cuda<TFloat>* local_generator =
       _dev_solver->_dev_bulk_prn_generator;
 
-    benchmark_dispatch(ISLES, AGENTS, DIMENSIONS, F_NEGATE_EVALUATION,
-                       _FUNCTION_ID, _EVALUATION_BIAS, _SHIFT_ORIGIN, _ROT_FLAG,
-                       _ROTATION_MATRIX, evaluation_data, evaluation_results,
+    benchmark_dispatch(ISLES,
+                       AGENTS,
+                       DIMENSIONS,
+                       F_NEGATE_EVALUATION,
+                       _FUNCTION_ID,
+                       _EVALUATION_BIAS,
+                       _SHIFT_ORIGIN,
+                       _ROT_FLAG,
+                       _ROTATION_MATRIX,
+                       evaluation_data,
+                       evaluation_results,
                        local_generator);
   }
 };

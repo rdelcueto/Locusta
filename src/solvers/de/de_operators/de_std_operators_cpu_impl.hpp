@@ -9,10 +9,28 @@
 
 namespace locusta {
 
-template <typename TFloat>
+/**
+ * @brief Whole crossover operator for differential evolution.
+ *
+ * This class implements the whole crossover operator for differential
+ * evolution, which performs crossover between a target vector and a trial
+ * vector.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct DeWholeCrossover : DeBreedFunctor<TFloat>
 {
 
+  /**
+   * @brief Perform crossover between two genes.
+   *
+   * @param difference_a_vector First difference vector.
+   * @param difference_b_vector Second difference vector.
+   * @param base_vector Base vector.
+   * @param DIFFERENTIAL_SCALE_FACTOR Differential scale factor.
+   * @return Trial gene.
+   */
   inline TFloat GeneCrossOver(const TFloat difference_a_vector,
                               const TFloat difference_b_vector,
                               const TFloat base_vector,
@@ -24,7 +42,16 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
     return trial_gene;
   }
 
-  inline TFloat GeneCrop(const TFloat trial_gene, const TFloat lower_bound,
+  /**
+   * @brief Crop a gene to fit within the bounds.
+   *
+   * @param trial_gene Trial gene to crop.
+   * @param lower_bound Lower bound of the gene.
+   * @param upper_bound Upper bound of the gene.
+   * @return Cropped gene.
+   */
+  inline TFloat GeneCrop(const TFloat trial_gene,
+                         const TFloat lower_bound,
                          const TFloat upper_bound)
   {
     TFloat cropped_gene = trial_gene;
@@ -33,6 +60,12 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
     return cropped_gene;
   }
 
+  /**
+   * @brief Get the number of pseudo-random numbers required by the operator.
+   *
+   * @param solver Differential evolution solver.
+   * @return Number of pseudo-random numbers required.
+   */
   uint32_t required_prns(de_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -43,6 +76,11 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
     return ISLES * AGENTS * GENOME_RND_OFFSET;
   }
 
+  /**
+   * @brief Apply the breeding operator.
+   *
+   * @param solver Differential evolution solver.
+   */
   void operator()(de_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -111,9 +149,10 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
           const TFloat& lower_bound = solver->_LOWER_BOUNDS[k];
           const TFloat& upper_bound = solver->_UPPER_BOUNDS[k];
 
-          TFloat trial_gene =
-            GeneCrossOver(difference_a_vector[k], difference_b_vector[k],
-                          base_vector[k], DIFFERENTIAL_SCALE_FACTOR);
+          TFloat trial_gene = GeneCrossOver(difference_a_vector[k],
+                                            difference_b_vector[k],
+                                            base_vector[k],
+                                            DIFFERENTIAL_SCALE_FACTOR);
 
           if (unlikely((k != FORCE_PARAMETER_COPY_FLAG) && !CROSSOVER_FLAG)) {
             trial_vector[k] = target_vector[k];
@@ -126,10 +165,24 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
   }
 };
 
-template <typename TFloat>
+/**
+ * @brief Random selection operator for differential evolution.
+ *
+ * This class implements the random selection operator for differential
+ * evolution, which selects random vectors from the population.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct DeRandomSelection : DeSelectionFunctor<TFloat>
 {
 
+  /**
+   * @brief Get the number of pseudo-random numbers required by the operator.
+   *
+   * @param solver Differential evolution solver.
+   * @return Number of pseudo-random numbers required.
+   */
   uint32_t required_prns(de_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -139,6 +192,11 @@ struct DeRandomSelection : DeSelectionFunctor<TFloat>
     return ISLES * AGENTS * (AGENTS - (1 + RANDOM_VECTORS));
   }
 
+  /**
+   * @brief Apply the selection operator.
+   *
+   * @param solver Differential evolution solver.
+   */
   void operator()(de_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -189,10 +247,24 @@ struct DeRandomSelection : DeSelectionFunctor<TFloat>
   }
 };
 
-template <typename TFloat>
+/**
+ * @brief Tournament selection operator for differential evolution.
+ *
+ * This class implements the tournament selection operator for differential
+ * evolution, which selects parents from a population based on their fitness.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct DeTournamentSelection : DeSelectionFunctor<TFloat>
 {
 
+  /**
+   * @brief Get the number of pseudo-random numbers required by the operator.
+   *
+   * @param solver Differential evolution solver.
+   * @return Number of pseudo-random numbers required.
+   */
   uint32_t required_prns(de_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -203,6 +275,11 @@ struct DeTournamentSelection : DeSelectionFunctor<TFloat>
            ((AGENTS - (1 + SELECTION_SIZE)) + (SELECTION_SIZE - 1));
   }
 
+  /**
+   * @brief Apply the selection operator.
+   *
+   * @param solver Differential evolution solver.
+   */
   void operator()(de_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;

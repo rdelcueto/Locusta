@@ -14,53 +14,124 @@
 
 namespace locusta {
 
-/// Interface for evolutionary computing metaheuristic solver_cudas
-template <typename TFloat>
+/**
+ * @brief CUDA implementation of the evolutionary_solver class.
+ *
+ * This class extends the evolutionary_solver class with CUDA-specific
+ * functionality.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct evolutionary_solver_cuda : evolutionary_solver<TFloat>
 {
 
-  /// Default constructor
+  /**
+   * @brief Construct a new evolutionary_solver_cuda object.
+   *
+   * @param population Population set.
+   * @param evaluator Evaluator.
+   * @param prn_generator Pseudo-random number generator.
+   * @param generation_target Target number of generations.
+   * @param upper_bounds Array of upper bounds for the genes.
+   * @param lower_bounds Array of lower bounds for the genes.
+   */
   evolutionary_solver_cuda(population_set_cuda<TFloat>* population,
                            evaluator_cuda<TFloat>* evaluator,
                            prngenerator_cuda<TFloat>* prn_generator,
-                           uint64_t generation_target, TFloat* upper_bounds,
+                           uint64_t generation_target,
+                           TFloat* upper_bounds,
                            TFloat* lower_bounds);
 
-  /// Default destructor
+  /**
+   * @brief Destroy the evolutionary_solver_cuda object.
+   */
   virtual ~evolutionary_solver_cuda();
 
-  /// Initializes and allocates solver_cuda's runtime resources.
+  /**
+   * @brief Set up the solver.
+   *
+   * This method initializes and allocates the solver's runtime resources.
+   */
   virtual void setup_solver();
 
-  /// Terminates and deallocates solver_cuda's runtime resources.
+  /**
+   * @brief Tear down the solver.
+   *
+   * This method terminates and deallocates the solver's runtime resources.
+   */
   virtual void teardown_solver() = 0;
 
-  /// Applies solver_cuda's population transformation.
+  /**
+   * @brief Apply the solver's population transformation.
+   *
+   * This method applies the solver's specific population transformation to
+   * generate the next generation of candidate solutions.
+   */
   virtual void transform() = 0;
 
-  /// Calls evaluator and assigns a fitness value to every genome.
+  /**
+   * @brief Evaluate the genomes.
+   *
+   * This method calls the evaluator and assigns a fitness value to every genome
+   * in the population.
+   */
   virtual void evaluate_genomes();
 
-  /// Updates best genomes records
+  /**
+   * @brief Update the best genomes records.
+   *
+   * This method updates the records of the best genomes found so far.
+   */
   virtual void update_records();
 
-  /// Regenerates the bulk_prnumbers array.
+  /**
+   * @brief Regenerate the pseudo-random numbers.
+   *
+   * This method regenerates the bulk pseudo-random numbers used by the solver.
+   */
   virtual void regenerate_prns();
 
-  // Crop vector values, to fit within bounds.
+  /**
+   * @brief Crop a vector to fit within the bounds.
+   *
+   * This method crops the values of a vector to fit within the solver's bounds.
+   *
+   * @param vec Vector to crop.
+   */
   virtual void crop_vector(TFloat* vec);
 
-  /// Initializes vector to uniform random values, within the solver_cuda's
-  /// bounds.
+  /**
+   * @brief Initialize a vector with uniform random values within the bounds.
+   *
+   * This method initializes a vector with uniform random values within the
+   * solver's bounds.
+   *
+   * @param dst_vec Vector to initialize.
+   */
   virtual void initialize_vector(TFloat* dst_vec);
 
-  /// Prints all current genomes and their fitness.
+  /**
+   * @brief Print the current population.
+   *
+   * This method prints all current genomes and their fitness.
+   */
   virtual void print_population();
 
-  /// Prints last transformation diff.
+  /**
+   * @brief Print the last transformation difference.
+   *
+   * This method prints the difference between the current population and the
+   * previous population after the last transformation.
+   */
   virtual void print_transformation_diff();
 
-  /// Prints solver_cuda's current best found solutions and their fitness.
+  /**
+   * @brief Print the solver's current best found solutions.
+   *
+   * This method prints the solver's current best found solutions and their
+   * fitness.
+   */
   virtual void print_solutions();
 
   /// Specialized device pointers
@@ -105,13 +176,6 @@ struct evolutionary_solver_cuda : evolutionary_solver<TFloat>
   /// Bulk Pseudo Random Number array
   TFloat* _dev_bulk_prns;
 
-  /// Evaluator
-  using evolutionary_solver<TFloat>::_evaluator;
-  /// Population Set
-  using evolutionary_solver<TFloat>::_population;
-  /// Bulk Pseudo Random Number Generator
-  using evolutionary_solver<TFloat>::_bulk_prn_generator;
-
   /// Populations Configuration
   using evolutionary_solver<TFloat>::_ISLES;
   using evolutionary_solver<TFloat>::_AGENTS;
@@ -120,43 +184,32 @@ struct evolutionary_solver_cuda : evolutionary_solver<TFloat>
   /// Genes Variable Bounds (HOST COPY)
   using evolutionary_solver<TFloat>::_UPPER_BOUNDS;
   using evolutionary_solver<TFloat>::_LOWER_BOUNDS;
-
   /// Variable Ranges (HOST COPY)
   using evolutionary_solver<TFloat>::_VAR_RANGES;
 
+  using evolutionary_solver<TFloat>::_evaluator;
+  using evolutionary_solver<TFloat>::_population;
+
   using evolutionary_solver<TFloat>::_max_agent_genome;
   using evolutionary_solver<TFloat>::_min_agent_genome;
-
   using evolutionary_solver<TFloat>::_max_agent_fitness;
   using evolutionary_solver<TFloat>::_min_agent_fitness;
-
   using evolutionary_solver<TFloat>::_max_agent_idx;
   using evolutionary_solver<TFloat>::_min_agent_idx;
 
-  /// Defines the migration size.
   using evolutionary_solver<TFloat>::_migration_step;
-
-  /// Defines the migration size.
   using evolutionary_solver<TFloat>::_migration_size;
-
-  /// Defines the migration selection window size.
   using evolutionary_solver<TFloat>::_migration_selection_size;
-
   /// Describes the migration selection indexes. (HOST COPY)
   using evolutionary_solver<TFloat>::_migration_idxs;
-
   /// Stores the temporal migration genomes to be migrated. (HOST COPY)
   using evolutionary_solver<TFloat>::_migration_buffer;
 
-  /// Describes the size of the _bulk_prnumbers array.
+  using evolutionary_solver<TFloat>::_bulk_prn_generator;
   using evolutionary_solver<TFloat>::_bulk_size;
 
-  /// Counter describing the solver_cuda's current generation.
   using evolutionary_solver<TFloat>::_generation_count;
-
-  /// Defines the solver_cuda's target generation.
   using evolutionary_solver<TFloat>::_generation_target;
-
   using evolutionary_solver<TFloat>::_f_initialized;
 };
 

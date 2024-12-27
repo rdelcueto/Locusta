@@ -2,14 +2,41 @@
 
 namespace locusta {
 
-template <typename TFloat>
-void elite_population_replace_dispatch(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const uint32_t* min_agent_idx, const TFloat* max_agent_genome,
-  const TFloat* max_agent_fitness, TFloat* genomes, TFloat* fitness);
+/**
+ * @brief Dispatch function for replacing the elite population.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param min_agent_idx Array of indices of the agents with minimum fitness.
+ * @param max_agent_genome Array of genomes with maximum fitness.
+ * @param max_agent_fitness Array of maximum fitness values.
+ * @param genomes Array of genomes.
+ * @param fitness Array of fitness values.
+ */
+template<typename TFloat>
+void
+elite_population_replace_dispatch(const uint32_t ISLES,
+                                  const uint32_t AGENTS,
+                                  const uint32_t DIMENSIONS,
+                                  const uint32_t* min_agent_idx,
+                                  const TFloat* max_agent_genome,
+                                  const TFloat* max_agent_fitness,
+                                  TFloat* genomes,
+                                  TFloat* fitness);
 
 /// Interface for Genetic Algorithm solvers
-template <typename TFloat>
+/**
+ * @brief Construct a new ga_solver_cuda object.
+ *
+ * @param population Population set.
+ * @param evaluator Evaluator.
+ * @param prn_generator Pseudo-random number generator.
+ * @param generation_target Target number of generations.
+ * @param upper_bounds Array of upper bounds for the genes.
+ * @param lower_bounds Array of lower bounds for the genes.
+ */
+template<typename TFloat>
 ga_solver_cuda<TFloat>::ga_solver_cuda(population_set_cuda<TFloat>* population,
                                        evaluator_cuda<TFloat>* evaluator,
                                        prngenerator_cuda<TFloat>* prn_generator,
@@ -17,8 +44,11 @@ ga_solver_cuda<TFloat>::ga_solver_cuda(population_set_cuda<TFloat>* population,
                                        TFloat* upper_bounds,
                                        TFloat* lower_bounds)
 
-  : evolutionary_solver_cuda<TFloat>(population, evaluator, prn_generator,
-                                     generation_target, upper_bounds,
+  : evolutionary_solver_cuda<TFloat>(population,
+                                     evaluator,
+                                     prn_generator,
+                                     generation_target,
+                                     upper_bounds,
                                      lower_bounds)
 {
   // Defaults
@@ -39,14 +69,22 @@ ga_solver_cuda<TFloat>::ga_solver_cuda(population_set_cuda<TFloat>* population,
                           _ISLES * _AGENTS * _AGENTS * sizeof(uint32_t)));
 }
 
-template <typename TFloat>
+/**
+ * @brief Destroy the ga_solver_cuda object.
+ */
+template<typename TFloat>
 ga_solver_cuda<TFloat>::~ga_solver_cuda()
 {
   CudaSafeCall(cudaFree(_dev_couples_idx_array));
   CudaSafeCall(cudaFree(_dev_candidates_reservoir_array));
 }
 
-template <typename TFloat>
+/**
+ * @brief Set up the solver.
+ *
+ * This method initializes and allocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 ga_solver_cuda<TFloat>::setup_solver()
 {
@@ -65,7 +103,12 @@ ga_solver_cuda<TFloat>::setup_solver()
   evolutionary_solver_cuda<TFloat>::setup_solver();
 }
 
-template <typename TFloat>
+/**
+ * @brief Tear down the solver.
+ *
+ * This method terminates and deallocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 ga_solver_cuda<TFloat>::teardown_solver()
 {
@@ -73,7 +116,16 @@ ga_solver_cuda<TFloat>::teardown_solver()
   CudaSafeCall(cudaFree(_dev_bulk_prns));
 }
 
-template <typename TFloat>
+/**
+ * @brief Set the genetic algorithm solver operators.
+ *
+ * This method sets the genetic algorithm solver operators, including the
+ * breeding and selection operators.
+ *
+ * @param breed_functor_ptr Breeding operator.
+ * @param selection_functor_ptr Selection operator.
+ */
+template<typename TFloat>
 void
 ga_solver_cuda<TFloat>::setup_operators(
   BreedCudaFunctor<TFloat>* breed_functor_ptr,
@@ -83,7 +135,21 @@ ga_solver_cuda<TFloat>::setup_operators(
   _selection_functor_ptr = selection_functor_ptr;
 }
 
-template <typename TFloat>
+/**
+ * @brief Configure the solver.
+ *
+ * This method sets up the solver's configuration, including parameters for
+ * migration, selection, crossover, and mutation.
+ *
+ * @param migration_step Migration step size.
+ * @param migration_size Migration size.
+ * @param migration_selection_size Migration selection size.
+ * @param selection_size Selection size.
+ * @param selection_stochastic_factor Selection stochastic factor.
+ * @param crossover_rate Crossover rate.
+ * @param mutation_rate Mutation rate.
+ */
+template<typename TFloat>
 void
 ga_solver_cuda<TFloat>::solver_config(uint32_t migration_step,
                                       uint32_t migration_size,
@@ -102,7 +168,13 @@ ga_solver_cuda<TFloat>::solver_config(uint32_t migration_step,
   _mutation_rate = mutation_rate;
 }
 
-template <typename TFloat>
+/**
+ * @brief Apply the solver's population transformation.
+ *
+ * This method applies the solver's specific population transformation to
+ * generate the next generation of candidate solutions.
+ */
+template<typename TFloat>
 void
 ga_solver_cuda<TFloat>::transform()
 {
@@ -112,7 +184,13 @@ ga_solver_cuda<TFloat>::transform()
   (*_breed_functor_ptr)(this);
 }
 
-template <typename TFloat>
+/**
+ * @brief Replace the elite population.
+ *
+ * This method replaces the elite population with the best individuals from the
+ * current population.
+ */
+template<typename TFloat>
 void
 ga_solver_cuda<TFloat>::elite_population_replace()
 {
@@ -120,9 +198,14 @@ ga_solver_cuda<TFloat>::elite_population_replace()
   TFloat* genomes = _dev_population->_dev_data_array;
   TFloat* fitness = _dev_population->_dev_fitness_array;
 
-  elite_population_replace_dispatch(_ISLES, _AGENTS, _DIMENSIONS,
-                                    _dev_min_agent_idx, _dev_max_agent_genome,
-                                    _dev_max_agent_fitness, genomes, fitness);
+  elite_population_replace_dispatch(_ISLES,
+                                    _AGENTS,
+                                    _DIMENSIONS,
+                                    _dev_min_agent_idx,
+                                    _dev_max_agent_genome,
+                                    _dev_max_agent_fitness,
+                                    genomes,
+                                    fitness);
 }
 
 } // namespace locusta

@@ -6,12 +6,31 @@
 
 namespace locusta {
 
-template <typename TFloat>
+/**
+ * @brief Canonical particle record update operator.
+ *
+ * This class implements the canonical particle record update operator, which
+ * updates the best known position and fitness for each particle.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct CanonicalParticleRecordUpdate : UpdateParticleRecordFunctor<TFloat>
 {
 
+  /**
+   * @brief Get the number of pseudo-random numbers required by the operator.
+   *
+   * @param solver Particle swarm optimization solver.
+   * @return Number of pseudo-random numbers required.
+   */
   uint32_t required_prns(pso_solver_cpu<TFloat>* solver) { return 0; }
 
+  /**
+   * @brief Apply the particle record update operator.
+   *
+   * @param solver Particle swarm optimization solver.
+   */
   void operator()(pso_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -47,10 +66,24 @@ struct CanonicalParticleRecordUpdate : UpdateParticleRecordFunctor<TFloat>
   }
 };
 
-template <typename TFloat>
+/**
+ * @brief Canonical speed update operator.
+ *
+ * This class implements the canonical speed update operator, which updates the
+ * speed of each particle based on its current position, best known position,
+ * and the best known position of its neighbors.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct CanonicalSpeedUpdate : UpdateSpeedFunctor<TFloat>
 {
-
+  /**
+   * @brief Get the number of pseudo-random numbers required by the operator.
+   *
+   * @param solver Particle swarm optimization solver.
+   * @return Number of pseudo-random numbers required.
+   */
   uint32_t required_prns(pso_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -60,6 +93,11 @@ struct CanonicalSpeedUpdate : UpdateSpeedFunctor<TFloat>
     return ISLES * AGENTS * DIMENSIONS * 2;
   }
 
+  /**
+   * @brief Apply the speed update operator.
+   *
+   * @param solver Particle swarm optimization solver.
+   */
   void operator()(pso_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;
@@ -120,12 +158,31 @@ struct CanonicalSpeedUpdate : UpdateSpeedFunctor<TFloat>
   }
 };
 
-template <typename TFloat>
+/**
+ * @brief Canonical position update operator.
+ *
+ * This class implements the canonical position update operator, which updates
+ * the position of each particle based on its current position and speed.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct CanonicalPositionUpdate : UpdatePositionFunctor<TFloat>
 {
 
+  /**
+   * @brief Get the number of pseudo-random numbers required by the operator.
+   *
+   * @param solver Particle swarm optimization solver.
+   * @return Number of pseudo-random numbers required.
+   */
   uint32_t required_prns(pso_solver_cpu<TFloat>* solver) { return 0; }
 
+  /**
+   * @brief Apply the position update operator.
+   *
+   * @param solver Particle swarm optimization solver.
+   */
   void operator()(pso_solver_cpu<TFloat>* solver)
   {
     const uint32_t ISLES = solver->_ISLES;

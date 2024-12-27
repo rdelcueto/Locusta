@@ -8,44 +8,111 @@
 
 namespace locusta {
 
-/// Interface for Genetic Algorithm solver_cudas
-template <typename TFloat>
+/**
+ * @brief CUDA implementation of the genetic algorithm solver.
+ *
+ * This class implements the genetic algorithm solver for the CUDA architecture.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct ga_solver_cuda : evolutionary_solver_cuda<TFloat>
 {
-
+  /**
+   * @brief Enum defining the offsets for the pseudo-random number sets.
+   */
   enum PRN_OFFSETS
   {
     SELECTION_SET = 0,
     BREEDING_SET = 1
   };
 
+  /**
+   * @brief Construct a new ga_solver_cuda object.
+   *
+   * @param population Population set.
+   * @param evaluator Evaluator.
+   * @param prn_generator Pseudo-random number generator.
+   * @param generation_target Target number of generations.
+   * @param upper_bounds Array of upper bounds for the genes.
+   * @param lower_bounds Array of lower bounds for the genes.
+   */
   ga_solver_cuda(population_set_cuda<TFloat>* population,
                  evaluator_cuda<TFloat>* evaluator,
                  prngenerator_cuda<TFloat>* prn_generator,
-                 uint64_t generation_target, TFloat* upper_bounds,
+                 uint64_t generation_target,
+                 TFloat* upper_bounds,
                  TFloat* lower_bounds);
 
+  /**
+   * @brief Destroy the ga_solver_cuda object.
+   */
   virtual ~ga_solver_cuda();
 
+  /**
+   * @brief Set up the solver.
+   *
+   * This method initializes and allocates the solver's runtime resources.
+   */
   virtual void setup_solver();
 
+  /**
+   * @brief Tear down the solver.
+   *
+   * This method terminates and deallocates the solver's runtime resources.
+   */
   virtual void teardown_solver();
 
+  /**
+   * @brief Apply the solver's population transformation.
+   *
+   * This method applies the solver's specific population transformation to
+   * generate the next generation of candidate solutions.
+   */
   virtual void transform();
 
+  /**
+   * @brief Replace the elite population.
+   *
+   * This method replaces the elite population with the best individuals from
+   * the current population.
+   */
   virtual void elite_population_replace();
 
-  /// Set Genetic Algorithm solver operators.
+  /**
+   * @brief Set the genetic algorithm solver operators.
+   *
+   * This method sets the genetic algorithm solver operators, including the
+   * breeding and selection operators.
+   *
+   * @param breed_functor_ptr Breeding operator.
+   * @param select_functor_ptr Selection operator.
+   */
   virtual void setup_operators(
     BreedCudaFunctor<TFloat>* breed_functor_ptr,
     SelectionCudaFunctor<TFloat>* select_functor_ptr);
 
-  /// Sets up the solver_cuda's configuration
-  virtual void solver_config(uint32_t migration_step, uint32_t migration_size,
+  /**
+   * @brief Configure the solver.
+   *
+   * This method sets up the solver's configuration, including parameters for
+   * migration, selection, crossover, and mutation.
+   *
+   * @param migration_step Migration step size.
+   * @param migration_size Migration size.
+   * @param migration_selection_size Migration selection size.
+   * @param selection_size Selection size.
+   * @param selection_stochastic_factor Selection stochastic factor.
+   * @param crossover_rate Crossover rate.
+   * @param mutation_rate Mutation rate.
+   */
+  virtual void solver_config(uint32_t migration_step,
+                             uint32_t migration_size,
                              uint32_t migration_selection_size,
                              uint32_t selection_size,
                              TFloat selection_stochastic_factor,
-                             TFloat crossover_rate, TFloat mutation_rate);
+                             TFloat crossover_rate,
+                             TFloat mutation_rate);
 
   /// Population crossover + mutation operator.
   BreedCudaFunctor<TFloat>* _breed_functor_ptr;

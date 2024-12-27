@@ -6,7 +6,18 @@ namespace locusta {
 /// GPU Kernels Shared Memory Pointer.
 extern __shared__ int pso_operators_shared_memory[];
 
-template <typename TFloat>
+/**
+ * @brief CUDA kernel for the canonical particle record update operator.
+ *
+ * This kernel updates the best known position and fitness for each particle.
+ *
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param positions Device array of current particle positions.
+ * @param fitness Device array of current particle fitness values.
+ * @param record_positions Device array of best known particle positions.
+ * @param record_fitness Device array of best known particle fitness values.
+ */
+template<typename TFloat>
 __global__ void
 canonical_particle_record_update_kernel(const uint32_t DIMENSIONS,
                                         const TFloat* __restrict__ positions,
@@ -35,9 +46,21 @@ canonical_particle_record_update_kernel(const uint32_t DIMENSIONS,
   }
 }
 
-template <typename TFloat>
+/**
+ * @brief Dispatch function for the canonical particle record update operator.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param positions Device array of current particle positions.
+ * @param fitness Device array of current particle fitness values.
+ * @param record_positions Device array of best known particle positions.
+ * @param record_fitness Device array of best known particle fitness values.
+ */
+template<typename TFloat>
 void
-canonical_particle_update_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
+canonical_particle_update_dispatch(const uint32_t ISLES,
+                                   const uint32_t AGENTS,
                                    const uint32_t DIMENSIONS,
                                    const TFloat* positions,
                                    const TFloat* fitness,
@@ -51,18 +74,43 @@ canonical_particle_update_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
 }
 
 // Template Specialization (float)
-template void canonical_particle_update_dispatch<float>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const float* positions, const float* fitness, float* record_positions,
-  float* record_fitness);
+template void
+canonical_particle_update_dispatch<float>(const uint32_t ISLES,
+                                          const uint32_t AGENTS,
+                                          const uint32_t DIMENSIONS,
+                                          const float* positions,
+                                          const float* fitness,
+                                          float* record_positions,
+                                          float* record_fitness);
 
 // Template Specialization (double)
-template void canonical_particle_update_dispatch<double>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const double* positions, const double* fitness, double* record_positions,
-  double* record_fitness);
+template void
+canonical_particle_update_dispatch<double>(const uint32_t ISLES,
+                                           const uint32_t AGENTS,
+                                           const uint32_t DIMENSIONS,
+                                           const double* positions,
+                                           const double* fitness,
+                                           double* record_positions,
+                                           double* record_fitness);
 
-template <typename TFloat>
+/**
+ * @brief CUDA kernel for the canonical speed update operator.
+ *
+ * This kernel updates the speed of each particle based on its current position,
+ * best known position, and the best known position of its neighbors.
+ *
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param inertia_factor Inertia factor.
+ * @param cognitive_factor Cognitive factor.
+ * @param social_factor Social factor.
+ * @param positions Device array of current particle positions.
+ * @param record_positions Device array of best known particle positions.
+ * @param isle_record_positions Device array of best known positions for each
+ * isle.
+ * @param prng_vector Device array of pseudo-random numbers.
+ * @param velocities Device array of particle velocities.
+ */
+template<typename TFloat>
 __global__ void
 canonical_speed_update_kernel(const uint32_t DIMENSIONS,
                               const TFloat inertia_factor,
@@ -110,38 +158,89 @@ canonical_speed_update_kernel(const uint32_t DIMENSIONS,
   }
 }
 
-template <typename TFloat>
+/**
+ * @brief Dispatch function for the canonical speed update operator.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param inertia_factor Inertia factor.
+ * @param cognitive_factor Cognitive factor.
+ * @param social_factor Social factor.
+ * @param positions Device array of current particle positions.
+ * @param record_positions Device array of best known particle positions.
+ * @param isle_record_positions Device array of best known positions for each
+ * isle.
+ * @param prng_vector Device array of pseudo-random numbers.
+ * @param velocities Device array of particle velocities.
+ */
+template<typename TFloat>
 void
-canonical_speed_update_dispatch(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const TFloat inertia_factor, const TFloat cognitive_factor,
-  const TFloat social_factor, const TFloat* positions,
-  const TFloat* record_positions, const TFloat* isle_record_positions,
-  const TFloat* prng_vector, TFloat* velocities)
+canonical_speed_update_dispatch(const uint32_t ISLES,
+                                const uint32_t AGENTS,
+                                const uint32_t DIMENSIONS,
+                                const TFloat inertia_factor,
+                                const TFloat cognitive_factor,
+                                const TFloat social_factor,
+                                const TFloat* positions,
+                                const TFloat* record_positions,
+                                const TFloat* isle_record_positions,
+                                const TFloat* prng_vector,
+                                TFloat* velocities)
 {
   canonical_speed_update_kernel<<<ISLES, AGENTS, DIMENSIONS * sizeof(TFloat)>>>(
-    DIMENSIONS, inertia_factor, cognitive_factor, social_factor, positions,
-    record_positions, isle_record_positions, prng_vector, velocities);
+    DIMENSIONS,
+    inertia_factor,
+    cognitive_factor,
+    social_factor,
+    positions,
+    record_positions,
+    isle_record_positions,
+    prng_vector,
+    velocities);
   CudaCheckError();
 }
 
 // Template Specialization (float)
-template void canonical_speed_update_dispatch<float>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const float inertia_factor, const float cognitive_factor,
-  const float social_factor, const float* positions,
-  const float* record_positions, const float* isle_record_positions,
-  const float* prng_vector, float* velocities);
+template void
+canonical_speed_update_dispatch<float>(const uint32_t ISLES,
+                                       const uint32_t AGENTS,
+                                       const uint32_t DIMENSIONS,
+                                       const float inertia_factor,
+                                       const float cognitive_factor,
+                                       const float social_factor,
+                                       const float* positions,
+                                       const float* record_positions,
+                                       const float* isle_record_positions,
+                                       const float* prng_vector,
+                                       float* velocities);
 
 // Template Specialization (double)
-template void canonical_speed_update_dispatch<double>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const double inertia_factor, const double cognitive_factor,
-  const double social_factor, const double* positions,
-  const double* record_positions, const double* isle_record_positions,
-  const double* prng_vector, double* velocities);
+template void
+canonical_speed_update_dispatch<double>(const uint32_t ISLES,
+                                        const uint32_t AGENTS,
+                                        const uint32_t DIMENSIONS,
+                                        const double inertia_factor,
+                                        const double cognitive_factor,
+                                        const double social_factor,
+                                        const double* positions,
+                                        const double* record_positions,
+                                        const double* isle_record_positions,
+                                        const double* prng_vector,
+                                        double* velocities);
 
-template <typename TFloat>
+/**
+ * @brief CUDA kernel for the canonical position update operator.
+ *
+ * This kernel updates the position of each particle based on its current
+ * position and speed.
+ *
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param velocities Device array of particle velocities.
+ * @param positions Device array of current particle positions.
+ * @param new_positions Device array of new particle positions.
+ */
+template<typename TFloat>
 __global__ void
 canonical_position_update_kernel(const uint32_t DIMENSIONS,
                                  const TFloat* __restrict__ velocities,
@@ -166,27 +265,46 @@ canonical_position_update_kernel(const uint32_t DIMENSIONS,
   }
 }
 
-template <typename TFloat>
+/**
+ * @brief Dispatch function for the canonical position update operator.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param velocities Device array of particle velocities.
+ * @param positions Device array of current particle positions.
+ * @param new_positions Device array of new particle positions.
+ */
+template<typename TFloat>
 void
-canonical_position_update_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
+canonical_position_update_dispatch(const uint32_t ISLES,
+                                   const uint32_t AGENTS,
                                    const uint32_t DIMENSIONS,
                                    const TFloat* velocities,
                                    const TFloat* positions,
                                    TFloat* new_positions)
 {
-  canonical_position_update_kernel<<<ISLES, AGENTS>>>(DIMENSIONS, velocities,
-                                                      positions, new_positions);
+  canonical_position_update_kernel<<<ISLES, AGENTS>>>(
+    DIMENSIONS, velocities, positions, new_positions);
 
   CudaCheckError();
 }
 
 // Template Specialization (float)
-template void canonical_position_update_dispatch<float>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const float* velocities, const float* positions, float* new_positions);
+template void
+canonical_position_update_dispatch<float>(const uint32_t ISLES,
+                                          const uint32_t AGENTS,
+                                          const uint32_t DIMENSIONS,
+                                          const float* velocities,
+                                          const float* positions,
+                                          float* new_positions);
 
 // Template Specialization (double)
-template void canonical_position_update_dispatch<double>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const double* velocities, const double* positions, double* new_positions);
+template void
+canonical_position_update_dispatch<double>(const uint32_t ISLES,
+                                           const uint32_t AGENTS,
+                                           const uint32_t DIMENSIONS,
+                                           const double* velocities,
+                                           const double* positions,
+                                           double* new_positions);
 }

@@ -6,7 +6,14 @@ namespace locusta {
 /// GPU Kernels Shared Memory Pointer.
 extern __shared__ int ga_operators_shared_memory[];
 
-template <typename TFloat>
+/**
+ * @brief CUDA device function for performing gene crossover.
+ *
+ * @param parentA First parent gene.
+ * @param parentB Second parent gene.
+ * @return Offspring gene.
+ */
+template<typename TFloat>
 __device__ __forceinline__ TFloat
 GeneCrossOver(const TFloat parentA, const TFloat parentB)
 {
@@ -16,9 +23,18 @@ GeneCrossOver(const TFloat parentA, const TFloat parentB)
   return offspring_gene;
 }
 
-template <typename TFloat>
+/**
+ * @brief CUDA device function for cropping a gene to fit within the bounds.
+ *
+ * @param offspring_gene Offspring gene to crop.
+ * @param lower_bound Lower bound of the gene.
+ * @param upper_bound Upper bound of the gene.
+ * @return Cropped gene.
+ */
+template<typename TFloat>
 __device__ __forceinline__ TFloat
-GeneCrop(const TFloat offspring_gene, const TFloat lower_bound,
+GeneCrop(const TFloat offspring_gene,
+         const TFloat lower_bound,
          const TFloat upper_bound)
 {
   TFloat mutated_gene = offspring_gene;
@@ -27,11 +43,34 @@ GeneCrop(const TFloat offspring_gene, const TFloat lower_bound,
   return mutated_gene;
 }
 
-template <typename TFloat>
+/**
+ * @brief CUDA kernel for the whole crossover operator.
+ *
+ * This kernel performs crossover and mutation on the population of genomes.
+ *
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param DEVIATION Deviation factor for mutation.
+ * @param CROSSOVER_RATE Crossover rate.
+ * @param MUTATION_RATE Mutation rate.
+ * @param DIST_LIMIT Distribution limit for mutation.
+ * @param INV_DIST_LIMIT Inverse of the distribution limit.
+ * @param VAR_RANGES Array of ranges for the genes.
+ * @param LOWER_BOUNDS Array of lower bounds for the genes.
+ * @param UPPER_BOUNDS Array of upper bounds for the genes.
+ * @param prn_array Array of pseudo-random numbers.
+ * @param couple_selection Array of couple selections.
+ * @param parent_genomes Array of parent genomes.
+ * @param offspring_genomes Array of offspring genomes.
+ * @param local_generator Array of cuRAND states.
+ */
+template<typename TFloat>
 __global__ void
-whole_crossover_kernel(const uint32_t DIMENSIONS, const TFloat DEVIATION,
-                       const TFloat CROSSOVER_RATE, const TFloat MUTATION_RATE,
-                       const uint32_t DIST_LIMIT, const TFloat INV_DIST_LIMIT,
+whole_crossover_kernel(const uint32_t DIMENSIONS,
+                       const TFloat DEVIATION,
+                       const TFloat CROSSOVER_RATE,
+                       const TFloat MUTATION_RATE,
+                       const uint32_t DIST_LIMIT,
+                       const TFloat INV_DIST_LIMIT,
                        const TFloat* __restrict__ VAR_RANGES,
                        const TFloat* __restrict__ LOWER_BOUNDS,
                        const TFloat* __restrict__ UPPER_BOUNDS,
@@ -105,14 +144,38 @@ whole_crossover_kernel(const uint32_t DIMENSIONS, const TFloat DEVIATION,
   local_generator[BASE_IDX] = local_state;
 }
 
-template <typename TFloat>
+/**
+ * @brief Dispatch function for the whole crossover operator.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param DEVIATION Deviation factor for mutation.
+ * @param CROSSOVER_RATE Crossover rate.
+ * @param MUTATION_RATE Mutation rate.
+ * @param DIST_LIMIT Distribution limit for mutation.
+ * @param VAR_RANGES Array of ranges for the genes.
+ * @param LOWER_BOUNDS Array of lower bounds for the genes.
+ * @param UPPER_BOUNDS Array of upper bounds for the genes.
+ * @param prn_array Array of pseudo-random numbers.
+ * @param couple_selection Array of couple selections.
+ * @param parent_genomes Array of parent genomes.
+ * @param offspring_genomes Array of offspring genomes.
+ * @param local_generator Pseudo-random number generator.
+ */
+template<typename TFloat>
 void
-whole_crossover_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
-                         const uint32_t DIMENSIONS, const TFloat DEVIATION,
+whole_crossover_dispatch(const uint32_t ISLES,
+                         const uint32_t AGENTS,
+                         const uint32_t DIMENSIONS,
+                         const TFloat DEVIATION,
                          const TFloat CROSSOVER_RATE,
-                         const TFloat MUTATION_RATE, const uint32_t DIST_LIMIT,
-                         const TFloat* VAR_RANGES, const TFloat* LOWER_BOUNDS,
-                         const TFloat* UPPER_BOUNDS, const TFloat* prn_array,
+                         const TFloat MUTATION_RATE,
+                         const uint32_t DIST_LIMIT,
+                         const TFloat* VAR_RANGES,
+                         const TFloat* LOWER_BOUNDS,
+                         const TFloat* UPPER_BOUNDS,
+                         const TFloat* prn_array,
                          const uint32_t* couple_selection,
                          const TFloat* parent_genomes,
                          TFloat* offspring_genomes,
@@ -123,32 +186,59 @@ whole_crossover_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
     local_generator->get_device_generator_states();
   const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
 
-  whole_crossover_kernel<<<ISLES, AGENTS>>>(
-    DIMENSIONS, DEVIATION, CROSSOVER_RATE, MUTATION_RATE, DIST_LIMIT,
-    INV_DIST_LIMIT, VAR_RANGES, LOWER_BOUNDS, UPPER_BOUNDS, prn_array,
-    couple_selection, parent_genomes, offspring_genomes, device_generators);
+  whole_crossover_kernel<<<ISLES, AGENTS>>>(DIMENSIONS,
+                                            DEVIATION,
+                                            CROSSOVER_RATE,
+                                            MUTATION_RATE,
+                                            DIST_LIMIT,
+                                            INV_DIST_LIMIT,
+                                            VAR_RANGES,
+                                            LOWER_BOUNDS,
+                                            UPPER_BOUNDS,
+                                            prn_array,
+                                            couple_selection,
+                                            parent_genomes,
+                                            offspring_genomes,
+                                            device_generators);
 
   CudaCheckError();
 }
 
-template void whole_crossover_dispatch<float>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const float DEVIATION, const float CROSSOVER_RATE, const float MUTATION_RATE,
-  const uint32_t DIST_LIMIT, const float* VAR_RANGES, const float* LOWER_BOUNDS,
-  const float* UPPER_BOUNDS, const float* prn_array,
-  const uint32_t* couple_selection, const float* parent_genomes,
-  float* offspring_genomes, prngenerator_cuda<float>* local_generator);
+template void
+whole_crossover_dispatch<float>(const uint32_t ISLES,
+                                const uint32_t AGENTS,
+                                const uint32_t DIMENSIONS,
+                                const float DEVIATION,
+                                const float CROSSOVER_RATE,
+                                const float MUTATION_RATE,
+                                const uint32_t DIST_LIMIT,
+                                const float* VAR_RANGES,
+                                const float* LOWER_BOUNDS,
+                                const float* UPPER_BOUNDS,
+                                const float* prn_array,
+                                const uint32_t* couple_selection,
+                                const float* parent_genomes,
+                                float* offspring_genomes,
+                                prngenerator_cuda<float>* local_generator);
 
-template void whole_crossover_dispatch<double>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t DIMENSIONS,
-  const double DEVIATION, const double CROSSOVER_RATE,
-  const double MUTATION_RATE, const uint32_t DIST_LIMIT,
-  const double* VAR_RANGES, const double* LOWER_BOUNDS,
-  const double* UPPER_BOUNDS, const double* prn_array,
-  const uint32_t* couple_selection, const double* parent_genomes,
-  double* offspring_genomes, prngenerator_cuda<double>* local_generator);
+template void
+whole_crossover_dispatch<double>(const uint32_t ISLES,
+                                 const uint32_t AGENTS,
+                                 const uint32_t DIMENSIONS,
+                                 const double DEVIATION,
+                                 const double CROSSOVER_RATE,
+                                 const double MUTATION_RATE,
+                                 const uint32_t DIST_LIMIT,
+                                 const double* VAR_RANGES,
+                                 const double* LOWER_BOUNDS,
+                                 const double* UPPER_BOUNDS,
+                                 const double* prn_array,
+                                 const uint32_t* couple_selection,
+                                 const double* parent_genomes,
+                                 double* offspring_genomes,
+                                 prngenerator_cuda<double>* local_generator);
 
-template <typename TFloat>
+template<typename TFloat>
 __global__ void
 tournament_selection_kernel(const uint32_t SELECTION_SIZE,
                             const TFloat SELECTION_P,
@@ -217,9 +307,10 @@ tournament_selection_kernel(const uint32_t SELECTION_SIZE,
   couple_idx_array[BASE_IDX] = best_idx;
 }
 
-template <typename TFloat>
+template<typename TFloat>
 void
-tournament_selection_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
+tournament_selection_dispatch(const uint32_t ISLES,
+                              const uint32_t AGENTS,
                               const uint32_t SELECTION_SIZE,
                               const TFloat SELECTION_P,
                               const TFloat* fitness_array,
@@ -227,21 +318,33 @@ tournament_selection_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
                               uint32_t* couple_idx_array,
                               uint32_t* candidates_reservoir_array)
 {
-  tournament_selection_kernel<<<ISLES, AGENTS>>>(
-    SELECTION_SIZE, SELECTION_P, fitness_array, prn_array, couple_idx_array,
-    candidates_reservoir_array);
+  tournament_selection_kernel<<<ISLES, AGENTS>>>(SELECTION_SIZE,
+                                                 SELECTION_P,
+                                                 fitness_array,
+                                                 prn_array,
+                                                 couple_idx_array,
+                                                 candidates_reservoir_array);
 
   CudaCheckError();
 }
 
-template void tournament_selection_dispatch<float>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t SELECTION_SIZE,
-  const float SELECTION_P, const float* fitness_array, const float* prn_array,
-  uint32_t* couple_idx_array, uint32_t* candidates_reservoir_array);
+template void
+tournament_selection_dispatch<float>(const uint32_t ISLES,
+                                     const uint32_t AGENTS,
+                                     const uint32_t SELECTION_SIZE,
+                                     const float SELECTION_P,
+                                     const float* fitness_array,
+                                     const float* prn_array,
+                                     uint32_t* couple_idx_array,
+                                     uint32_t* candidates_reservoir_array);
 
-template void tournament_selection_dispatch<double>(
-  const uint32_t ISLES, const uint32_t AGENTS, const uint32_t SELECTION_SIZE,
-  const double SELECTION_P, const double* fitness_array,
-  const double* prn_array, uint32_t* couple_idx_array,
-  uint32_t* candidates_reservoir_array);
+template void
+tournament_selection_dispatch<double>(const uint32_t ISLES,
+                                      const uint32_t AGENTS,
+                                      const uint32_t SELECTION_SIZE,
+                                      const double SELECTION_P,
+                                      const double* fitness_array,
+                                      const double* prn_array,
+                                      uint32_t* couple_idx_array,
+                                      uint32_t* candidates_reservoir_array);
 }

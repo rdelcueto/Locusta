@@ -8,42 +8,114 @@
 
 namespace locusta {
 
-/// Interface for Differential Evolution solvers
-template <typename TFloat>
+/**
+ * @brief CUDA implementation of the differential evolution solver.
+ *
+ * This class implements the differential evolution solver for the CUDA
+ * architecture.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct de_solver_cuda : evolutionary_solver_cuda<TFloat>
 {
 
+  /**
+   * @brief Enum defining the offsets for the pseudo-random number sets.
+   */
   enum PRN_OFFSETS
   {
     SELECTION_SET = 0,
     BREEDING_SET = 1
   };
 
+  /**
+   * @brief Construct a new de_solver_cuda object.
+   *
+   * @param population Population set.
+   * @param evaluator Evaluator.
+   * @param prn_generator Pseudo-random number generator.
+   * @param generation_target Target number of generations.
+   * @param upper_bounds Array of upper bounds for the genes.
+   * @param lower_bounds Array of lower bounds for the genes.
+   */
   de_solver_cuda(population_set_cuda<TFloat>* population,
                  evaluator_cuda<TFloat>* evaluator,
                  prngenerator_cuda<TFloat>* prn_generator,
-                 uint64_t generation_target, TFloat* upper_bounds,
+                 uint64_t generation_target,
+                 TFloat* upper_bounds,
                  TFloat* lower_bounds);
 
+  /**
+   * @brief Destroy the de_solver_cuda object.
+   */
   virtual ~de_solver_cuda();
 
+  /**
+   * @brief Set up the solver.
+   *
+   * This method initializes and allocates the solver's runtime resources.
+   */
   virtual void setup_solver();
 
+  /**
+   * @brief Tear down the solver.
+   *
+   * This method terminates and deallocates the solver's runtime resources.
+   */
   virtual void teardown_solver();
 
+  /**
+   * @brief Advance the solver by one generation step.
+   *
+   * This method evolves the population through one generation step.
+   */
   virtual void advance();
 
+  /**
+   * @brief Apply the solver's population transformation.
+   *
+   * This method applies the solver's specific population transformation to
+   * generate the next generation of candidate solutions.
+   */
   virtual void transform();
 
+  /**
+   * @brief Replace the trial vector.
+   *
+   * This method replaces the trial vector with the best candidate solution.
+   */
   virtual void trial_vector_replace();
 
-  /// Set Differential Evolution solver operators.
+  /**
+   * @brief Set the differential evolution solver operators.
+   *
+   * This method sets the differential evolution solver operators, including the
+   * breeding and selection operators.
+   *
+   * @param breed_functor_ptr Breeding operator.
+   * @param select_functor_ptr Selection operator.
+   */
   virtual void setup_operators(
     DeBreedCudaFunctor<TFloat>* breed_functor_ptr,
     DeSelectionCudaFunctor<TFloat>* select_functor_ptr);
 
-  /// Sets up the solver_cuda's configuration
-  virtual void solver_config(uint32_t migration_step, uint32_t migration_size,
+  /**
+   * @brief Configure the solver.
+   *
+   * This method sets up the solver's configuration, including parameters for
+   * migration, selection, crossover, and differential scale factor.
+   *
+   * @param migration_step Migration step size.
+   * @param migration_size Migration size.
+   * @param migration_selection_size Migration selection size.
+   * @param selection_size Selection size.
+   * @param selection_stochastic_factor Selection stochastic factor.
+   * @param crossover_rate Crossover rate.
+   * @param differential_scale_factor Differential scale factor.
+   */
+  virtual void solver_config(uint32_t migration_step,
+                             uint32_t migration_size,
                              uint32_t migration_selection_size,
                              uint32_t selection_size,
                              TFloat selection_stochastic_factor,

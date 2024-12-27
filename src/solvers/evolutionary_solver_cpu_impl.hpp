@@ -2,22 +2,47 @@
 
 namespace locusta {
 
-template <typename TFloat>
+/**
+ * @brief Construct a new evolutionary_solver_cpu object.
+ *
+ * @param population Population set.
+ * @param evaluator Evaluator.
+ * @param prn_generator Pseudo-random number generator.
+ * @param generation_target Target number of generations.
+ * @param upper_bounds Array of upper bounds for the genes.
+ * @param lower_bounds Array of lower bounds for the genes.
+ */
+template<typename TFloat>
 evolutionary_solver_cpu<TFloat>::evolutionary_solver_cpu(
-  population_set_cpu<TFloat>* population, evaluator_cpu<TFloat>* evaluator,
-  prngenerator_cpu<TFloat>* prn_generator, uint64_t generation_target,
-  TFloat* upper_bounds, TFloat* lower_bounds)
-  : evolutionary_solver<TFloat>(population, evaluator, prn_generator,
-                                generation_target, upper_bounds, lower_bounds)
+  population_set_cpu<TFloat>* population,
+  evaluator_cpu<TFloat>* evaluator,
+  prngenerator_cpu<TFloat>* prn_generator,
+  uint64_t generation_target,
+  TFloat* upper_bounds,
+  TFloat* lower_bounds)
+  : evolutionary_solver<TFloat>(population,
+                                evaluator,
+                                prn_generator,
+                                generation_target,
+                                upper_bounds,
+                                lower_bounds)
 {
 }
 
-template <typename TFloat>
+/**
+ * @brief Destroy the evolutionary_solver_cpu object.
+ */
+template<typename TFloat>
 evolutionary_solver_cpu<TFloat>::~evolutionary_solver_cpu()
 {
 }
 
-template <typename TFloat>
+/**
+ * @brief Set up the solver.
+ *
+ * This method initializes and allocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 evolutionary_solver_cpu<TFloat>::setup_solver()
 {
@@ -56,13 +81,23 @@ evolutionary_solver_cpu<TFloat>::setup_solver()
   evolutionary_solver<TFloat>::regenerate_prns();
 }
 
-template <typename TFloat>
+/**
+ * @brief Tear down the solver.
+ *
+ * This method terminates and deallocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 evolutionary_solver_cpu<TFloat>::teardown_solver()
 {
 }
 
-template <typename TFloat>
+/**
+ * @brief Update the best genomes records.
+ *
+ * This method updates the records of the best genomes found so far.
+ */
+template<typename TFloat>
 void
 evolutionary_solver_cpu<TFloat>::update_records()
 {
@@ -125,7 +160,14 @@ evolutionary_solver_cpu<TFloat>::update_records()
   }
 }
 
-template <typename TFloat>
+/**
+ * @brief Crop a vector to fit within the bounds.
+ *
+ * This method crops the values of a vector to fit within the solver's bounds.
+ *
+ * @param vec Vector to crop.
+ */
+template<typename TFloat>
 void
 evolutionary_solver_cpu<TFloat>::crop_vector(TFloat* vec)
 {
@@ -155,7 +197,16 @@ evolutionary_solver_cpu<TFloat>::crop_vector(TFloat* vec)
     }
   }
 }
-template <typename TFloat>
+
+/**
+ * @brief Initialize a vector with uniform random values within the bounds.
+ *
+ * This method initializes a vector with uniform random values within the
+ * solver's bounds.
+ *
+ * @param dst_vec Vector to initialize.
+ */
+template<typename TFloat>
 void
 evolutionary_solver_cpu<TFloat>::initialize_vector(TFloat* dst_vec)
 {
@@ -181,7 +232,13 @@ evolutionary_solver_cpu<TFloat>::initialize_vector(TFloat* dst_vec)
   delete[] tmp_vec;
 }
 
-template <typename TFloat>
+/**
+ * @brief Print the last transformation difference.
+ *
+ * This method prints the difference between the current population and the
+ * previous population after the last transformation.
+ */
+template<typename TFloat>
 void
 evolutionary_solver_cpu<TFloat>::print_transformation_diff()
 {
@@ -208,7 +265,12 @@ evolutionary_solver_cpu<TFloat>::print_transformation_diff()
   }
 }
 
-template <typename TFloat>
+/**
+ * @brief Print the current population.
+ *
+ * This method prints all current genomes and their fitness.
+ */
+template<typename TFloat>
 void
 evolutionary_solver_cpu<TFloat>::print_population()
 {
@@ -233,7 +295,13 @@ evolutionary_solver_cpu<TFloat>::print_population()
   }
 }
 
-template <typename TFloat>
+/**
+ * @brief Print the solver's current best found solutions.
+ *
+ * This method prints the solver's current best found solutions and their
+ * fitness.
+ */
+template<typename TFloat>
 void
 evolutionary_solver_cpu<TFloat>::print_solutions()
 {

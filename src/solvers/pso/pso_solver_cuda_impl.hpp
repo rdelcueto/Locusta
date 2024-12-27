@@ -2,19 +2,46 @@
 
 namespace locusta {
 
-template <typename TFloat>
-void reset_velocity_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
-                             const uint32_t DIMENSIONS, TFloat* velocity_vector,
-                             TFloat reset_value);
+/**
+ * @brief Dispatch function for resetting the velocity vector.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param velocity_vector Velocity vector.
+ * @param reset_value Value to reset the velocity to.
+ */
+template<typename TFloat>
+void
+reset_velocity_dispatch(const uint32_t ISLES,
+                        const uint32_t AGENTS,
+                        const uint32_t DIMENSIONS,
+                        TFloat* velocity_vector,
+                        TFloat reset_value);
 
-/// Interface for Genetic Algorithm solvers
-template <typename TFloat>
+/**
+ * @brief Construct a new pso_solver_cuda object.
+ *
+ * @param population Population set.
+ * @param evaluator Evaluator.
+ * @param prn_generator Pseudo-random number generator.
+ * @param generation_target Target number of generations.
+ * @param upper_bounds Array of upper bounds for the genes.
+ * @param lower_bounds Array of lower bounds for the genes.
+ */
+template<typename TFloat>
 pso_solver_cuda<TFloat>::pso_solver_cuda(
-  population_set_cuda<TFloat>* population, evaluator_cuda<TFloat>* evaluator,
-  prngenerator_cuda<TFloat>* prn_generator, uint64_t generation_target,
-  TFloat* upper_bounds, TFloat* lower_bounds)
-  : evolutionary_solver_cuda<TFloat>(population, evaluator, prn_generator,
-                                     generation_target, upper_bounds,
+  population_set_cuda<TFloat>* population,
+  evaluator_cuda<TFloat>* evaluator,
+  prngenerator_cuda<TFloat>* prn_generator,
+  uint64_t generation_target,
+  TFloat* upper_bounds,
+  TFloat* lower_bounds)
+  : evolutionary_solver_cuda<TFloat>(population,
+                                     evaluator,
+                                     prn_generator,
+                                     generation_target,
+                                     upper_bounds,
                                      lower_bounds)
 {
   // Defaults
@@ -37,7 +64,10 @@ pso_solver_cuda<TFloat>::pso_solver_cuda(
     cudaMalloc((void**)&(_dev_velocity_vector), TOTAL_GENES * sizeof(TFloat)));
 }
 
-template <typename TFloat>
+/**
+ * @brief Destroy the pso_solver_cuda object.
+ */
+template<typename TFloat>
 pso_solver_cuda<TFloat>::~pso_solver_cuda()
 {
   CudaSafeCall(cudaFree(_dev_cognitive_position_vector));
@@ -45,7 +75,12 @@ pso_solver_cuda<TFloat>::~pso_solver_cuda()
   CudaSafeCall(cudaFree(_dev_velocity_vector));
 }
 
-template <typename TFloat>
+/**
+ * @brief Set up the solver.
+ *
+ * This method initializes and allocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 pso_solver_cuda<TFloat>::setup_solver()
 {
@@ -77,7 +112,8 @@ pso_solver_cuda<TFloat>::setup_solver()
     _dev_cognitive_position_vector);
 
   // Copy data values into temporal vector.
-  CudaSafeCall(cudaMemcpy(temporal_data, _dev_cognitive_position_vector,
+  CudaSafeCall(cudaMemcpy(temporal_data,
+                          _dev_cognitive_position_vector,
                           TOTAL_GENES * sizeof(TFloat),
                           cudaMemcpyDeviceToDevice));
 
@@ -87,18 +123,24 @@ pso_solver_cuda<TFloat>::setup_solver()
   _population->swap_data_sets();
 
   // Copy evaluation values.
-  CudaSafeCall(cudaMemcpy(_dev_cognitive_fitness_vector, temporal_data_fitness,
+  CudaSafeCall(cudaMemcpy(_dev_cognitive_fitness_vector,
+                          temporal_data_fitness,
                           TOTAL_AGENTS * sizeof(TFloat),
                           cudaMemcpyDeviceToDevice));
 
   const TFloat zero_value = 0;
-  reset_velocity_dispatch(_ISLES, _AGENTS, _DIMENSIONS, _dev_velocity_vector,
-                          zero_value);
+  reset_velocity_dispatch(
+    _ISLES, _AGENTS, _DIMENSIONS, _dev_velocity_vector, zero_value);
 
   evolutionary_solver_cuda<TFloat>::setup_solver();
 }
 
-template <typename TFloat>
+/**
+ * @brief Tear down the solver.
+ *
+ * This method terminates and deallocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 pso_solver_cuda<TFloat>::teardown_solver()
 {
@@ -106,7 +148,17 @@ pso_solver_cuda<TFloat>::teardown_solver()
   CudaSafeCall(cudaFree(_dev_bulk_prns));
 }
 
-template <typename TFloat>
+/**
+ * @brief Set the particle swarm optimization solver operators.
+ *
+ * This method sets the particle swarm optimization solver operators, including
+ * the particle record updater, speed updater, and position updater.
+ *
+ * @param update_particle_record_functor_ptr Particle record updater.
+ * @param update_speed_functor_ptr Speed updater.
+ * @param update_position_functor_ptr Position updater.
+ */
+template<typename TFloat>
 void
 pso_solver_cuda<TFloat>::setup_operators(
   UpdateParticleRecordCudaFunctor<TFloat>* update_particle_record_functor_ptr,
@@ -118,7 +170,20 @@ pso_solver_cuda<TFloat>::setup_operators(
   _position_updater_ptr = update_position_functor_ptr;
 }
 
-template <typename TFloat>
+/**
+ * @brief Configure the solver.
+ *
+ * This method sets up the solver's configuration, including parameters for
+ * migration, inertia, cognitive, and social factors.
+ *
+ * @param migration_step Migration step size.
+ * @param migration_size Migration size.
+ * @param migration_selection_size Migration selection size.
+ * @param inertia_factor Inertia factor.
+ * @param cognitive_factor Cognitive factor.
+ * @param social_factor Social factor.
+ */
+template<typename TFloat>
 void
 pso_solver_cuda<TFloat>::solver_config(uint32_t migration_step,
                                        uint32_t migration_size,
@@ -135,7 +200,13 @@ pso_solver_cuda<TFloat>::solver_config(uint32_t migration_step,
   _social_factor = social_factor;
 }
 
-template <typename TFloat>
+/**
+ * @brief Apply the solver's population transformation.
+ *
+ * This method applies the solver's specific population transformation to
+ * generate the next generation of candidate solutions.
+ */
+template<typename TFloat>
 void
 pso_solver_cuda<TFloat>::transform()
 {

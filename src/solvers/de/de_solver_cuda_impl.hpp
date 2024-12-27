@@ -2,16 +2,38 @@
 
 namespace locusta {
 
-template <typename TFloat>
-void trial_vector_replace_dispatch(const uint32_t ISLES, const uint32_t AGENTS,
-                                   const uint32_t DIMENSIONS,
-                                   TFloat* previous_vectors,
-                                   const TFloat* previous_fitness,
-                                   const TFloat* trial_vectors,
-                                   TFloat* trial_fitness);
+/**
+ * @brief Dispatch function for replacing the trial vector.
+ *
+ * @param ISLES Number of isles in the population.
+ * @param AGENTS Number of agents per isle.
+ * @param DIMENSIONS Number of dimensions per agent.
+ * @param previous_vectors Array of previous vectors.
+ * @param previous_fitness Array of previous fitness values.
+ * @param trial_vectors Array of trial vectors.
+ * @param trial_fitness Array of trial fitness values.
+ */
+template<typename TFloat>
+void
+trial_vector_replace_dispatch(const uint32_t ISLES,
+                              const uint32_t AGENTS,
+                              const uint32_t DIMENSIONS,
+                              TFloat* previous_vectors,
+                              const TFloat* previous_fitness,
+                              const TFloat* trial_vectors,
+                              TFloat* trial_fitness);
 
-/// Interface for Differential Evolution solvers
-template <typename TFloat>
+/**
+ * @brief Construct a new de_solver_cuda object.
+ *
+ * @param population Population set.
+ * @param evaluator Evaluator.
+ * @param prn_generator Pseudo-random number generator.
+ * @param generation_target Target number of generations.
+ * @param upper_bounds Array of upper bounds for the genes.
+ * @param lower_bounds Array of lower bounds for the genes.
+ */
+template<typename TFloat>
 de_solver_cuda<TFloat>::de_solver_cuda(population_set_cuda<TFloat>* population,
                                        evaluator_cuda<TFloat>* evaluator,
                                        prngenerator_cuda<TFloat>* prn_generator,
@@ -19,8 +41,11 @@ de_solver_cuda<TFloat>::de_solver_cuda(population_set_cuda<TFloat>* population,
                                        TFloat* upper_bounds,
                                        TFloat* lower_bounds)
 
-  : evolutionary_solver_cuda<TFloat>(population, evaluator, prn_generator,
-                                     generation_target, upper_bounds,
+  : evolutionary_solver_cuda<TFloat>(population,
+                                     evaluator,
+                                     prn_generator,
+                                     generation_target,
+                                     upper_bounds,
                                      lower_bounds)
 {
   // Defaults
@@ -43,7 +68,10 @@ de_solver_cuda<TFloat>::de_solver_cuda(population_set_cuda<TFloat>* population,
                           _ISLES * _AGENTS * _AGENTS * sizeof(uint32_t)));
 }
 
-template <typename TFloat>
+/**
+ * @brief Destroy the de_solver_cuda object.
+ */
+template<typename TFloat>
 de_solver_cuda<TFloat>::~de_solver_cuda()
 {
   CudaSafeCall(cudaFree(_dev_previous_fitness_array));
@@ -51,7 +79,12 @@ de_solver_cuda<TFloat>::~de_solver_cuda()
   CudaSafeCall(cudaFree(_dev_recombination_reservoir_array));
 }
 
-template <typename TFloat>
+/**
+ * @brief Set up the solver.
+ *
+ * This method initializes and allocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 de_solver_cuda<TFloat>::setup_solver()
 {
@@ -70,7 +103,12 @@ de_solver_cuda<TFloat>::setup_solver()
   evolutionary_solver_cuda<TFloat>::setup_solver();
 }
 
-template <typename TFloat>
+/**
+ * @brief Tear down the solver.
+ *
+ * This method terminates and deallocates the solver's runtime resources.
+ */
+template<typename TFloat>
 void
 de_solver_cuda<TFloat>::teardown_solver()
 {
@@ -78,7 +116,16 @@ de_solver_cuda<TFloat>::teardown_solver()
   CudaSafeCall(cudaFree(_dev_bulk_prns));
 }
 
-template <typename TFloat>
+/**
+ * @brief Set the differential evolution solver operators.
+ *
+ * This method sets the differential evolution solver operators, including the
+ * breeding and selection operators.
+ *
+ * @param breed_functor_ptr Breeding operator.
+ * @param selection_functor_ptr Selection operator.
+ */
+template<typename TFloat>
 void
 de_solver_cuda<TFloat>::setup_operators(
   DeBreedCudaFunctor<TFloat>* breed_functor_ptr,
@@ -88,7 +135,21 @@ de_solver_cuda<TFloat>::setup_operators(
   _selection_functor_ptr = selection_functor_ptr;
 }
 
-template <typename TFloat>
+/**
+ * @brief Configure the solver.
+ *
+ * This method sets up the solver's configuration, including parameters for
+ * migration, selection, crossover, and differential scale factor.
+ *
+ * @param migration_step Migration step size.
+ * @param migration_size Migration size.
+ * @param migration_selection_size Migration selection size.
+ * @param selection_size Selection size.
+ * @param selection_stochastic_factor Selection stochastic factor.
+ * @param crossover_rate Crossover rate.
+ * @param differential_scale_factor Differential scale factor.
+ */
+template<typename TFloat>
 void
 de_solver_cuda<TFloat>::solver_config(uint32_t migration_step,
                                       uint32_t migration_size,
@@ -107,7 +168,12 @@ de_solver_cuda<TFloat>::solver_config(uint32_t migration_step,
   _differential_scale_factor = differential_scale_factor;
 }
 
-template <typename TFloat>
+/**
+ * @brief Advance the solver by one generation step.
+ *
+ * This method evolves the population through one generation step.
+ */
+template<typename TFloat>
 void
 de_solver_cuda<TFloat>::advance()
 {
@@ -116,9 +182,10 @@ de_solver_cuda<TFloat>::advance()
   TFloat* dev_population_data_fitness = _dev_population->_dev_fitness_array;
 
   // Copy evaluation values.
-  CudaSafeCall(
-    cudaMemcpy(_dev_previous_fitness_array, dev_population_data_fitness,
-               TOTAL_AGENTS * sizeof(TFloat), cudaMemcpyDeviceToDevice));
+  CudaSafeCall(cudaMemcpy(_dev_previous_fitness_array,
+                          dev_population_data_fitness,
+                          TOTAL_AGENTS * sizeof(TFloat),
+                          cudaMemcpyDeviceToDevice));
 
   transform();
 
@@ -136,7 +203,13 @@ de_solver_cuda<TFloat>::advance()
   _generation_count++;
 }
 
-template <typename TFloat>
+/**
+ * @brief Apply the solver's population transformation.
+ *
+ * This method applies the solver's specific population transformation to
+ * generate the next generation of candidate solutions.
+ */
+template<typename TFloat>
 void
 de_solver_cuda<TFloat>::transform()
 {
@@ -145,7 +218,12 @@ de_solver_cuda<TFloat>::transform()
   (*_breed_functor_ptr)(this);
 }
 
-template <typename TFloat>
+/**
+ * @brief Replace the trial vector.
+ *
+ * This method replaces the trial vector with the best candidate solution.
+ */
+template<typename TFloat>
 void
 de_solver_cuda<TFloat>::trial_vector_replace()
 {
@@ -156,8 +234,13 @@ de_solver_cuda<TFloat>::trial_vector_replace()
   const TFloat* trial_vectors = _dev_population->_dev_data_array;
   TFloat* trial_fitness = _dev_population->_dev_fitness_array;
 
-  trial_vector_replace_dispatch(_ISLES, _AGENTS, _DIMENSIONS, previous_vectors,
-                                previous_fitness, trial_vectors, trial_fitness);
+  trial_vector_replace_dispatch(_ISLES,
+                                _AGENTS,
+                                _DIMENSIONS,
+                                previous_vectors,
+                                previous_fitness,
+                                trial_vectors,
+                                trial_fitness);
 }
 
 } // namespace locusta

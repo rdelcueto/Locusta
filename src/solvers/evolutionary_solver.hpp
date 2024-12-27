@@ -11,58 +11,141 @@
 
 namespace locusta {
 
-/// Interface for evolutionary computing metaheuristic solvers
-template <typename TFloat>
+/**
+ * @brief Interface for evolutionary computing metaheuristic solvers.
+ *
+ * This abstract class defines the interface for evolutionary computing
+ * metaheuristic solvers. Concrete solver implementations, such as the genetic
+ * algorithm, particle swarm optimization, and differential evolution solvers,
+ * derive from this abstract class.
+ *
+ * @tparam TFloat Floating-point type.
+ */
+template<typename TFloat>
 struct evolutionary_solver
 {
 
-  /// Default constructor
+  /**
+   * @brief Construct a new evolutionary_solver object.
+   *
+   * @param population Population set.
+   * @param evaluator Evaluator.
+   * @param prn_generator Pseudo-random number generator.
+   * @param generation_target Target number of generations.
+   * @param upper_bounds Array of upper bounds for the genes.
+   * @param lower_bounds Array of lower bounds for the genes.
+   */
   evolutionary_solver(population_set<TFloat>* population,
                       evaluator<TFloat>* evaluator,
                       prngenerator<TFloat>* prn_generator,
-                      uint64_t generation_target, TFloat* upper_bounds,
+                      uint64_t generation_target,
+                      TFloat* upper_bounds,
                       TFloat* lower_bounds);
 
-  /// Default destructor
+  /**
+   * @brief Destroy the evolutionary_solver object.
+   */
   virtual ~evolutionary_solver();
 
-  /// Initializes and allocates solver's runtime resources.
+  /**
+   * @brief Set up the solver.
+   *
+   * This method initializes and allocates the solver's runtime resources.
+   */
   virtual void setup_solver() = 0;
 
-  /// Terminates and deallocates solver's runtime resources.
+  /**
+   * @brief Tear down the solver.
+   *
+   * This method terminates and deallocates the solver's runtime resources.
+   */
   virtual void teardown_solver() = 0;
 
-  /// Applies solver's population transformation.
+  /**
+   * @brief Apply the solver's population transformation.
+   *
+   * This method applies the solver's specific population transformation to
+   * generate the next generation of candidate solutions.
+   */
   virtual void transform() = 0;
 
-  /// Evolves the population through one generation step.
+  /**
+   * @brief Advance the solver by one generation step.
+   *
+   * This method evolves the population through one generation step.
+   */
   virtual void advance();
 
-  /// Runs solver until it reaches the target number of generations.
+  /**
+   * @brief Run the solver.
+   *
+   * This method runs the solver until it reaches the target number of
+   * generations.
+   */
   virtual void run();
 
-  /// Calls evaluator and assigns a fitness value to every genome.
+  /**
+   * @brief Evaluate the genomes.
+   *
+   * This method calls the evaluator and assigns a fitness value to every genome
+   * in the population.
+   */
   virtual void evaluate_genomes();
 
-  /// Updates best genomes records
+  /**
+   * @brief Update the best genomes records.
+   *
+   * This method updates the records of the best genomes found so far.
+   */
   virtual void update_records() = 0;
 
-  /// Regenerates the bulk_prns array.
+  /**
+   * @brief Regenerate the pseudo-random numbers.
+   *
+   * This method regenerates the bulk pseudo-random numbers used by the solver.
+   */
   virtual void regenerate_prns();
 
-  // Crop vector values, to fit within bounds.
+  /**
+   * @brief Crop a vector to fit within the bounds.
+   *
+   * This method crops the values of a vector to fit within the solver's bounds.
+   *
+   * @param vec Vector to crop.
+   */
   virtual void crop_vector(TFloat* vec) = 0;
 
-  /// Initializes vector to uniform random values, within the solver's bounds.
+  /**
+   * @brief Initialize a vector with uniform random values within the bounds.
+   *
+   * This method initializes a vector with uniform random values within the
+   * solver's bounds.
+   *
+   * @param dst_vec Vector to initialize.
+   */
   virtual void initialize_vector(TFloat* dst_vec) = 0;
 
-  /// Prints all current genomes and their fitness.
+  /**
+   * @brief Print the current population.
+   *
+   * This method prints all current genomes and their fitness.
+   */
   virtual void print_population() = 0;
 
-  /// Prints last transformation diff.
+  /**
+   * @brief Print the last transformation difference.
+   *
+   * This method prints the difference between the current population and the
+   * previous population after the last transformation.
+   */
   virtual void print_transformation_diff() = 0;
 
-  /// Prints solver's current best found solutions and their fitness.
+  /**
+   * @brief Print the solver's current best found solutions.
+   *
+   * This method prints the solver's current best found solutions and their
+   * fitness.
+   */
   virtual void print_solutions() = 0;
 
   /// Evaluator
