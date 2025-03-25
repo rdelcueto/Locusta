@@ -2,8 +2,11 @@
 
 ![Locusta Logo - Designed by: Perla Fierro @ https://perlafierro.com/locusta](./locusta-06.png)
 
-This is the main source code repository for the Locusta project.
-It contains the library code implementation, documentation and an example benchmarking application using the [GoogleTest library](https://github.com/google/googletest).
+This repository contains the source code for the Locusta project.
+
+It includes the library implementation, documentation, and an example benchmarking application.
+
+For API details, see the Locusta Doxygen documentation at [rdelcueto.github.io/Locusta/](https://rdelcueto.github.io/Locusta/).
 
 # Locusta - A Framework for Analyzing and Evaluating Evolutionary Algorithms on Parallel Architectures
 
