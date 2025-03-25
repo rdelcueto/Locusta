@@ -1,0 +1,5 @@
+<map id="locusta::evolutionary_solver_cpu::initialize_vector" name="locusta::evolutionary_solver_cpu::initialize_vector">
+<area shape="rect" id="Node000001" title="Initialize a vector with uniform random values within the bounds." alt="" coords="5,5,144,52"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="192,17,281,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="144,26,178,26,178,31,144,31"/>
+</map>

@@ -1,0 +1,40 @@
+<map id="locusta::BenchmarkCudaFunctor::operator()" name="locusta::BenchmarkCudaFunctor::operator()">
+<area shape="rect" id="Node000001" title="Function call operator." alt="" coords="5,426,205,461"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a0478abeb33e8a26d75c3e86336376869" title="Dispatch function for benchmark functions." alt="" coords="253,285,384,319"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="131,424,279,325,282,329,134,428"/>
+<area shape="rect" id="Node000004" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="613,268,703,291"/>
+<area shape="poly" id="edge24_Node000001_Node000004" title=" " alt="" coords="131,459,209,511,262,540,322,566,384,585,448,592,478,590,508,584,537,573,564,557,591,532,612,501,628,466,640,430,652,360,655,304,660,305,657,360,645,431,633,468,617,503,595,535,567,561,539,578,510,589,479,596,447,597,383,590,320,571,260,545,206,515,128,463"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a3151314f53458b52729fa45495919ed6" title="Ackley’s function." alt="" coords="446,5,551,28"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="321,284,332,237,353,174,385,107,406,74,430,45,447,32,451,36,434,49,410,78,389,109,358,176,337,239,326,285"/>
+<area shape="poly" id="edge14_Node000002_Node000004" title=" " alt="" coords="321,284,331,241,351,187,384,132,405,108,431,89,466,72,499,65,531,71,567,89,587,105,604,125,630,169,647,215,656,254,650,255,642,217,626,172,600,128,584,109,564,94,530,76,499,71,468,77,433,94,409,112,388,135,356,189,336,243,326,285"/>
+<area shape="rect" id="Node000005" href="$namespacelocusta.html#ae4dd890402e4bd773fa03204edbe98a7" title="Bent Cigar function." alt="" coords="435,104,562,127"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="325,283,363,212,393,171,430,136,438,131,441,135,434,140,397,175,368,215,330,286"/>
+<area shape="rect" id="Node000006" href="$namespacelocusta.html#a362ec6a0f0b6bc72e00d67d72b8a60ce" title="Different Powers function." alt="" coords="433,151,565,173"/>
+<area shape="poly" id="edge6_Node000002_Node000006" title=" " alt="" coords="330,283,371,233,399,206,431,182,441,177,444,181,433,187,403,210,375,237,335,286"/>
+<area shape="rect" id="Node000007" href="$namespacelocusta.html#a902d37b5c31e3dca7079f2cdbe008809" title="Discus function." alt="" coords="446,197,551,220"/>
+<area shape="poly" id="edge8_Node000002_Node000007" title=" " alt="" coords="343,282,383,256,431,229,446,222,448,227,433,234,386,260,345,287"/>
+<area shape="rect" id="Node000008" href="$namespacelocusta.html#a48c7136b9cf87bc45fe3290857ae1d1d" title="High Conditioned Elliptic function." alt="" coords="449,244,548,267"/>
+<area shape="poly" id="edge10_Node000002_Node000008" title=" " alt="" coords="383,283,440,268,441,273,385,288"/>
+<area shape="rect" id="Node000009" href="$namespacelocusta.html#acd9138efc8854286cf56d00fe8428220" title="Griewank’s function." alt="" coords="439,291,559,313"/>
+<area shape="poly" id="edge12_Node000002_Node000009" title=" " alt="" coords="384,299,424,299,424,305,384,305"/>
+<area shape="rect" id="Node000010" href="$namespacelocusta.html#ac31a78a722c4683db75bd3faa9c6f63a" title="Rastrigin’s function." alt="" coords="441,337,556,360"/>
+<area shape="poly" id="edge15_Node000002_Node000010" title=" " alt="" coords="385,316,441,331,440,336,383,321"/>
+<area shape="rect" id="Node000011" href="$namespacelocusta.html#a577cc27bbc4deeb0d772ba15b046bf75" title="Rosenbrock’s function." alt="" coords="433,384,564,407"/>
+<area shape="poly" id="edge17_Node000002_Node000011" title=" " alt="" coords="346,317,386,343,433,369,450,377,448,381,431,374,384,348,344,322"/>
+<area shape="rect" id="Node000012" href="$namespacelocusta.html#a9f65fb360cadf0a8f47cf9afd7cdbfae" title="Schaffers F7 function." alt="" coords="441,431,556,453"/>
+<area shape="poly" id="edge19_Node000002_Node000012" title=" " alt="" coords="335,318,376,366,403,393,433,416,447,423,444,428,431,420,400,397,372,370,331,321"/>
+<area shape="rect" id="Node000013" href="$namespacelocusta.html#aeb29d43e7076d132f47ce468a0331191" title="Sphere function." alt="" coords="445,477,553,500"/>
+<area shape="poly" id="edge21_Node000002_Node000013" title=" " alt="" coords="330,318,368,388,398,428,434,463,444,469,441,474,430,467,394,431,364,391,325,321"/>
+<area shape="rect" id="Node000014" href="$namespacelocusta.html#a1a49f08197580db9434297eb6e2600a1" title="Weierstrass function." alt="" coords="432,524,565,547"/>
+<area shape="poly" id="edge22_Node000002_Node000014" title=" " alt="" coords="327,319,340,358,361,410,392,464,412,489,434,511,440,515,437,520,430,515,408,492,388,467,356,412,335,360,322,320"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="538,26,567,45,587,70,604,97,630,155,646,210,656,253,650,255,641,211,625,157,599,100,583,73,564,49,535,30"/>
+<area shape="poly" id="edge5_Node000005_Node000004" title=" " alt="" coords="547,124,567,136,595,164,618,195,649,254,645,257,614,198,591,167,564,140,544,129"/>
+<area shape="poly" id="edge7_Node000006_Node000004" title=" " alt="" coords="543,171,567,182,610,218,642,255,638,259,606,222,564,187,541,176"/>
+<area shape="poly" id="edge9_Node000007_Node000004" title=" " alt="" coords="537,218,566,229,627,259,624,264,564,234,535,223"/>
+<area shape="poly" id="edge11_Node000008_Node000004" title=" " alt="" coords="549,260,600,268,599,273,548,265"/>
+<area shape="poly" id="edge13_Node000009_Node000004" title=" " alt="" coords="558,291,599,285,600,290,559,296"/>
+<area shape="poly" id="edge16_Node000010_Node000004" title=" " alt="" coords="532,335,564,322,622,295,624,300,566,327,534,340"/>
+<area shape="poly" id="edge18_Node000011_Node000004" title=" " alt="" coords="538,382,564,369,605,335,637,300,641,304,609,339,567,374,541,386"/>
+<area shape="poly" id="edge20_Node000012_Node000004" title=" " alt="" coords="542,428,564,416,591,389,613,359,644,302,649,304,618,362,595,393,567,420,545,433"/>
+<area shape="poly" id="edge23_Node000014_Node000004" title=" " alt="" coords="547,522,564,511,584,487,601,461,627,404,643,348,651,304,656,305,648,350,632,406,606,464,588,491,567,515,550,526"/>
+</map>

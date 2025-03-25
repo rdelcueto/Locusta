@@ -1,0 +1,5 @@
+<map id="locusta::CanonicalSpeedUpdateCuda::required_prns" name="locusta::CanonicalSpeedUpdateCuda::required_prns">
+<area shape="rect" id="Node000001" title="Get the number of pseudo&#45;random numbers required by the operator." alt="" coords="5,5,204,40"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="252,11,341,34"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="205,20,238,20,238,25,205,25"/>
+</map>

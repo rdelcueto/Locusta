@@ -1,0 +1,8 @@
+<map id="CPULocustaTest::SetUp" name="CPULocustaTest::SetUp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,39,155,62"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1prngenerator__cpu.html#a4b15d3b960015efaa9c555e50f0dbecd" title="Initialize the state of the PRNG engines." alt="" coords="203,5,357,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="154,38,189,33,189,38,155,43"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="405,39,495,62"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="155,49,203,49,357,49,391,49,392,54,357,55,203,55,155,54"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="358,33,392,38,391,44,357,38"/>
+</map>

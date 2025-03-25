@@ -1,0 +1,5 @@
+<map id="locusta::DeRandomSelection::required_prns" name="locusta::DeRandomSelection::required_prns">
+<area shape="rect" id="Node000001" title="Get the number of pseudo&#45;random numbers required by the operator." alt="" coords="5,5,187,40"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="235,11,324,34"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="187,20,221,20,221,25,187,25"/>
+</map>

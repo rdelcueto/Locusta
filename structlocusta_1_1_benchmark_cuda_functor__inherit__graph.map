@@ -1,0 +1,7 @@
+<map id="locusta::BenchmarkCudaFunctor&lt; TFloat &gt;" name="locusta::BenchmarkCudaFunctor&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="CUDA evaluation functor for benchmark functions." alt="" coords="5,171,205,205"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1_evaluation_cuda_functor.html" title="Abstract base class for CUDA evaluation functors." alt="" coords="7,88,204,123"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="108,136,108,171,103,171,103,136"/>
+<area shape="rect" id="Node000003" href="$structlocusta_1_1_evaluation_functor.html" title="Abstract base class for evaluation functors." alt="" coords="21,5,190,40"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="108,54,108,88,103,88,103,54"/>
+</map>

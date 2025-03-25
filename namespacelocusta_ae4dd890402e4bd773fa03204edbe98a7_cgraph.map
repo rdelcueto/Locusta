@@ -1,0 +1,5 @@
+<map id="locusta::bent_cigar" name="locusta::bent_cigar">
+<area shape="rect" id="Node000001" title="Bent Cigar function." alt="" coords="5,5,132,28"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="180,5,269,28"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="132,14,166,14,166,19,132,19"/>
+</map>

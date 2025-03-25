@@ -1,0 +1,11 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$structlocusta_1_1evaluator.html" title="Abstract evaluator type." alt="" coords="5,93,128,128"/>
+<area shape="rect" id="Node000001" href="$structlocusta_1_1evaluator__cpu.html" title=" " alt="" coords="176,5,299,40"/>
+<area shape="poly" id="edge12_Node000000_Node000001" title=" " alt="" coords="110,84,175,50,199,38,201,42,177,54,112,89"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1evaluator__cuda.html" title=" " alt="" coords="176,64,299,99"/>
+<area shape="poly" id="edge13_Node000000_Node000002" title=" " alt="" coords="141,95,175,89,176,94,142,100"/>
+<area shape="rect" id="Node000003" href="$structlocusta_1_1evaluator__cpu.html" title="CPU evaluator type." alt="" coords="176,123,299,157"/>
+<area shape="poly" id="edge14_Node000000_Node000003" title=" " alt="" coords="142,121,176,127,175,132,141,126"/>
+<area shape="rect" id="Node000004" href="$structlocusta_1_1evaluator__cuda.html" title="CUDA evaluator type." alt="" coords="176,181,299,216"/>
+<area shape="poly" id="edge15_Node000000_Node000004" title=" " alt="" coords="112,132,177,167,201,179,199,184,175,172,110,137"/>
+</map>

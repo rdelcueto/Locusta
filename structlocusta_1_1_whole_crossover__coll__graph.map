@@ -1,0 +1,5 @@
+<map id="locusta::WholeCrossover&lt; TFloat &gt;" name="locusta::WholeCrossover&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="Whole crossover operator." alt="" coords="5,88,164,123"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1_ga_breed_functor.html" title="Abstract base class for breeding operators." alt="" coords="5,5,164,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,54,87,88,82,88,82,54"/>
+</map>

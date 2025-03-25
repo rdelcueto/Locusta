@@ -1,0 +1,11 @@
+<map id="CPULocustaTest" name="CPULocustaTest">
+<area shape="rect" id="Node000001" title="Test fixture for CPU&#45;based Locusta tests." alt="" coords="231,100,339,123"/>
+<area shape="rect" id="Node000003" href="$class_c_p_u_differential_evolution_test.html" title="Test fixture for CPU&#45;based Differential Evolution tests." alt="" coords="5,171,181,193"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="245,130,123,173,121,168,243,125"/>
+<area shape="rect" id="Node000004" href="$class_c_p_u_genetic_algorithm_test.html" title="Test fixture for CPU&#45;based Genetic Algorithm tests." alt="" coords="206,171,365,193"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="288,136,288,171,283,171,283,136"/>
+<area shape="rect" id="Node000005" href="$class_c_p_u_particle_swarm_test.html" title="Test fixture for CPU&#45;based Particle Swarm Optimization tests." alt="" coords="389,171,531,193"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="325,125,435,168,433,173,323,130"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="189,5,382,52"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="288,66,288,100,283,100,283,66"/>
+</map>

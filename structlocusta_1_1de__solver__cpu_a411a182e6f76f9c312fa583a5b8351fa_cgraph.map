@@ -1,0 +1,11 @@
+<map id="locusta::de_solver_cpu::advance" name="locusta::de_solver_cpu::advance">
+<area shape="rect" id="Node000001" title="Advance the solver by one generation step." alt="" coords="5,85,128,120"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1evolutionary__solver.html#a9b75a9dc2938714da717f7d0d4e2d01f" title="Evaluate the genomes." alt="" coords="179,5,351,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="101,83,175,50,195,42,196,47,177,54,104,88"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="221,65,310,87"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="128,92,207,81,207,86,129,97"/>
+<area shape="rect" id="Node000004" href="$structlocusta_1_1evolutionary__solver.html#ae017702d52f5fd34f48a1898215b9a61" title="Regenerate the pseudo&#45;random numbers." alt="" coords="186,112,345,147"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="129,108,173,114,172,119,128,114"/>
+<area shape="rect" id="Node000005" href="$structlocusta_1_1evolutionary__solver__cpu.html#afabeea5fb73f1ae1e7c47968de7c3719" title="Update the best genomes records." alt="" coords="176,171,355,205"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="100,118,177,156,195,163,193,168,175,161,97,123"/>
+</map>

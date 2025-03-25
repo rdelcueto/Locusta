@@ -1,0 +1,5 @@
+<map id="locusta::de_solver_cpu::trial_vector_replace" name="locusta::de_solver_cpu::trial_vector_replace">
+<area shape="rect" id="Node000001" title="Replace the trial vector." alt="" coords="5,5,167,40"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="215,11,304,34"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="167,20,201,20,201,25,167,25"/>
+</map>

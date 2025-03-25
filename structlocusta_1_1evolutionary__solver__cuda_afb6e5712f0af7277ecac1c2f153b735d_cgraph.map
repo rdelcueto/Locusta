@@ -1,0 +1,5 @@
+<map id="locusta::evolutionary_solver_cuda::print_solutions" name="locusta::evolutionary_solver_cuda::print_solutions">
+<area shape="rect" id="Node000001" title="Print the solver&#39;s current best found solutions." alt="" coords="5,5,185,40"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="233,11,323,34"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="186,20,219,20,219,25,186,25"/>
+</map>

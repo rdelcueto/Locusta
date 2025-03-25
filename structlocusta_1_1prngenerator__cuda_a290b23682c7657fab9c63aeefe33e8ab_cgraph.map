@@ -1,0 +1,5 @@
+<map id="locusta::prngenerator_cuda::_generate" name="locusta::prngenerator_cuda::_generate">
+<area shape="rect" id="Node000001" title="Generate pseudo&#45;random numbers (double precision specialization)." alt="" coords="5,5,148,40"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="196,11,285,34"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="148,20,182,20,182,25,148,25"/>
+</map>

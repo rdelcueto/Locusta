@@ -1,0 +1,5 @@
+<map id="locusta::CanonicalSpeedUpdateCuda&lt; TFloat &gt;" name="locusta::CanonicalSpeedUpdateCuda&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="CUDA implementation of the canonical speed update operator." alt="" coords="5,88,204,123"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1_update_speed_cuda_functor.html" title="Abstract base class for updating the speed of particles in particle swarm optimization on CUDA." alt="" coords="18,5,191,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="107,54,107,88,102,88,102,54"/>
+</map>

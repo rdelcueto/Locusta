@@ -1,0 +1,5 @@
+<map id="locusta::UpdatePositionCudaFunctor&lt; TFloat &gt;" name="locusta::UpdatePositionCudaFunctor&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="Abstract base class for updating the position of particles in particle swarm optimization on CUDA." alt="" coords="5,5,187,40"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1_canonical_position_update_cuda.html" title="CUDA implementation of the canonical position update operator." alt="" coords="13,88,179,123"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="99,54,99,88,93,88,93,54"/>
+</map>

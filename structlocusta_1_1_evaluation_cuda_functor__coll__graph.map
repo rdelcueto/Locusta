@@ -1,0 +1,5 @@
+<map id="locusta::EvaluationCudaFunctor&lt; TFloat &gt;" name="locusta::EvaluationCudaFunctor&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="Abstract base class for CUDA evaluation functors." alt="" coords="5,88,203,123"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1_evaluation_functor.html" title="Abstract base class for evaluation functors." alt="" coords="19,5,189,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="107,54,107,88,101,88,101,54"/>
+</map>

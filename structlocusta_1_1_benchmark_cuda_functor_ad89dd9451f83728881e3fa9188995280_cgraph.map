@@ -1,0 +1,5 @@
+<map id="locusta::BenchmarkCudaFunctor::~BenchmarkCudaFunctor" name="locusta::BenchmarkCudaFunctor::~BenchmarkCudaFunctor">
+<area shape="rect" id="Node000001" title="Destroy the BenchmarkCudaFunctor object." alt="" coords="5,5,205,40"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="253,11,343,34"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="206,20,240,20,240,25,206,25"/>
+</map>

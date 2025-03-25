@@ -1,0 +1,5 @@
+<map id="locusta::griewank" name="locusta::griewank">
+<area shape="rect" id="Node000001" title="Griewank’s function." alt="" coords="5,5,125,28"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="173,5,263,28"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="126,14,160,14,160,19,126,19"/>
+</map>

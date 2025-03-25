@@ -1,0 +1,5 @@
+<map id="locusta::evolutionary_solver_cpu::crop_vector" name="locusta::evolutionary_solver_cpu::crop_vector">
+<area shape="rect" id="Node000001" title="Crop a vector to fit within the bounds." alt="" coords="5,5,161,40"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="209,11,299,34"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="162,20,196,20,196,25,162,25"/>
+</map>

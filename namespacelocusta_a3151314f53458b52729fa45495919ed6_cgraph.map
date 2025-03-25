@@ -1,0 +1,5 @@
+<map id="locusta::ackley" name="locusta::ackley">
+<area shape="rect" id="Node000001" title="Ackley’s function." alt="" coords="5,5,111,28"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="159,5,248,28"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="111,14,145,14,145,19,111,19"/>
+</map>

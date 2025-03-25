@@ -1,0 +1,7 @@
+<map id="locusta::CanonicalPositionUpdateCuda::operator()" name="locusta::CanonicalPositionUpdateCuda::operator()">
+<area shape="rect" id="Node000001" title="Apply the position update operator." alt="" coords="5,32,172,67"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#afc143d8286e268bf9f4299658e22039c" title="Dispatch function for the canonical position update operator." alt="" coords="220,5,387,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="172,36,206,32,206,37,173,42"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="259,65,348,87"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="173,57,245,66,245,71,172,62"/>
+</map>

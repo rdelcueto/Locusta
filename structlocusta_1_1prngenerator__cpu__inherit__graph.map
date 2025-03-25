@@ -1,0 +1,5 @@
+<map id="locusta::prngenerator_cpu&lt; TFloat &gt;" name="locusta::prngenerator_cpu&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="CPU implementation of the pseudo&#45;random number generator." alt="" coords="5,88,148,123"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1prngenerator.html" title="Abstract base class for pseudo&#45;random number generators." alt="" coords="5,5,148,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="79,54,79,88,74,88,74,54"/>
+</map>

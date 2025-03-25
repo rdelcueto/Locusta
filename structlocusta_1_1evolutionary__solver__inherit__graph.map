@@ -1,0 +1,35 @@
+<map id="locusta::evolutionary_solver&lt; TFloat &gt;" name="locusta::evolutionary_solver&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="Forward declaration of the evolutionary_solver type." alt="" coords="5,152,144,187"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1evolutionary__solver__cpu.html" title=" " alt="" coords="198,64,337,99"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="119,143,191,108,219,96,221,101,193,113,122,148"/>
+<area shape="rect" id="Node000003" href="$structlocusta_1_1evolutionary__solver__cuda.html" title=" " alt="" coords="197,123,338,157"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="157,154,196,148,197,153,158,159"/>
+<area shape="rect" id="Node000004" href="$structlocusta_1_1evolutionary__solver__cpu.html" title="Forward declaration of the evolutionary_solver_cpu type." alt="" coords="196,181,339,216"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="158,179,196,185,195,190,157,185"/>
+<area shape="rect" id="Node000011" href="$structlocusta_1_1evolutionary__solver__cuda.html" title="Forward declaration of the evolutionary_solver_cuda type." alt="" coords="192,475,343,509"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="95,197,258,473,253,476,91,200"/>
+<area shape="rect" id="Node000005" href="$structlocusta_1_1de__solver__cpu.html" title=" " alt="" coords="393,5,516,40"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="336,172,341,167,352,153,359,139,365,111,370,81,377,66,389,50,404,38,407,42,393,54,381,69,375,83,370,112,364,141,357,156,345,171,340,175"/>
+<area shape="rect" id="Node000006" href="$structlocusta_1_1ga__solver__cpu.html" title=" " alt="" coords="393,64,516,99"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="333,173,341,167,356,153,365,139,374,124,389,109,408,97,411,101,392,113,378,127,369,142,360,156,344,171,336,177"/>
+<area shape="rect" id="Node000007" href="$structlocusta_1_1pso__solver__cpu.html" title=" " alt="" coords="391,123,519,157"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="336,175,398,155,399,160,337,180"/>
+<area shape="rect" id="Node000008" href="$structlocusta_1_1de__solver__cpu.html" title="Forward declaration of the de_solver_cpu type." alt="" coords="393,181,516,216"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="352,196,393,196,393,201,352,201"/>
+<area shape="rect" id="Node000009" href="$structlocusta_1_1ga__solver__cpu.html" title="Forward declaration of the ga_solver_cpu type." alt="" coords="393,240,516,275"/>
+<area shape="poly" id="edge8_Node000004_Node000009" title=" " alt="" coords="337,218,399,237,398,242,336,223"/>
+<area shape="rect" id="Node000010" href="$structlocusta_1_1pso__solver__cpu.html" title="Forward declaration of the pso_solver_cpu type." alt="" coords="391,299,519,333"/>
+<area shape="poly" id="edge9_Node000004_Node000010" title=" " alt="" coords="303,223,345,253,392,284,414,296,412,301,389,289,342,258,300,227"/>
+<area shape="rect" id="Node000012" href="$structlocusta_1_1de__solver__cuda.html" title=" " alt="" coords="393,357,516,392"/>
+<area shape="poly" id="edge11_Node000011_Node000012" title=" " alt="" coords="300,464,342,433,389,402,412,390,414,395,392,406,345,437,303,468"/>
+<area shape="rect" id="Node000013" href="$structlocusta_1_1ga__solver__cuda.html" title=" " alt="" coords="393,416,516,451"/>
+<area shape="poly" id="edge12_Node000011_Node000013" title=" " alt="" coords="336,468,398,448,399,453,337,473"/>
+<area shape="rect" id="Node000014" href="$structlocusta_1_1pso__solver__cuda.html" title=" " alt="" coords="391,475,519,509"/>
+<area shape="poly" id="edge13_Node000011_Node000014" title=" " alt="" coords="356,489,391,489,391,495,356,495"/>
+<area shape="rect" id="Node000015" href="$structlocusta_1_1de__solver__cuda.html" title="Forward declaration of the de_solver_cuda type." alt="" coords="393,533,516,568"/>
+<area shape="poly" id="edge14_Node000011_Node000015" title=" " alt="" coords="337,511,399,531,398,536,336,516"/>
+<area shape="rect" id="Node000016" href="$structlocusta_1_1ga__solver__cuda.html" title="Forward declaration of the ga_solver_cuda type." alt="" coords="393,592,516,627"/>
+<area shape="poly" id="edge15_Node000011_Node000016" title=" " alt="" coords="303,516,345,547,392,578,414,589,412,594,389,582,342,551,300,520"/>
+<area shape="rect" id="Node000017" href="$structlocusta_1_1pso__solver__cuda.html" title="Forward declaration of the pso_solver_cuda type." alt="" coords="391,651,519,685"/>
+<area shape="poly" id="edge16_Node000011_Node000017" title=" " alt="" coords="289,519,333,577,361,609,392,637,411,648,408,653,389,641,357,612,328,581,285,522"/>
+</map>

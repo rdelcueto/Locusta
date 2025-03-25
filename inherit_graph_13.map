@@ -1,0 +1,11 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$structlocusta_1_1_evaluation_functor.html" title="Abstract base class for evaluation functors." alt="" coords="5,64,175,99"/>
+<area shape="rect" id="Node000001" href="$structlocusta_1_1_evaluation_cuda_functor.html" title=" " alt="" coords="223,5,420,40"/>
+<area shape="poly" id="edge8_Node000000_Node000001" title=" " alt="" coords="172,58,252,37,253,43,173,63"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1_benchmark_functor.html" title="Evaluation functor for benchmark functions." alt="" coords="235,64,407,99"/>
+<area shape="poly" id="edge9_Node000000_Node000002" title=" " alt="" coords="189,79,235,79,235,84,189,84"/>
+<area shape="rect" id="Node000003" href="$structlocusta_1_1_evaluation_cuda_functor.html" title="Abstract base class for CUDA evaluation functors." alt="" coords="223,123,420,157"/>
+<area shape="poly" id="edge10_Node000000_Node000003" title=" " alt="" coords="173,100,253,120,252,125,172,105"/>
+<area shape="rect" id="Node000004" href="$structlocusta_1_1_benchmark_cuda_functor.html" title="CUDA evaluation functor for benchmark functions." alt="" coords="468,123,668,157"/>
+<area shape="poly" id="edge11_Node000003_Node000004" title=" " alt="" coords="434,137,468,137,468,143,434,143"/>
+</map>

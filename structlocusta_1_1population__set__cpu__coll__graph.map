@@ -1,0 +1,5 @@
+<map id="locusta::population_set_cpu&lt; TFloat &gt;" name="locusta::population_set_cpu&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="CPU implementation of the population_set class." alt="" coords="5,88,135,123"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1population__set.html" title="Class for managing a population of candidate solutions." alt="" coords="5,5,135,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="73,54,73,88,67,88,67,54"/>
+</map>

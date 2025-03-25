@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$structlocusta_1_1_selection_cuda_functor.html" title="Abstract base class for selection operators on CUDA." alt="" coords="5,5,196,40"/>
+<area shape="rect" id="Node000001" href="$structlocusta_1_1_tournament_selection_cuda.html" title="CUDA implementation of the tournament selection operator." alt="" coords="244,5,431,40"/>
+<area shape="poly" id="edge42_Node000000_Node000001" title=" " alt="" coords="210,20,244,20,244,25,210,25"/>
+</map>

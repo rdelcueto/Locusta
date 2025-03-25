@@ -1,0 +1,7 @@
+<map id="locusta::DeWholeCrossoverCuda::operator()" name="locusta::DeWholeCrossoverCuda::operator()">
+<area shape="rect" id="Node000001" title="Apply the breeding operator." alt="" coords="5,32,180,67"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a41b0438d7d8c4610449bf616a90c29a1" title="Dispatch function for the whole crossover operator in differential evolution." alt="" coords="228,5,408,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="180,36,214,32,215,38,180,42"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="273,65,363,87"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="180,57,260,67,259,72,180,62"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$structlocusta_1_1_update_speed_cuda_functor.html" title="Abstract base class for updating the speed of particles in particle swarm optimization on CUDA." alt="" coords="5,5,179,40"/>
+<area shape="rect" id="Node000001" href="$structlocusta_1_1_canonical_speed_update_cuda.html" title="CUDA implementation of the canonical speed update operator." alt="" coords="227,5,425,40"/>
+<area shape="poly" id="edge47_Node000000_Node000001" title=" " alt="" coords="192,20,227,20,227,25,192,25"/>
+</map>

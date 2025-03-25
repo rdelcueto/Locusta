@@ -1,0 +1,5 @@
+<map id="locusta::DeTournamentSelectionCuda&lt; TFloat &gt;" name="locusta::DeTournamentSelectionCuda&lt; TFloat &gt;">
+<area shape="rect" id="Node000001" title="CUDA implementation of the tournament selection operator for differential evolution." alt="" coords="5,88,207,123"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1_de_selection_cuda_functor.html" title="Abstract base class for differential evolution selection operators on CUDA." alt="" coords="24,5,188,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="109,54,109,88,103,88,103,54"/>
+</map>

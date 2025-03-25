@@ -1,0 +1,7 @@
+<map id="locusta::DeTournamentSelectionCuda::operator()" name="locusta::DeTournamentSelectionCuda::operator()">
+<area shape="rect" id="Node000001" title="Apply the selection operator." alt="" coords="5,32,207,67"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#ab18085e6ec0f2069342869f4a97bd38d" title="Dispatch function for the tournament selection operator in differential evolution." alt="" coords="255,5,408,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="207,35,241,31,241,36,207,40"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="287,65,376,87"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="207,59,273,67,273,72,207,64"/>
+</map>

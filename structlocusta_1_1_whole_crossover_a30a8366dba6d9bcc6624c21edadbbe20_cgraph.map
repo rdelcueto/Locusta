@@ -1,0 +1,14 @@
+<map id="locusta::WholeCrossover::operator()" name="locusta::WholeCrossover::operator()">
+<area shape="rect" id="Node000001" title="Apply the breeding operator." alt="" coords="5,88,164,123"/>
+<area shape="rect" id="Node000002" href="$structlocusta_1_1_whole_crossover.html#ae9e7fd76d28f49ca0c8d19ba70b33997" title="Crop a gene to fit within the bounds." alt="" coords="212,5,371,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="128,85,233,43,235,48,130,90"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="419,94,508,117"/>
+<area shape="poly" id="edge7_Node000001_Node000003" title=" " alt="" coords="164,101,212,100,371,100,405,101,405,106,371,105,212,105,164,106"/>
+<area shape="rect" id="Node000004" href="$structlocusta_1_1_whole_crossover.html#af1419a71a3347aa6c0c901a0bd116e5a" title="Perform crossover between two genes." alt="" coords="212,115,371,149"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="165,113,199,117,198,123,164,118"/>
+<area shape="rect" id="Node000005" href="$structlocusta_1_1_whole_crossover.html#abb9da8cf24156d494cfeedf59797b33a" title="Mutate a gene." alt="" coords="212,173,371,208"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="125,120,213,159,230,166,228,171,211,164,123,125"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="332,38,372,56,429,85,427,90,369,61,330,43"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="370,117,404,112,405,117,371,122"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="342,171,369,159,433,122,435,127,372,164,344,176"/>
+</map>

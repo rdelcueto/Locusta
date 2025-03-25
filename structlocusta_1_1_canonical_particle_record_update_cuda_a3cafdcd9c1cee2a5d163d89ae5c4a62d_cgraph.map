@@ -1,0 +1,7 @@
+<map id="locusta::CanonicalParticleRecordUpdateCuda::operator()" name="locusta::CanonicalParticleRecordUpdateCuda::operator()">
+<area shape="rect" id="Node000001" title="Apply the particle record update operator." alt="" coords="5,32,196,67"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#ab5bbf5b80a14a65bc22aa822ce825a1d" title="Dispatch function for the canonical particle record update operator." alt="" coords="244,5,408,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="196,35,230,31,231,37,197,41"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="281,65,371,87"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="197,58,268,66,267,72,196,63"/>
+</map>

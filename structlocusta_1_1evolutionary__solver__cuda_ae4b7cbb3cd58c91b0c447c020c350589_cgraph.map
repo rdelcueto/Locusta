@@ -1,0 +1,7 @@
+<map id="locusta::evolutionary_solver_cuda::update_records" name="locusta::evolutionary_solver_cuda::update_records">
+<area shape="rect" id="Node000001" title="Update the best genomes records." alt="" coords="5,20,144,67"/>
+<area shape="rect" id="Node000002" href="$namespacelocusta.html#a17de7ca8a1b170048e12b5ec04ec2efa" title="Apply the osz transformation." alt="" coords="225,5,314,28"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="144,31,211,22,212,27,145,36"/>
+<area shape="rect" id="Node000003" href="$namespacelocusta.html#a401081dff8094cd1fc5dbcbf3ebbfbee" title="Dispatch function for updating the best genomes records." alt="" coords="192,53,347,87"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="145,50,179,55,178,60,144,55"/>
+</map>
