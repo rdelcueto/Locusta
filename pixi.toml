@@ -1,0 +1,34 @@
+[workspace]
+name = "locusta"
+version = "0.1.0"
+description = "Locusta project"
+authors = ["rdelcueto"]
+channels = ["conda-forge", "nvidia"]
+platforms = ["linux-64"]
+
+[system-requirements]
+linux = "4.18"
+cuda = "12"
+
+[dependencies]
+cmake = "*"
+ninja = "*"
+cxx-compiler = "*"
+make = "*"
+gtest = "*" 
+doxygen = "*"
+graphviz = "*"
+cuda = "*" 
+
+[tasks]
+# Configuration task to set up the build directory
+configure = "cmake -B build -G Ninja -DENABLE_CUDA=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON"
+
+# Build task
+build = { cmd = "cmake --build build", depends-on = ["configure"] }
+
+# Task to run CPU-only example tests
+locusta_test_cpu = { cmd = "./build/bin/locustaExamples-cpu --gtest_filter='*CPU*'", depends-on = ["build"] }
+
+# Task to run CUDA example tests (both CPU and GPU filters as requested)
+locusta_test_cuda = { cmd = "./build/bin/locustaExamples-cuda --gtest_filter='*GPU*'", depends-on = ["build"] }
