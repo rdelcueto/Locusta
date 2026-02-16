@@ -89,46 +89,75 @@ The CPU parallel implementation is written using OpenMP, enabling efficient para
 The framework allows for comparing and measuring the performance throughput of each implementation, taking into account the strengths of each targeted architecture. This helps users to choose the best platform for their specific needs and to optimize their evolutionary algorithms for maximum performance.
 
 
-## Building
+## Quick Start
 
-Instructions for building the example application and documentation.
+Locusta uses [Pixi](https://pixi.prefix.dev/) for dependency management and task execution. This is the recommended way to get started.
 
-### Building the Example Application
+1.  **Install Pixi**: Follow the instructions at https://pixi.prefix.dev/.
 
-#### Ubuntu & WSL
+2.  **Run CPU Tests**:
+    This will install all dependencies (CMake, Ninja, GTest, compilers), configure the project, build it, and run the CPU benchmarks.
+    ```bash
+    pixi run locusta_test_cpu
+    ```
 
-1.  Install Dependencies
-    *   CUDA & CUDA Toolkit. See [CUDA Quick start guide](https://docs.nvidia.com/cuda/cuda-quick-start-guide/index.html)
-    *   CMake
-        > sudo apt-get install cmake
-    *   Google Test
-        > sudo apt-get install libtgtest-dev
+3.  **Run CUDA Tests**:
+    If you have a CUDA-capable GPU and drivers installed:
+    ```bash
+    pixi run locusta_test_cuda
+    ```
 
-2.  Run Cmake
-    > cmake -B build .
+4.  **Build Documentation**:
+    Generates Doxygen documentation in `build/html/index.html`.
+    ```bash
+    pixi run doc
+    ```
 
-3.  Compile example application
-    > cd Build
-    > make -j
+## Building with CMake
 
-### Building the Documentation
+If you prefer to manage dependencies manually, you can build Locusta using standard CMake workflows.
 
-#### Ubuntu
+### Requirements
 
-1.  Install Dependencies
-    *   CMake
-        > sudo apt-get install cmake
-    *   Doxygen
-        > sudo apt-get install doxygen
-    *   Graphviz
-        > sudo apt-get install graphviz
+*   CMake >= 3.5
+*   C++14 compliant compiler (GCC, Clang, MSVC)
+*   **Optional**:
+    *   CUDA Toolkit (for GPU support)
+    *   Google Test (for building tests)
+    *   Doxygen & Graphviz (for documentation)
 
-2.  Run Cmake
-    > cmake -B build .
+### Build Instructions
 
-3.  Compile
-    > cd Build
-    > make doc
+1.  **Configure**:
+    ```bash
+    cmake -B build -DENABLE_CUDA=ON -DENABLE_TESTS=ON
+    ```
+    *Options:*
+    - `-DENABLE_CUDA=ON/OFF`: Enable/Disable CUDA support.
+    - `-DENABLE_TESTS=ON/OFF`: Enable/Disable examples and tests.
+    - `-DENABLE_DOCS=ON/OFF`: Enable/Disable documentation.
+
+2.  **Build**:
+    ```bash
+    cmake --build build -j
+    ```
+
+3.  **Run Examples**:
+    ```bash
+    ./build/bin/locustaExamples-cpu
+    # If CUDA is enabled:
+    ./build/bin/locustaExamples-cuda
+    ```
+
+### Building Documentation
+
+To build the documentation (requires Doxygen and Graphviz):
+
+```bash
+cmake -B build -DENABLE_DOCS=ON
+cmake --build build --target doc
+```
+The documentation will be generated in `build/html/index.html`.
 
 ## Implemented Metaheuristic Solvers
 

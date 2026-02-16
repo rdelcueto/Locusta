@@ -22,7 +22,10 @@ cuda = "*"
 
 [tasks]
 # Configuration task to set up the build directory
-configure = "cmake -B build -G Ninja -DENABLE_CUDA=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON"
+configure = "cmake -B build -G Ninja -DENABLE_CUDA=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+
+# Task to specifically prepare the environment for your IDE/LSP
+setup-ide = { cmd = "ln -sf build/compile_commands.json compile_commands.json", depends-on = ["configure"] }
 
 # Build task
 build = { cmd = "cmake --build build", depends-on = ["configure"] }
@@ -32,3 +35,6 @@ locusta_test_cpu = { cmd = "./build/bin/locustaExamples-cpu --gtest_filter='*CPU
 
 # Task to run CUDA example tests (both CPU and GPU filters as requested)
 locusta_test_cuda = { cmd = "./build/bin/locustaExamples-cuda --gtest_filter='*GPU*'", depends-on = ["build"] }
+
+# Task to build documentation
+doc = { cmd = "cmake --build build --target doc", depends-on = ["configure"] }
