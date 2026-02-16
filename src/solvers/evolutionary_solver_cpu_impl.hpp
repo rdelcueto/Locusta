@@ -60,8 +60,8 @@ evolutionary_solver_cpu<TFloat>::setup_solver()
       _max_agent_idx[i] = 0;
       _min_agent_idx[i] = 0;
 
-      _max_agent_fitness[i] = -std::numeric_limits<TFloat>::infinity();
-      _min_agent_fitness[i] = std::numeric_limits<TFloat>::infinity();
+      _max_agent_fitness[i] = static_cast<TFloat>(-std::numeric_limits<float>::infinity());
+      _min_agent_fitness[i] = static_cast<TFloat>(std::numeric_limits<float>::infinity());
 
       for (uint32_t k = 0; k < _DIMENSIONS; ++k) {
         const uint32_t data_idx =
@@ -184,14 +184,15 @@ evolutionary_solver_cpu<TFloat>::crop_vector(TFloat* vec)
         const TFloat low_bound = _LOWER_BOUNDS[k];
         const TFloat high_bound = _UPPER_BOUNDS[k];
 
-        TFloat crop_value = curr_value;
+        float fc = static_cast<float>(curr_value);
+        float fl = static_cast<float>(low_bound);
+        float fh = static_cast<float>(high_bound);
 
-        crop_value = crop_value < low_bound ? low_bound : crop_value;
-        crop_value = crop_value > high_bound ? high_bound : crop_value;
+        float crop_val = fc < fl ? fl : (fc > fh ? fh : fc);
 
         // Crop
-        if (curr_value != crop_value) {
-          vec[data_idx] = crop_value;
+        if (fc != crop_val) {
+          vec[data_idx] = static_cast<TFloat>(crop_val);
         }
       }
     }
@@ -223,8 +224,8 @@ evolutionary_solver_cpu<TFloat>::initialize_vector(TFloat* dst_vec)
         const uint32_t data_idx =
           i * _AGENTS * _DIMENSIONS + j * _DIMENSIONS + k;
 
-        dst_vec[data_idx] =
-          _LOWER_BOUNDS[k] + (_VAR_RANGES[k] * tmp_vec[data_idx]);
+        dst_vec[data_idx] = static_cast<TFloat>(
+          static_cast<float>(_LOWER_BOUNDS[k]) + (static_cast<float>(_VAR_RANGES[k]) * static_cast<float>(tmp_vec[data_idx])));
       }
     }
   }

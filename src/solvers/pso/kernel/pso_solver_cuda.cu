@@ -1,3 +1,6 @@
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #include "../pso_solver_cuda.hpp"
 #include "cuda_common/cuda_helpers.h"
 
@@ -74,4 +77,10 @@ reset_velocity_dispatch<double>(const uint32_t ISLES,
                                 const uint32_t DIMENSIONS,
                                 double* velocity_vector,
                                 double reset_value);
+
+template void reset_velocity_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, __half*, __half);
+template void reset_velocity_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, __nv_bfloat16*, __nv_bfloat16);
+template void reset_velocity_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, __nv_fp8_e4m3*, __nv_fp8_e4m3);
+template void reset_velocity_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, __nv_fp8_e5m2*, __nv_fp8_e5m2);
+
 }

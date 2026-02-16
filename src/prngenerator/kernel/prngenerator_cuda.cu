@@ -48,15 +48,39 @@ gpu_setup_curand_dispatch(uint64_t seed,
   CudaCheckError();
 }
 
-// Explicit specialization
-template void
-gpu_setup_curand_dispatch<float>(uint64_t seed,
-                                 curandState* curand_states,
-                                 uint32_t num_engines);
+template<typename TFloat>
+__global__ void
+gpu_cast_float_to_tfloat(const float* __restrict__ in, TFloat* __restrict__ out, uint32_t n)
+{
+  uint32_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < n) {
+    out[idx] = static_cast<TFloat>(in[idx]);
+  }
+}
 
-template void
-gpu_setup_curand_dispatch<double>(uint64_t seed,
-                                  curandState* curand_states,
-                                  uint32_t num_engines);
+template<typename TFloat>
+void
+gpu_cast_float_to_tfloat_dispatch(const float* in, TFloat* out, uint32_t n)
+{
+  uint32_t threads = 256;
+  uint32_t blocks = (n + threads - 1) / threads;
+  gpu_cast_float_to_tfloat<TFloat><<<blocks, threads>>>(in, out, n);
+  CudaCheckError();
+}
+
+// Explicit specializations
+template void gpu_setup_curand_dispatch<float>(uint64_t, curandState*, uint32_t);
+template void gpu_setup_curand_dispatch<double>(uint64_t, curandState*, uint32_t);
+template void gpu_setup_curand_dispatch<__half>(uint64_t, curandState*, uint32_t);
+template void gpu_setup_curand_dispatch<__nv_bfloat16>(uint64_t, curandState*, uint32_t);
+template void gpu_setup_curand_dispatch<__nv_fp8_e4m3>(uint64_t, curandState*, uint32_t);
+template void gpu_setup_curand_dispatch<__nv_fp8_e5m2>(uint64_t, curandState*, uint32_t);
+
+template void gpu_cast_float_to_tfloat_dispatch<float>(const float*, float*, uint32_t);
+template void gpu_cast_float_to_tfloat_dispatch<double>(const float*, double*, uint32_t);
+template void gpu_cast_float_to_tfloat_dispatch<__half>(const float*, __half*, uint32_t);
+template void gpu_cast_float_to_tfloat_dispatch<__nv_bfloat16>(const float*, __nv_bfloat16*, uint32_t);
+template void gpu_cast_float_to_tfloat_dispatch<__nv_fp8_e4m3>(const float*, __nv_fp8_e4m3*, uint32_t);
+template void gpu_cast_float_to_tfloat_dispatch<__nv_fp8_e5m2>(const float*, __nv_fp8_e5m2*, uint32_t);
 
 }

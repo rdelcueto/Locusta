@@ -3,6 +3,7 @@
 set(HPPFILES
   prngenerator/prngenerator.hpp
   prngenerator/prngenerator_cpu.hpp
+  population/precision_types.hpp
   population/population_set.hpp
   population/population_set_cpu.hpp
   evaluator/evaluator.hpp

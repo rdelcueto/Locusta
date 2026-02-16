@@ -6,8 +6,14 @@
 
 #include <curand.h>
 #include <curand_kernel.h>
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 
 namespace locusta {
+
+template<typename TFloat>
+void gpu_cast_float_to_tfloat_dispatch(const float* in, TFloat* out, uint32_t n);
 
 /**
  * @brief CUDA implementation of the pseudo-random number generator.

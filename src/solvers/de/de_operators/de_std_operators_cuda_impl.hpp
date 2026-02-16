@@ -124,7 +124,7 @@ struct DeWholeCrossoverCuda : DeBreedCudaFunctor<TFloat>
     const TFloat* LOWER_BOUNDS = solver->_DEV_LOWER_BOUNDS;
     const TFloat* UPPER_BOUNDS = solver->_DEV_UPPER_BOUNDS;
 
-    const TFloat DEVIATION = 0.2;
+    const TFloat DEVIATION = static_cast<TFloat>(0.2);
 
     const TFloat* prn_array = const_cast<TFloat*>(
       solver->_prn_sets[de_solver_cuda<TFloat>::BREEDING_SET]);

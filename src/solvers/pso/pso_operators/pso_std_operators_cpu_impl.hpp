@@ -52,7 +52,7 @@ struct CanonicalParticleRecordUpdate : UpdateParticleRecordFunctor<TFloat>
         const uint32_t agent_idx = i * AGENTS + j;
         const TFloat curr_fitness = fitness_array[agent_idx];
         const TFloat candidate_fitness = fitness_record[agent_idx];
-        if (curr_fitness > candidate_fitness) {
+        if (static_cast<float>(curr_fitness) > static_cast<float>(candidate_fitness)) {
           fitness_record[agent_idx] = curr_fitness;
           const uint32_t genome_offset =
             i * AGENTS * DIMENSIONS + j * DIMENSIONS;
@@ -149,9 +149,10 @@ struct CanonicalSpeedUpdate : UpdateSpeedFunctor<TFloat>
 
           const TFloat v_i = velocities[particle_offset + k];
           // Compute new velocity
-          velocities[particle_offset + k] =
-            inertia_factor * v_i + cognitive_factor * c_rnd * (p_i - x_i) +
-            social_factor * s_rnd * (p_g - x_i);
+          velocities[particle_offset + k] = static_cast<TFloat>(
+            static_cast<float>(inertia_factor) * static_cast<float>(v_i) +
+            static_cast<float>(cognitive_factor) * static_cast<float>(c_rnd) * (static_cast<float>(p_i) - static_cast<float>(x_i)) +
+            static_cast<float>(social_factor) * static_cast<float>(s_rnd) * (static_cast<float>(p_g) - static_cast<float>(x_i)));
         }
       }
     }
@@ -205,8 +206,7 @@ struct CanonicalPositionUpdate : UpdatePositionFunctor<TFloat>
 
           const TFloat curr_velocity = velocities[curr_gene];
           const TFloat curr_position = positions[curr_gene];
-
-          new_positions[curr_gene] = curr_position + curr_velocity;
+          new_positions[curr_gene] = static_cast<TFloat>(static_cast<float>(curr_position) + static_cast<float>(curr_velocity));
         }
       }
     }

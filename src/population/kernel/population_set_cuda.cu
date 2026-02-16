@@ -1,3 +1,6 @@
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #include "../population_set_cuda.hpp"
 
 namespace locusta {
@@ -41,9 +44,9 @@ initialize_device_population_set_kernel(const uint32_t NUM_ISLES,
       (VAR_RANGES[i] *
        transformed_data_array[idx + i * NUM_ISLES * NUM_AGENTS]);
     // Resets transformed_data_array values
-    transformed_data_array[idx + i * NUM_ISLES * NUM_AGENTS] = CUDART_NAN_F;
+    transformed_data_array[idx + i * NUM_ISLES * NUM_AGENTS] = static_cast<TFloat>(CUDART_NAN_F);
   }
-  fitness_array[idx] = -(CUDART_INF_F);
+  fitness_array[idx] = static_cast<TFloat>(-(CUDART_INF_F));
 }
 
 /**
@@ -242,5 +245,17 @@ update_records_dispatch<double>(const uint32_t NUM_ISLES,
                                 double* const highest_fitness,
                                 double* const lowest_fitness,
                                 double* const fitness_array);
+
+// Specializations for __half, __nv_bfloat16, __nv_fp8_e4m3, __nv_fp8_e5m2
+template void initialize_device_population_set_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half* const, const __half* const, __half* const, __half* const, __half* const);
+template void update_records_dispatch<__half>(const uint32_t, const uint32_t, uint32_t* const, uint32_t* const, __half* const, __half* const, __half* const);
+
+template void initialize_device_population_set_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16* const, const __nv_bfloat16* const, __nv_bfloat16* const, __nv_bfloat16* const, __nv_bfloat16* const);
+template void update_records_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, uint32_t* const, uint32_t* const, __nv_bfloat16* const, __nv_bfloat16* const, __nv_bfloat16* const);
+
+template void initialize_device_population_set_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3* const, const __nv_fp8_e4m3* const, __nv_fp8_e4m3* const, __nv_fp8_e4m3* const, __nv_fp8_e4m3* const);
+template void update_records_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, uint32_t* const, uint32_t* const, __nv_fp8_e4m3* const, __nv_fp8_e4m3* const, __nv_fp8_e4m3* const);
+
+template void initialize_device_population_set_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2* const, const __nv_fp8_e5m2* const, __nv_fp8_e5m2* const, __nv_fp8_e5m2* const, __nv_fp8_e5m2* const);
 
 }

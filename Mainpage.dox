@@ -42,6 +42,8 @@ See the full dissertation for detailed information and analysis: [Parallelizatio
     
   - **Extensible:** Allows users to define their own custom operators and fitness functions.
 
+  - **Multi-Precision Support:** Supports standard floating-point types (`float`, `double`) as well as NVIDIA's half and quarter precision types (`__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2`) for GPU accelerated workloads.
+
   - **Data-oriented design:**  Recognizes that each platform (CPU, GPU) presents unique data handling challenges, leading to specialized implementations for optimal performance.
 
 \section getting_started Getting Started
@@ -81,54 +83,127 @@ The CPU parallel implementation is written using OpenMP, enabling efficient para
 The framework allows for comparing and measuring the performance throughput of each implementation, taking into account the strengths of each targeted architecture. This helps users to choose the best platform for their specific needs and to optimize their evolutionary algorithms for maximum performance.
 
 
-\section building_sec Building
+\section quick_start Quick Start & Building with Pixi
 
-Instructions for building the example application and documentation.
+Locusta uses [Pixi](https://pixi.prefix.dev/) for cross-platform dependency management, task execution, and package building via the `pixi-build-cmake` backend.
 
-\subsection building_app Building the Example Application
+\subsection pixi_install 1. Install Pixi
+Follow the installation instructions at https://pixi.prefix.dev/.
 
-\subsubsection ubuntu_wsl Ubuntu & WSL
+\subsection pixi_tasks 2. Available Pixi Tasks
 
-1.  Install Dependencies
-    *   CUDA & CUDA Toolkit. See [CUDA Quick start guide](https://docs.nvidia.com/cuda/cuda-quick-start-guide/index.html)
-    *   CMake
-        > sudo apt-get install cmake
-    *   Google Test
-        > sudo apt-get install libtgtest-dev
+* **Configure project**:
+  Configures the build directory using Ninja with Release optimizations, CUDA support, tests, and documentation enabled.
+  \code{.sh}
+  pixi run configure
+  \endcode
 
-2.  Run Cmake
-    > cmake -B build .
+* **IDE / LSP Integration**:
+  Symlinks `build/compile_commands.json` to the root directory for C++ IDEs and LSP engines (e.g., clangd):
+  \code{.sh}
+  pixi run setup-ide
+  \endcode
 
-3.  Compile example application
-    > cd Build
-    > make -j
+* **Build binaries**:
+  Compiles all binaries (solvers, examples, and tests).
+  \code{.sh}
+  pixi run build
+  \endcode
 
-\subsection building_doc Building the Documentation
+* **Build Conda Package (via `pixi-build-cmake`)**:
+  Locusta configures `pixi-build-cmake` as its package build backend. Build the binary package with:
+  \code{.sh}
+  pixi build
+  \endcode
 
-\subsubsection ubuntu Ubuntu
+* **Run CPU Benchmarks & Tests**:
+  Automatically installs all toolchain dependencies, configures, builds, and executes CPU tests:
+  \code{.sh}
+  pixi run locusta_test_cpu
+  \endcode
 
-1.  Install Dependencies
-    *   CMake
-        > sudo apt-get install cmake
-    *   Doxygen
-        > sudo apt-get install doxygen
-    *   Graphviz
-        > sudo apt-get install graphviz
+* **Run CUDA Benchmarks & Tests**:
+  If a CUDA-capable GPU and drivers are present:
+  \code{.sh}
+  pixi run locusta_test_cuda
+  \endcode
 
-2.  Run Cmake
-    > cmake -B build .
+* **Build API Documentation**:
+  Generates Doxygen documentation in `build/html/index.html`:
+  \code{.sh}
+  pixi run doc
+  \endcode
 
-3.  Compile
-    > cd Build
-    > make doc
+\subsection test_filtering 3. Test Filtering (GoogleTest)
 
-\section metaheuristics_sec Implemented Metaheuristic Solvers
+You can filter test execution using standard GoogleTest `--gtest_filter` patterns:
 
-| Metaheuristic Solver           | OMP |  CUDA |
-|--------------------------------|-----|-------|
-| Particle Swarm Optimization    | ✓   | ✓    |
-| Genetic Algorithm              | ✓   | ✓    |
-| Differential Evolution         | ✓   | ✓    |
+\code{.sh}
+# Run only Half Precision tests on GPU:
+./build/bin/locustaExamples-cuda --gtest_filter='*Half*'
+
+# Run only Particle Swarm Optimization tests on CPU:
+./build/bin/locustaExamples-cpu --gtest_filter='*PSO*'
+\endcode
+
+\section building_cmake Building directly with CMake
+
+If you prefer to manage dependencies manually (without Pixi), you can build Locusta directly using CMake.
+
+\subsection requirements Requirements
+
+* CMake >= 3.5
+* C++14 compliant compiler (GCC, Clang, MSVC)
+* **Optional Dependencies**:
+  * CUDA Toolkit >= 12.0 (for GPU acceleration)
+  * Google Test (for unit tests and benchmarks)
+  * OpenMP (for multi-threaded CPU execution)
+  * Doxygen & Graphviz (for building API documentation)
+
+\subsection build_instructions CMake Build Instructions
+
+1. **Configure**:
+   \code{.sh}
+   # Release build (default optimization flags: -O3 -DNDEBUG):
+   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_CUDA=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON
+
+   # Debug build (with debug symbols and no optimization: -O0 -ggdb -g -D_DEBUG):
+   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON
+   \endcode
+   *Configuration Flags:*
+   - `-DCMAKE_BUILD_TYPE=Release/Debug/RelWithDebInfo`: Set build optimization level (`Debug` enables `-O0 -ggdb -g -D_DEBUG`, `Release` enables `-O3 -DNDEBUG`).
+   - `-DENABLE_CUDA=ON/OFF`: Enable or disable CUDA GPU support (default: `ON`).
+   - `-DENABLE_TESTS=ON/OFF`: Enable or disable building tests and examples (default: `ON`).
+   - `-DENABLE_DOCS=ON/OFF`: Enable or disable Doxygen documentation target (default: `ON`).
+   - `-DENABLE_SIMD=ON/OFF`: Enable SIMD vectorization flags (default: `ON`).
+
+2. **Build**:
+   \code{.sh}
+   cmake --build build -j
+   \endcode
+
+3. **Run Executables**:
+   \code{.sh}
+   # Run CPU benchmark example tests:
+   ./build/bin/locustaExamples-cpu
+
+   # Run CUDA benchmark example tests (if ENABLE_CUDA=ON):
+   ./build/bin/locustaExamples-cuda
+   \endcode
+
+4. **Build Documentation**:
+   \code{.sh}
+   cmake --build build --target doc
+   \endcode
+   Output documentation is located at `build/html/index.html`.
+
+\section metaheuristics_sec Implemented Metaheuristic Solvers & Precision Support
+
+| Metaheuristic Solver           | OMP (CPU) | CUDA (GPU) | Precision Types Supported |
+|--------------------------------|-----------|------------|---------------------------|
+| Particle Swarm Optimization    | ✓         | ✓          | `float`, `double`, `__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2` |
+| Genetic Algorithm              | ✓         | ✓          | `float`, `double`, `__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2` |
+| Differential Evolution         | ✓         | ✓          | `float`, `double`, `__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2` |
 
 
 \section license_sec License

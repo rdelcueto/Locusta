@@ -1,3 +1,6 @@
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #include "../ga_std_operators_cuda_impl.hpp"
 #include "cuda_common/cuda_helpers.h"
 
@@ -17,10 +20,7 @@ template<typename TFloat>
 __device__ __forceinline__ TFloat
 GeneCrossOver(const TFloat parentA, const TFloat parentB)
 {
-  TFloat offspring_gene = parentA;
-  offspring_gene *= 0.5;
-  offspring_gene += parentB * 0.5;
-  return offspring_gene;
+  return static_cast<TFloat>(0.5f * static_cast<float>(parentA) + 0.5f * static_cast<float>(parentB));
 }
 
 /**
@@ -37,10 +37,10 @@ GeneCrop(const TFloat offspring_gene,
          const TFloat lower_bound,
          const TFloat upper_bound)
 {
-  TFloat mutated_gene = offspring_gene;
-  mutated_gene = offspring_gene < lower_bound ? lower_bound : offspring_gene;
-  mutated_gene = offspring_gene > upper_bound ? upper_bound : offspring_gene;
-  return mutated_gene;
+  float fo = static_cast<float>(offspring_gene);
+  float fl = static_cast<float>(lower_bound);
+  float fu = static_cast<float>(upper_bound);
+  return static_cast<TFloat>(fo < fl ? fl : (fo > fu ? fu : fo));
 }
 
 /**
@@ -99,7 +99,7 @@ whole_crossover_kernel(const uint32_t DIMENSIONS,
   const TFloat* parentA = parent_genomes + BASE_IDX;
   const TFloat* parentB = parent_genomes + couple_idx + i * AGENTS;
 
-  const bool CROSSOVER_FLAG = (*agent_prns) < CROSSOVER_RATE;
+  const bool CROSSOVER_FLAG = static_cast<float>(*agent_prns) < static_cast<float>(CROSSOVER_RATE);
   agent_prns += THREAD_OFFSET; // Advance pointer
 
   // Cross over
@@ -118,22 +118,22 @@ whole_crossover_kernel(const uint32_t DIMENSIONS,
     const TFloat& range = VAR_RANGES[k];
     const TFloat& lower_bound = LOWER_BOUNDS[k];
     const TFloat& upper_bound = UPPER_BOUNDS[k];
-    const bool GENE_MUTATE_FLAG = (*agent_prns) < MUTATION_RATE;
+    const bool GENE_MUTATE_FLAG = static_cast<float>(*agent_prns) < static_cast<float>(MUTATION_RATE);
     agent_prns += THREAD_OFFSET; // Advance pointer
 
     // Mutate Gene
     if (GENE_MUTATE_FLAG) {
       TFloat mutated_gene = offspring[k * THREAD_OFFSET];
-      TFloat x = 0.0;
+      float x = 0.0f;
       for (uint32_t n = 0; n < DIST_LIMIT; ++n) {
         x += curand_uniform(&local_state);
       }
 
-      x *= INV_DIST_LIMIT;
-      x -= 0.5;
-      x *= DEVIATION * range;
+      x *= static_cast<float>(INV_DIST_LIMIT);
+      x -= 0.5f;
+      x *= static_cast<float>(DEVIATION) * static_cast<float>(range);
 
-      mutated_gene += x;
+      mutated_gene = static_cast<TFloat>(static_cast<float>(mutated_gene) + x);
 
       // Crop gene
       offspring[k * THREAD_OFFSET] =
@@ -184,7 +184,7 @@ whole_crossover_dispatch(const uint32_t ISLES,
 
   curandState* device_generators =
     local_generator->get_device_generator_states();
-  const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
+  const TFloat INV_DIST_LIMIT = static_cast<TFloat>(1.0f / DIST_LIMIT);
 
   whole_crossover_kernel<<<ISLES, AGENTS>>>(DIMENSIONS,
                                             DEVIATION,
@@ -268,7 +268,7 @@ tournament_selection_kernel(const uint32_t SELECTION_SIZE,
       local_candidates[k * THREAD_OFFSET] = k < j ? k : k + 1;
     } else {
       uint32_t r;
-      r = (*agent_prns) * (k + 1);
+      r = static_cast<uint32_t>(static_cast<float>(*agent_prns) * (k + 1));
       agent_prns += THREAD_OFFSET; // Advance pointer
       if (r < SELECTION_SIZE) {
         // Replace
@@ -290,9 +290,9 @@ tournament_selection_kernel(const uint32_t SELECTION_SIZE,
     const uint32_t candidate_idx = local_candidates[k * THREAD_OFFSET];
     const TFloat candidate_fitness = fitness_array[candidate_idx + i * AGENTS];
 
-    switch_flag = (candidate_fitness > best_fitness);
+    switch_flag = (static_cast<float>(candidate_fitness) > static_cast<float>(best_fitness));
 
-    if ((SELECTION_P != 0.0f) && (SELECTION_P >= (*agent_prns))) {
+    if ((static_cast<float>(SELECTION_P) != 0.0f) && (static_cast<float>(SELECTION_P) >= static_cast<float>(*agent_prns))) {
       switch_flag = !switch_flag;
     }
 
@@ -347,4 +347,17 @@ tournament_selection_dispatch<double>(const uint32_t ISLES,
                                       const double* prn_array,
                                       uint32_t* couple_idx_array,
                                       uint32_t* candidates_reservoir_array);
+
+template void whole_crossover_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half, const __half, const __half, const uint32_t, const __half*, const __half*, const __half*, const __half*, const uint32_t*, const __half*, __half*, prngenerator_cuda<__half>*);
+template void tournament_selection_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half, const __half*, const __half*, uint32_t*, uint32_t*);
+
+template void whole_crossover_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16, const __nv_bfloat16, const __nv_bfloat16, const uint32_t, const __nv_bfloat16*, const __nv_bfloat16*, const __nv_bfloat16*, const __nv_bfloat16*, const uint32_t*, const __nv_bfloat16*, __nv_bfloat16*, prngenerator_cuda<__nv_bfloat16>*);
+template void tournament_selection_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16, const __nv_bfloat16*, const __nv_bfloat16*, uint32_t*, uint32_t*);
+
+template void whole_crossover_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3, const __nv_fp8_e4m3, const __nv_fp8_e4m3, const uint32_t, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const uint32_t*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*, prngenerator_cuda<__nv_fp8_e4m3>*);
+template void tournament_selection_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, uint32_t*, uint32_t*);
+
+template void whole_crossover_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2, const __nv_fp8_e5m2, const __nv_fp8_e5m2, const uint32_t, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const uint32_t*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*, prngenerator_cuda<__nv_fp8_e5m2>*);
+template void tournament_selection_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, uint32_t*, uint32_t*);
+
 }

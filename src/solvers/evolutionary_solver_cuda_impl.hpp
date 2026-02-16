@@ -174,12 +174,13 @@ evolutionary_solver_cuda<TFloat>::setup_solver()
     _max_agent_idx[i] = 0;
     _min_agent_idx[i] = 0;
 
-    _max_agent_fitness[i] = -std::numeric_limits<TFloat>::infinity();
-    _min_agent_fitness[i] = std::numeric_limits<TFloat>::infinity();
+    _max_agent_fitness[i] = static_cast<TFloat>(-std::numeric_limits<float>::infinity());
+    _min_agent_fitness[i] = static_cast<TFloat>(std::numeric_limits<float>::infinity());
 
     for (uint32_t k = 0; k < _DIMENSIONS; ++k) {
       const uint32_t data_idx = i * _AGENTS * _DIMENSIONS + 0 * _DIMENSIONS + k;
-      _max_agent_genome[i + k * _ISLES] = _min_agent_genome[i + k * _ISLES] = 0;
+      _max_agent_genome[i + k * _ISLES] = static_cast<TFloat>(0.0);
+      _min_agent_genome[i + k * _ISLES] = static_cast<TFloat>(0.0);
       // TODO: Define correct initialize value.
       // std::numeric_limits<TFloat>::quiet_NaN();
     }

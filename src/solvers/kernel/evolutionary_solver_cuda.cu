@@ -1,3 +1,6 @@
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #include "../evolutionary_solver_cuda.hpp"
 #include "cuda_common/cuda_helpers.h"
 
@@ -285,18 +288,19 @@ crop_vector_kernel(const uint32_t DIMENSIONS,
   for (uint32_t k = 0; k < DIMENSIONS; k++) {
     const uint32_t particle_gene_idx = k * ISLES * AGENTS + locus_offset;
 
+    const TFloat curr_value = vec[particle_gene_idx];
     const TFloat low_bound = LOWER_BOUNDS[k];
     const TFloat high_bound = UPPER_BOUNDS[k];
 
-    const TFloat curr_value = vec[particle_gene_idx];
-    TFloat crop_value = curr_value;
+    float fc = static_cast<float>(curr_value);
+    float fl = static_cast<float>(low_bound);
+    float fh = static_cast<float>(high_bound);
 
-    crop_value = crop_value < low_bound ? low_bound : crop_value;
-    crop_value = crop_value > high_bound ? high_bound : crop_value;
+    float crop_val = fc < fl ? fl : (fc > fh ? fh : fc);
 
     // Crop
-    if (curr_value != crop_value) {
-      vec[particle_gene_idx] = crop_value;
+    if (fc != crop_val) {
+      vec[particle_gene_idx] = static_cast<TFloat>(crop_val);
     }
   }
 }
@@ -345,4 +349,21 @@ crop_vector_dispatch<double>(const uint32_t ISLES,
                              const double* UPPER_BOUNDS,
                              const double* LOWER_BOUNDS,
                              double* vec);
+
+// Specializations for __half, __nv_bfloat16, __nv_fp8_e4m3, __nv_fp8_e5m2
+template void update_records_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half*, const __half*, __half*, __half*, __half*, __half*);
+template void update_records_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16*, const __nv_bfloat16*, __nv_bfloat16*, __nv_bfloat16*, __nv_bfloat16*, __nv_bfloat16*);
+template void update_records_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*, __nv_fp8_e4m3*, __nv_fp8_e4m3*, __nv_fp8_e4m3*);
+template void update_records_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*, __nv_fp8_e5m2*, __nv_fp8_e5m2*, __nv_fp8_e5m2*);
+
+template void initialize_vector_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half*, const __half*, const __half*, __half*);
+template void initialize_vector_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16*, const __nv_bfloat16*, const __nv_bfloat16*, __nv_bfloat16*);
+template void initialize_vector_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*);
+template void initialize_vector_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*);
+
+template void crop_vector_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half*, const __half*, __half*);
+template void crop_vector_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16*, const __nv_bfloat16*, __nv_bfloat16*);
+template void crop_vector_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*);
+template void crop_vector_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*);
+
 }

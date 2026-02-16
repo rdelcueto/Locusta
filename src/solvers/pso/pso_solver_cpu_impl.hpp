@@ -31,9 +31,9 @@ pso_solver_cpu<TFloat>::pso_solver_cpu(population_set_cpu<TFloat>* population,
   _migration_step = 0;
   _migration_size = 1;
   _migration_selection_size = 2;
-  _inertia_factor = 0.5;
-  _cognitive_factor = 2.0;
-  _social_factor = 2.0;
+  _inertia_factor = static_cast<TFloat>(0.5);
+  _cognitive_factor = static_cast<TFloat>(2.0);
+  _social_factor = static_cast<TFloat>(2.0);
 
   // Allocate PSO resources
   const size_t TOTAL_GENES = _population->_TOTAL_GENES;
@@ -104,7 +104,7 @@ pso_solver_cpu<TFloat>::setup_solver()
          temporal_data_fitness,
          TOTAL_AGENTS * sizeof(TFloat));
 
-  const TFloat zero_value = 0;
+  const TFloat zero_value = static_cast<TFloat>(0.0);
   // Initialize Velocity to 0
   std::fill(_velocity_vector, _velocity_vector + TOTAL_GENES, zero_value);
 

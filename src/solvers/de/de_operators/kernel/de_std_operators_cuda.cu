@@ -1,3 +1,6 @@
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #include "../de_std_operators_cuda_impl.hpp"
 #include "cuda_common/cuda_helpers.h"
 
@@ -23,11 +26,9 @@ CrossOverGene(const TFloat difference_a_vector,
               const TFloat base_vector,
               const TFloat DIFFERENTIAL_SCALE_FACTOR)
 {
-  TFloat trial_gene = difference_a_vector;
-  trial_gene -= difference_b_vector;
-  trial_gene *= DIFFERENTIAL_SCALE_FACTOR;
-  trial_gene += base_vector;
-  return trial_gene;
+  float diff = static_cast<float>(difference_a_vector) - static_cast<float>(difference_b_vector);
+  float val = diff * static_cast<float>(DIFFERENTIAL_SCALE_FACTOR) + static_cast<float>(base_vector);
+  return static_cast<TFloat>(val);
 }
 
 /**
@@ -44,10 +45,10 @@ CropGene(const TFloat offspring_gene,
          const TFloat lower_bound,
          const TFloat upper_bound)
 {
-  TFloat cropped_gene;
-  cropped_gene = offspring_gene < lower_bound ? lower_bound : offspring_gene;
-  cropped_gene = offspring_gene > upper_bound ? upper_bound : offspring_gene;
-  return cropped_gene;
+  float fo = static_cast<float>(offspring_gene);
+  float fl = static_cast<float>(lower_bound);
+  float fu = static_cast<float>(upper_bound);
+  return static_cast<TFloat>(fo < fl ? fl : (fo > fu ? fu : fo));
 }
 
 /**
@@ -133,12 +134,12 @@ de_whole_crossover_kernel(const uint32_t DIMENSIONS,
   const TFloat* difference_b_vector = current_vectors + DIFFERENCE_B_OFFSET;
   const TFloat* base_vector = current_vectors + BASE_VECTOR_OFFSET;
 
-  const bool FORCE_PARAMETER_COPY_FLAG = (*agent_prns);
+  const bool FORCE_PARAMETER_COPY_FLAG = (static_cast<float>(*agent_prns) != 0.0f);
   agent_prns += THREAD_OFFSET; // Advance pointer
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
     TFloat trial_gene;
-    const bool CROSSOVER_FLAG = (*agent_prns) < CROSSOVER_RATE;
+    const bool CROSSOVER_FLAG = static_cast<float>(*agent_prns) < static_cast<float>(CROSSOVER_RATE);
     agent_prns += THREAD_OFFSET; // Advance pointer
 
     if ((k != FORCE_PARAMETER_COPY_FLAG && !CROSSOVER_FLAG)) {
@@ -212,16 +213,6 @@ de_whole_crossover_dispatch(const uint32_t ISLES,
   CudaCheckError();
 }
 
-/**
- * @brief CUDA kernel for the random selection operator in differential
- * evolution.
- *
- * This kernel selects random vectors from the population.
- *
- * @param prn_array Array of pseudo-random numbers.
- * @param recombination_idx_array Array of recombination indices.
- * @param recombination_reservoir_array Array of recombination reservoirs.
- */
 template void
 de_whole_crossover_dispatch<float>(const uint32_t ISLES,
                                    const uint32_t AGENTS,
@@ -292,7 +283,7 @@ de_random_selection_kernel(const TFloat* __restrict__ prn_array,
       local_candidates[k * THREAD_OFFSET] = k < j ? k : k + 1;
     } else {
       uint32_t r;
-      r = (*agent_prns) * (k + 1);
+      r = static_cast<uint32_t>(static_cast<float>(*agent_prns) * (k + 1));
       agent_prns += THREAD_OFFSET; // Advance pointer
       if (r < SAMPLE_SIZE) {
         // Replace
@@ -334,4 +325,17 @@ de_random_selection_dispatch<double>(const uint32_t ISLES,
                                      const double* prn_array,
                                      uint32_t* recombination_idx_array,
                                      uint32_t* recombination_reservoir_array);
+
+template void de_whole_crossover_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half, const __half, const __half*, const __half*, const __half*, const __half*, const uint32_t*, const __half*, __half*, prngenerator_cuda<__half>*);
+template void de_random_selection_dispatch<__half>(const uint32_t, const uint32_t, const __half*, uint32_t*, uint32_t*);
+
+template void de_whole_crossover_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16, const __nv_bfloat16, const __nv_bfloat16*, const __nv_bfloat16*, const __nv_bfloat16*, const __nv_bfloat16*, const uint32_t*, const __nv_bfloat16*, __nv_bfloat16*, prngenerator_cuda<__nv_bfloat16>*);
+template void de_random_selection_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const __nv_bfloat16*, uint32_t*, uint32_t*);
+
+template void de_whole_crossover_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3, const __nv_fp8_e4m3, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const uint32_t*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*, prngenerator_cuda<__nv_fp8_e4m3>*);
+template void de_random_selection_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const __nv_fp8_e4m3*, uint32_t*, uint32_t*);
+
+template void de_whole_crossover_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2, const __nv_fp8_e5m2, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const uint32_t*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*, prngenerator_cuda<__nv_fp8_e5m2>*);
+template void de_random_selection_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const __nv_fp8_e5m2*, uint32_t*, uint32_t*);
+
 }

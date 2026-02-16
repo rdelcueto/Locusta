@@ -96,22 +96,22 @@ struct BenchmarkFunctor : EvaluationFunctor<TFloat>
 
     switch (function_id) {
       case ROT_ELLIPS:
-        _EVALUATION_BIAS = -1300.0;
+        _EVALUATION_BIAS = static_cast<TFloat>(-1300.0f);
         _ROT_FLAG = 1;
         break;
       case ROT_BENT_CIGAR:
-        _EVALUATION_BIAS = -1200.0;
+        _EVALUATION_BIAS = static_cast<TFloat>(-1200.0f);
         _ROT_FLAG = 1;
         break;
       case ROT_DISCUS:
-        _EVALUATION_BIAS = -1100.0;
+        _EVALUATION_BIAS = static_cast<TFloat>(-1100.0f);
         _ROT_FLAG = 1;
         break;
       case DIFF_POWERS:
-        _EVALUATION_BIAS = -1000.0;
+        _EVALUATION_BIAS = static_cast<TFloat>(-1000.0f);
         break;
       default: // SPHERE DEFAULT FUNC
-        _EVALUATION_BIAS = -1400.0;
+        _EVALUATION_BIAS = static_cast<TFloat>(-1400.0f);
         break;
     }
 

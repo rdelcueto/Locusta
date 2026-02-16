@@ -62,13 +62,16 @@ evaluator_cuda<TFloat>::bound_map(BoundMapKind bound_mapping_method,
                                   const TFloat& l,
                                   TFloat& x)
 {
-  if (x == x) {
+  float fx = static_cast<float>(x);
+  float fu = static_cast<float>(u);
+  float fl = static_cast<float>(l);
+  if (fx == fx) {
     switch (bound_mapping_method) {
       case CropBounds: /// Out of bounds Crop
-        x = x > u ? u : x < l ? l : x;
+        x = fx > fu ? u : (fx < fl ? l : x);
         break;
       case MirrorBounds: /// Out of bounds Mirror
-        x = x > u ? (2 * u - x) : x < l ? (2 * l - x) : x;
+        x = fx > fu ? static_cast<TFloat>(2.0f * fu - fx) : (fx < fl ? static_cast<TFloat>(2.0f * fl - fx) : x);
         break;
       case IgnoreBounds: /// Out of bounds Error
         break;

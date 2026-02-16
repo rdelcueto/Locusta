@@ -56,9 +56,9 @@ ga_solver_cuda<TFloat>::ga_solver_cuda(population_set_cuda<TFloat>* population,
   _migration_size = 1;
   _migration_selection_size = 2;
   _selection_size = 2;
-  _selection_stochastic_factor = 0;
-  _crossover_rate = 0.9;
-  _mutation_rate = 0.1;
+  _selection_stochastic_factor = static_cast<TFloat>(0.0);
+  _crossover_rate = static_cast<TFloat>(0.9);
+  _mutation_rate = static_cast<TFloat>(0.1);
 
   // Allocate GA resources
   const size_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;

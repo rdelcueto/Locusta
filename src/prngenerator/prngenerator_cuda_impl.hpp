@@ -80,30 +80,24 @@ template<typename TFloat>
 void
 prngenerator_cuda<TFloat>::_generate(const uint32_t n, TFloat* output)
 {
-  // #ifdef _DEBUG
-  //     __cudaCheckMemory();
-  //     std::cout << "Generating " << n << " numbers." << std::endl;
-  // #endif
+  float* dev_float = nullptr;
+  CudaSafeCall(cudaMalloc((void**)&dev_float, n * sizeof(float)));
+  CurandSafeCall(curandGenerateUniform(_dev_bulk_prng_engine, dev_float, n));
+  gpu_cast_float_to_tfloat_dispatch(dev_float, output, n);
+  CudaSafeCall(cudaFree(dev_float));
+}
+
+template<>
+inline void
+prngenerator_cuda<float>::_generate(const uint32_t n, float* output)
+{
   CurandSafeCall(curandGenerateUniform(_dev_bulk_prng_engine, output, n));
 }
 
-/**
- * @brief Generate pseudo-random numbers (double precision specialization).
- *
- * This method generates \p n pseudo-random numbers with double precision and
- * stores them in the \p output array.
- *
- * @param n Number of pseudo-random numbers to generate.
- * @param output Output array to store the generated pseudo-random numbers.
- */
 template<>
 inline void
 prngenerator_cuda<double>::_generate(const uint32_t n, double* output)
 {
-  // #ifdef _DEBUG
-  //     __cudaCheckMemory();
-  //     std::cout << "Generating " << n << " numbers." << std::endl;
-  // #endif
   CurandSafeCall(curandGenerateUniformDouble(_dev_bulk_prng_engine, output, n));
 }
 

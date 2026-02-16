@@ -5,6 +5,8 @@
 #include <omp.h>
 #include <random>
 
+#include <type_traits>
+
 #include "prngenerator.hpp"
 
 namespace locusta {
@@ -22,7 +24,11 @@ struct prngenerator_cpu : prngenerator<TFloat>
 {
 
   typedef std::mt19937 mersenne_twister;
-  typedef std::uniform_real_distribution<TFloat> uni_real_distribution;
+  typedef typename std::conditional<
+    std::is_floating_point<TFloat>::value,
+    std::uniform_real_distribution<TFloat>,
+    std::uniform_real_distribution<float>
+  >::type uni_real_distribution;
 
   /**
    * @brief Construct a new prngenerator_cpu object with a single engine.

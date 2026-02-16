@@ -48,9 +48,9 @@ pso_solver_cuda<TFloat>::pso_solver_cuda(
   _migration_step = 0;
   _migration_size = 1;
   _migration_selection_size = 2;
-  _inertia_factor = 0.5;
-  _cognitive_factor = 2.0;
-  _social_factor = 2.0;
+  _inertia_factor = static_cast<TFloat>(0.5);
+  _cognitive_factor = static_cast<TFloat>(2.0);
+  _social_factor = static_cast<TFloat>(2.0);
 
   // Allocate PSO resources
   const size_t TOTAL_GENES = _population->_TOTAL_GENES;
@@ -128,7 +128,7 @@ pso_solver_cuda<TFloat>::setup_solver()
                           TOTAL_AGENTS * sizeof(TFloat),
                           cudaMemcpyDeviceToDevice));
 
-  const TFloat zero_value = 0;
+  const TFloat zero_value = static_cast<TFloat>(0.0);
   reset_velocity_dispatch(
     _ISLES, _AGENTS, _DIMENSIONS, _dev_velocity_vector, zero_value);
 

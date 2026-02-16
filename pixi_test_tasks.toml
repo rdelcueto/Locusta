@@ -1,0 +1,7 @@
+
+[tasks.test_configure]
+cmd = "cmake -B build_temp -S . -G Ninja -DBUILD_EXAMPLES=ON"
+
+[tasks.test_build]
+cmd = "cmake --build build_temp"
+depends-on = ["test_configure"]

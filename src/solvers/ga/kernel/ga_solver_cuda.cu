@@ -1,3 +1,6 @@
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #include "../ga_solver_cuda.hpp"
 #include "cuda_common/cuda_helpers.h"
 
@@ -103,5 +106,10 @@ elite_population_replace_dispatch<double>(const uint32_t ISLES,
                                           const double* max_agent_fitness,
                                           double* genomes,
                                           double* fitness);
+
+template void elite_population_replace_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const uint32_t*, const __half*, const __half*, __half*, __half*);
+template void elite_population_replace_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const uint32_t*, const __nv_bfloat16*, const __nv_bfloat16*, __nv_bfloat16*, __nv_bfloat16*);
+template void elite_population_replace_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const uint32_t*, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*, __nv_fp8_e4m3*);
+template void elite_population_replace_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const uint32_t*, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*, __nv_fp8_e5m2*);
 
 }

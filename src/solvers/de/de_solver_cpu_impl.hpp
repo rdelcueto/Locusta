@@ -32,9 +32,9 @@ de_solver_cpu<TFloat>::de_solver_cpu(population_set_cpu<TFloat>* population,
   _migration_size = 1;
   _migration_selection_size = 2;
   _selection_size = 2;
-  _selection_stochastic_factor = 0;
-  _crossover_rate = 0.9;
-  _differential_scale_factor = 0.5;
+  _selection_stochastic_factor = static_cast<TFloat>(0.0);
+  _crossover_rate = static_cast<TFloat>(0.9);
+  _differential_scale_factor = static_cast<TFloat>(0.5);
 
   // Allocate GA resources
   const size_t TOTAL_AGENTS = _population->_TOTAL_AGENTS;

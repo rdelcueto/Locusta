@@ -1,13 +1,26 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 
 project(locusta)
 
-# The project version number.
+# Project Version
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
-set(VERSION_MINOR   1   CACHE STRING "Project minor version number.")
+set(VERSION_MINOR   2   CACHE STRING "Project minor version number.")
 set(VERSION_PATCH   0   CACHE STRING "Project patch version number.")
 mark_as_advanced(VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
 
+# Default to Release build type if not specified
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+# Conda environment sysroot detection for linkers
+if(NOT CMAKE_SYSROOT)
+  if(DEFINED ENV{PREFIX} AND EXISTS "$ENV{PREFIX}/x86_64-conda-linux-gnu/sysroot")
+    set(CMAKE_SYSROOT "$ENV{PREFIX}/x86_64-conda-linux-gnu/sysroot")
+  elseif(DEFINED ENV{CONDA_PREFIX} AND EXISTS "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot")
+    set(CMAKE_SYSROOT "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot")
+  endif()
+endif()
 
 # Options
 option(ENABLE_CUDA "Enable CUDA support" ON)
@@ -32,120 +45,83 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-# C/C++ Flags
-#set(CMAKE_C_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
-#set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
-#set(CMAKE_C_FLAGS_RELEASE "-O3")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC")
-
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g -pg -D_DEBUG -fdump-tree-all")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -pg -fdump-tree-all")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ffast-math -march=native -mtune=native -fPIC")
+# C/C++ Optimization & Debug Flags
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g -D_DEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ffast-math -march=native -mtune=native -mprefer-vector-width=512 -fPIC")
 
 # OpenMP
 find_package(OpenMP)
-if (OPENMP_FOUND)
- set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
- set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+if(OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-# ENABLE_SIMD
-option(ENABLE_SIMD
-  "On to compile with SIMD instructions."
-  ON
-  )
+# SIMD & Vectorization Options
+option(ENABLE_SIMD "Compile with SIMD instructions." ON)
 
-if (ENABLE_SIMD)
-  #set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
-  #set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fopt-info-vec-all")
-else ()
+if(NOT ENABLE_SIMD)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-tree-vectorize -fno-tree-loop-vectorize")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-tree-vectorize -fno-tree-loop-vectorize")
 endif()
 
 # OpenMP SIMD
-if (OPENMP_FOUND)
-  if (ENABLE_SIMD)
+if(OPENMP_FOUND)
+  if(ENABLE_SIMD)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp-simd")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-simd")
   else()
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-openmp-simd")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-openmp-simd")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-openmp-simd")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-openmp-simd")
   endif()
 endif()
 
-# ENABLE Prefetched loops
-option(ENABLE_PREFETCH
-  "On to compile with loop prefetching."
-  ON
-  )
+# Software Loop Prefetching (Disabled by default; software prefetch instructions degrade Intel hardware prefetchers)
+option(ENABLE_PREFETCH "Compile with loop prefetching." OFF)
 
-if (ENABLE_PREFETCH)
+if(ENABLE_PREFETCH)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprefetch-loop-arrays")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprefetch-loop-arrays")
 endif()
 
-option(BUILD_SHARED_LIBS
-  "On to build shared libraries, off for static libraries."
-  OFF
-  )
+option(BUILD_SHARED_LIBS "On to build shared libraries, off for static libraries." OFF)
 
-## Set the directory where the binaries will be stored
-set(EXECUTABLE_OUTPUT_PATH
-  ${PROJECT_BINARY_DIR}/bin
-  CACHE PATH
-  "Directory where all executables will be stored"
-  )
+# Binaries & Libraries Output Directory
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory where all executables will be stored")
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE PATH "Directory where all the libraries will be stored")
 
-## Set the directory where the libraries will be stored
-set(LIBRARY_OUTPUT_PATH
-  ${PROJECT_BINARY_DIR}/lib
-  CACHE PATH
-  "Directory where all the libraries will be stored"
-  )
+set(locusta_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 
-set(locusta_INCLUDE_DIRS
-  ${CMAKE_SOURCE_DIR}/include
-  )
+add_subdirectory(src)
 
-
-# include_directories(${locusta_INCLUDE_DIRS})
-
-
-add_subdirectory (src)
-
-if (ENABLE_TESTS)
+if(ENABLE_TESTS)
   find_package(GTest REQUIRED)
   include_directories(${GTEST_INCLUDE_DIRS})
 
   enable_testing()
-
   add_subdirectory(examples)
 endif()
-
 
 # Documentation
 if(ENABLE_DOCS)
   find_package(Doxygen REQUIRED)
 
-    if(NOT DOXYGEN_FOUND)
-        message(FATAL_ERROR "Doxygen is needed to build the documentation.")
-    endif()
+  if(NOT DOXYGEN_FOUND)
+    message(FATAL_ERROR "Doxygen is needed to build the documentation.")
+  endif()
 
-    set(doxy_main_page "${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox")
-    set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-    set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+  set(doxy_main_page "${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox")
+  set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+  set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+  configure_file(${doxyfile_in} ${doxyfile} @ONLY)
 
-    add_custom_target(doc
-        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating API documentation with Doxygen"
-        VERBATIM)
+  add_custom_target(doc
+    COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM)
 
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc)
-
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc OPTIONAL)
 endif()
-

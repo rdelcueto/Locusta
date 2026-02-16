@@ -1,3 +1,6 @@
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #include "../pso_std_operators_cuda_impl.hpp"
 #include "cuda_common/cuda_helpers.h"
 
@@ -36,7 +39,7 @@ canonical_particle_record_update_kernel(const uint32_t DIMENSIONS,
   const TFloat curr_fitness = fitness[locus_offset];
   const TFloat candidate_fitness = record_fitness[locus_offset];
 
-  if (curr_fitness > candidate_fitness) {
+  if (static_cast<float>(curr_fitness) > static_cast<float>(candidate_fitness)) {
     record_fitness[locus_offset] = curr_fitness;
     // Each thread iterates over a single particle.
     for (uint32_t k = 0; k < DIMENSIONS; k++) {
@@ -152,9 +155,10 @@ canonical_speed_update_kernel(const uint32_t DIMENSIONS,
     const TFloat c_rnd = prng_vector[particle_gene_idx];
     const TFloat s_rnd = prng_vector[particle_gene_idx + prng_offset];
 
-    velocities[particle_gene_idx] = inertia_factor * v_i +
-                                    cognitive_factor * c_rnd * (p_i - x_i) +
-                                    social_factor * s_rnd * (p_g[k] - x_i);
+    velocities[particle_gene_idx] = static_cast<TFloat>(
+      static_cast<float>(inertia_factor) * static_cast<float>(v_i) +
+      static_cast<float>(cognitive_factor) * static_cast<float>(c_rnd) * (static_cast<float>(p_i) - static_cast<float>(x_i)) +
+      static_cast<float>(social_factor) * static_cast<float>(s_rnd) * (static_cast<float>(p_g[k]) - static_cast<float>(x_i)));
   }
 }
 
@@ -261,7 +265,7 @@ canonical_position_update_kernel(const uint32_t DIMENSIONS,
     const TFloat curr_velocity = velocities[particle_gene_idx];
     const TFloat curr_position = positions[particle_gene_idx];
 
-    new_positions[particle_gene_idx] = curr_position + curr_velocity;
+    new_positions[particle_gene_idx] = static_cast<TFloat>(static_cast<float>(curr_position) + static_cast<float>(curr_velocity));
   }
 }
 
@@ -307,4 +311,21 @@ canonical_position_update_dispatch<double>(const uint32_t ISLES,
                                            const double* velocities,
                                            const double* positions,
                                            double* new_positions);
+
+template void canonical_particle_update_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half*, const __half*, __half*, __half*);
+template void canonical_speed_update_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half, const __half, const __half, const __half*, const __half*, const __half*, const __half*, __half*);
+template void canonical_position_update_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const __half*, const __half*, __half*);
+
+template void canonical_particle_update_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16*, const __nv_bfloat16*, __nv_bfloat16*, __nv_bfloat16*);
+template void canonical_speed_update_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16, const __nv_bfloat16, const __nv_bfloat16, const __nv_bfloat16*, const __nv_bfloat16*, const __nv_bfloat16*, const __nv_bfloat16*, __nv_bfloat16*);
+template void canonical_position_update_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const __nv_bfloat16*, const __nv_bfloat16*, __nv_bfloat16*);
+
+template void canonical_particle_update_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*, __nv_fp8_e4m3*);
+template void canonical_speed_update_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3, const __nv_fp8_e4m3, const __nv_fp8_e4m3, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*);
+template void canonical_position_update_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*);
+
+template void canonical_particle_update_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*, __nv_fp8_e5m2*);
+template void canonical_speed_update_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2, const __nv_fp8_e5m2, const __nv_fp8_e5m2, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*);
+template void canonical_position_update_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*);
+
 }

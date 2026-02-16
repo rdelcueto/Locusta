@@ -1,0 +1,70 @@
+[workspace]
+name = "locusta"
+version = "0.2.0"
+description = "Locusta project"
+authors = ["rdelcueto"]
+channels = ["conda-forge", "nvidia"]
+platforms = ["linux-64"]
+preview = ["pixi-build"]
+
+[package]
+name = "locusta"
+version = "0.2.0"
+description = "Locusta project"
+authors = ["rdelcueto"]
+
+[package.build]
+backend = { name = "pixi-build-cmake", version = "*" }
+
+[package.build-dependencies]
+cxx-compiler = "*"
+sysroot_linux-64 = "*"
+
+[package.host-dependencies]
+cmake = "*"
+ninja = "*"
+make = "*"
+gtest = "*"
+cuda = "*"
+
+[package.build.config]
+extra-args = [
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DENABLE_CUDA=ON",
+    "-DENABLE_TESTS=ON",
+    "-DENABLE_DOCS=ON"
+]
+
+[system-requirements]
+linux = "4.18"
+cuda = "12"
+
+[dependencies]
+cmake = "*"
+ninja = "*"
+cxx-compiler = "*"
+sysroot_linux-64 = "*"
+make = "*"
+gtest = "*"
+doxygen = "*"
+graphviz = "*"
+cuda = "*"
+
+[tasks]
+# Configure build directory with Ninja and Release optimizations
+configure = "cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_CUDA=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+
+# Task to specifically prepare the environment for your IDE/LSP
+setup-ide = { cmd = "ln -sf build/compile_commands.json compile_commands.json", depends-on = ["configure"] }
+
+# Build all binaries
+build = { cmd = "cmake --build build", depends-on = ["configure"] }
+
+# Run CPU-only benchmark tests
+locusta_test_cpu = { cmd = "./build/bin/locustaExamples-cpu --gtest_filter='*CPU*'", depends-on = ["build"] }
+
+# Run CUDA GPU benchmark tests
+locusta_test_cuda = { cmd = "./build/bin/locustaExamples-cuda --gtest_filter='*GPU*'", depends-on = ["build"] }
+
+# Task to build documentation
+doc = { cmd = "cmake --build build --target doc", depends-on = ["configure"] }

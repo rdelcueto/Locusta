@@ -26,8 +26,8 @@ struct WholeCrossover : GaBreedFunctor<TFloat>
 {
 
   const uint32_t DIST_LIMIT = 3;
-  const TFloat INV_DIST_LIMIT = 1.0 / DIST_LIMIT;
-  const TFloat DEVIATION = 0.2;
+  const TFloat INV_DIST_LIMIT = static_cast<TFloat>(1.0 / DIST_LIMIT);
+  const TFloat DEVIATION = static_cast<TFloat>(0.2);
 
   /**
    * @brief Perform crossover between two genes.
@@ -42,9 +42,9 @@ struct WholeCrossover : GaBreedFunctor<TFloat>
                               const TFloat GENE_CROSSOVER_FLAG)
   {
 
-    TFloat offspring_gene = (0.5f * parent_gene_a) + (0.5f * parent_gene_b);
+    TFloat offspring_gene = static_cast<TFloat>(0.5f * static_cast<float>(parent_gene_a) + 0.5f * static_cast<float>(parent_gene_b));
 
-    if (unlikely(!GENE_CROSSOVER_FLAG)) {
+    if (unlikely(static_cast<float>(GENE_CROSSOVER_FLAG) == 0.0f)) {
       offspring_gene = parent_gene_a;
     }
 
@@ -63,18 +63,18 @@ struct WholeCrossover : GaBreedFunctor<TFloat>
                            const TFloat* agents_prns,
                            const TFloat gene_range)
   {
-    TFloat x = 0.0;
+    float x = 0.0f;
     TFloat mutated_gene = offspring_gene;
 
     for (uint32_t n = 0; n < DIST_LIMIT; ++n) {
-      x += *(agents_prns + n);
+      x += static_cast<float>(*(agents_prns + n));
     }
 
-    x *= INV_DIST_LIMIT;
-    x -= 0.5;
-    x *= DEVIATION * gene_range;
+    x *= static_cast<float>(INV_DIST_LIMIT);
+    x -= 0.5f;
+    x *= static_cast<float>(DEVIATION) * static_cast<float>(gene_range);
 
-    mutated_gene += x;
+    mutated_gene = static_cast<TFloat>(static_cast<float>(offspring_gene) + x);
     return mutated_gene;
   }
 
@@ -91,12 +91,13 @@ struct WholeCrossover : GaBreedFunctor<TFloat>
                          const TFloat upper_bound)
   {
 
-    TFloat cropped_value = offspring_gene;
+    float fg = static_cast<float>(offspring_gene);
+    float fl = static_cast<float>(lower_bound);
+    float fu = static_cast<float>(upper_bound);
 
-    cropped_value = cropped_value < lower_bound ? lower_bound : cropped_value;
-    cropped_value = cropped_value > upper_bound ? upper_bound : cropped_value;
+    float cropped_value = fg < fl ? fl : (fg > fu ? fu : fg);
 
-    return cropped_value;
+    return static_cast<TFloat>(cropped_value);
   }
 
   /**
@@ -265,7 +266,7 @@ struct TournamentSelection : GaSelectionFunctor<TFloat>
             candidates[k] = k < j ? k : k + 1;
           } else {
             uint32_t r;
-            r = (*agents_prns++) * (k + 1);
+            r = static_cast<uint32_t>(static_cast<float>(*agents_prns++) * (k + 1));
             if (r < SELECTION_SIZE) {
               // Replace
               candidates[r] = k < j ? k : k + 1;
@@ -287,9 +288,9 @@ struct TournamentSelection : GaSelectionFunctor<TFloat>
         //   SELECTION_SIZE - 1
         for (uint32_t k = 1; k < SELECTION_SIZE; ++k) {
           const TFloat candidate = candidates_fitness[k];
-          switch_flag = (candidate > best_fitness);
+          switch_flag = (static_cast<float>(candidate) > static_cast<float>(best_fitness));
 
-          if ((SELECTION_P != 0.0f) && (SELECTION_P >= (*agents_prns))) {
+          if ((static_cast<float>(SELECTION_P) != 0.0f) && (static_cast<float>(SELECTION_P) >= static_cast<float>(*agents_prns))) {
             switch_flag = !switch_flag;
           }
 

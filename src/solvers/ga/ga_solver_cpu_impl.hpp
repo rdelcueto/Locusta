@@ -32,9 +32,9 @@ ga_solver_cpu<TFloat>::ga_solver_cpu(population_set_cpu<TFloat>* population,
   _migration_size = 1;
   _migration_selection_size = 2;
   _selection_size = 2;
-  _selection_stochastic_factor = 0;
-  _crossover_rate = 0.9;
-  _mutation_rate = 0.1;
+  _selection_stochastic_factor = static_cast<TFloat>(0.0);
+  _crossover_rate = static_cast<TFloat>(0.9);
+  _mutation_rate = static_cast<TFloat>(0.1);
 
   // Allocate GA resources
   const size_t TOTAL_GENES = _population->_TOTAL_GENES;

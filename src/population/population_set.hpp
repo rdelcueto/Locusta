@@ -3,6 +3,8 @@
 
 #include <inttypes.h>
 
+#include "precision_types.hpp"
+
 namespace locusta {
 
 /**

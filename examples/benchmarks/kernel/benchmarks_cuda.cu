@@ -1,4 +1,7 @@
 #include <math_functions.h>
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <cuda_fp8.h>
 
 #include "../benchmarks_cuda.hpp"
 #include "cuda_common/cuda_helpers.h"
@@ -22,7 +25,7 @@ template<typename TFloat>
 __device__ inline TFloat
 scale(const TFloat x, const TFloat scale)
 {
-  return x * scale;
+  return static_cast<TFloat>(static_cast<float>(x) * static_cast<float>(scale));
 }
 /**
  * @brief Shift a value.
@@ -37,7 +40,7 @@ template<typename TFloat>
 __device__ inline TFloat
 shift(const TFloat x, const TFloat o)
 {
-  return x - o;
+  return static_cast<TFloat>(static_cast<float>(x) - static_cast<float>(o));
 }
 
 /**
@@ -55,11 +58,10 @@ template<typename TFloat>
 __device__ inline TFloat
 asy(const TFloat x, const TFloat beta, const uint32_t i, const uint32_t k)
 {
-  const TFloat ONE = 1.0;
-  // const TFloat HALF = 0.5;
-  if (x > 0) {
-    // return pow(x, ONE + beta*i/(k-1)*pow(x, HALF));
-    return pow(x, ONE + beta * i / (k - 1) * sqrt(x));
+  float fx = static_cast<float>(x);
+  float fbeta = static_cast<float>(beta);
+  if (fx > 0.0f) {
+    return static_cast<TFloat>(powf(fx, 1.0f + fbeta * i / (k - 1) * sqrtf(fx)));
   } else {
     return x;
   }
@@ -79,24 +81,25 @@ template<typename TFloat>
 __device__ inline TFloat
 osz(const TFloat x, const uint32_t i, const uint32_t k)
 {
-  const TFloat c3 = 0.049;
+  const float c3 = 0.049f;
+  float fx = static_cast<float>(x);
 
   if (i == 0 || i == (k - 1)) {
 
-    if (x == 0) {
-      return 0;
+    if (fx == 0.0f) {
+      return static_cast<TFloat>(0.0);
     } else {
-      const TFloat xx = log(fabs(x));
-      if (x > 0) {
-        const TFloat c1 = 10;
-        const TFloat c2 = 7.9;
+      const float xx = logf(fabsf(fx));
+      if (fx > 0.0f) {
+        const float c1 = 10.0f;
+        const float c2 = 7.9f;
 
-        return exp(xx + c3 * (sin(c1 * xx) + sin(c2 * xx)));
+        return static_cast<TFloat>(expf(xx + c3 * (sinf(c1 * xx) + sinf(c2 * xx))));
       } else {
-        const TFloat c1 = 5.5;
-        const TFloat c2 = 3.1;
+        const float c1 = 5.5f;
+        const float c2 = 3.1f;
 
-        return -exp(xx + c3 * (sin(c1 * xx) + sin(c2 * xx)));
+        return static_cast<TFloat>(-expf(xx + c3 * (sinf(c1 * xx) + sinf(c2 * xx))));
       }
     }
 
@@ -118,280 +121,218 @@ sphere(const uint32_t DIMENSIONS,
        const uint32_t DIMENSION_OFFSET,
        const TFloat* evaluation_vector)
 {
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
     reduction_sum += x * x;
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
-/**
- * @brief High Conditioned Elliptic function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 ellips(const uint32_t DIMENSIONS,
        const uint32_t DIMENSION_OFFSET,
        const TFloat* evaluation_vector)
 {
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 6.0;
+  const float c1 = 10.0f;
+  const float c2 = 6.0f;
 
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
-    reduction_sum += pow(c1, c2 * k / (DIMENSIONS - 1)) * osz_x * osz_x;
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float osz_x = static_cast<float>(osz<TFloat>(static_cast<TFloat>(x), k, DIMENSIONS));
+    reduction_sum += powf(c1, c2 * k / (DIMENSIONS - 1)) * osz_x * osz_x;
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
-/**
- * @brief Bent Cigar function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 bent_cigar(const uint32_t DIMENSIONS,
            const uint32_t DIMENSION_OFFSET,
            const TFloat* evaluation_vector)
 {
-  const TFloat beta = 0.5;
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 6.0;
-  TFloat reduction_sum = 0;
+  const float beta = 0.5f;
+  const float c1 = 10.0f;
+  const float c2 = 6.0f;
+  float reduction_sum = 0.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float asy_x = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x), static_cast<TFloat>(beta), k, DIMENSIONS));
     if (k == 0) {
       reduction_sum += asy_x * asy_x;
     } else {
-      reduction_sum += pow(c1, c2) * asy_x * asy_x;
+      reduction_sum += powf(c1, c2) * asy_x * asy_x;
     }
   }
 
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
-/**
- * @brief Discus function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 discus(const uint32_t DIMENSIONS,
        const uint32_t DIMENSION_OFFSET,
        const TFloat* evaluation_vector)
 {
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 6.0;
+  const float c1 = 10.0f;
+  const float c2 = 6.0f;
 
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float osz_x = static_cast<float>(osz<TFloat>(static_cast<TFloat>(x), k, DIMENSIONS));
     if (k == 0) {
-      reduction_sum += pow(c1, c2) * osz_x * osz_x;
+      reduction_sum += powf(c1, c2) * osz_x * osz_x;
     } else {
       reduction_sum += osz_x * osz_x;
     }
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
-/**
- * @brief Different Powers function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 diff_powers(const uint32_t DIMENSIONS,
             const uint32_t DIMENSION_OFFSET,
             const TFloat* evaluation_vector)
 {
-  const TFloat ONE = 1.0;
-  // const TFloat c1 = 0.5;
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    reduction_sum += pow(fabs(x), 2 + 4 * k / (DIMENSIONS - 1) * ONE);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    reduction_sum += powf(fabsf(x), 2.0f + 4.0f * k / (DIMENSIONS - 1));
   }
 
-  // reduction_sum = pow(reduction_sum, c1);
-  reduction_sum = sqrt(reduction_sum);
-  return reduction_sum;
+  reduction_sum = sqrtf(reduction_sum);
+  return static_cast<TFloat>(reduction_sum);
 }
-/**
- * @brief Rosenbrock’s function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 rosenbrock(const uint32_t DIMENSIONS,
            const uint32_t DIMENSION_OFFSET,
            const TFloat* evaluation_vector)
 {
-  TFloat reduction_sum = 0.0;
-  TFloat x = evaluation_vector[0] + 1;
+  float reduction_sum = 0.0f;
+  float x = static_cast<float>(evaluation_vector[0]) + 1.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS - 1; ++k) {
-    const TFloat x_1 = evaluation_vector[(k + 1) * DIMENSION_OFFSET] + 1;
-    const TFloat y = x * x - x_1;
-    const TFloat z = x - 1.0;
-    reduction_sum += 100 * y * y + z * z;
+    const float x_1 = static_cast<float>(evaluation_vector[(k + 1) * DIMENSION_OFFSET]) + 1.0f;
+    const float y = x * x - x_1;
+    const float z = x - 1.0f;
+    reduction_sum += 100.0f * y * y + z * z;
 
-    x = x_1; // Update x value.
+    x = x_1;
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
-/**
- * @brief Schaffers F7 function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 schaffer(const uint32_t DIMENSIONS,
          const uint32_t DIMENSION_OFFSET,
          const TFloat* evaluation_vector)
 {
-  const TFloat beta = 0.5;
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 1.0;
-  const TFloat c3 = 2.0;
-  // const TFloat c4 = 0.5;
-  const TFloat c5 = 0.2;
+  const float beta = 0.5f;
+  const float c1 = 10.0f;
+  const float c2 = 1.0f;
+  const float c3 = 2.0f;
+  const float c5 = 0.2f;
 
-  const TFloat x = evaluation_vector[0];
-  const TFloat asy_x = asy<TFloat>(x, beta, 0, DIMENSIONS);
-  // TFloat y = asy_x * pow(c1, c2*0/(DIMENSIONS-1)/c3);
-  TFloat y = asy_x * c1;
+  const float x = static_cast<float>(evaluation_vector[0]);
+  const float asy_x = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x), static_cast<TFloat>(beta), 0, DIMENSIONS));
+  float y = asy_x * c1;
 
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
   for (uint32_t k = 0; k < DIMENSIONS - 1; ++k) {
-    const TFloat x_1 = evaluation_vector[(k + 1) * DIMENSION_OFFSET];
-    const TFloat asy_x_1 = asy<TFloat>(x_1, beta, (k + 1), DIMENSIONS);
-    const TFloat y_1 = asy_x_1 * pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
-    const TFloat z = sqrt(y * y + y_1 * y_1);
+    const float x_1 = static_cast<float>(evaluation_vector[(k + 1) * DIMENSION_OFFSET]);
+    const float asy_x_1 = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x_1), static_cast<TFloat>(beta), (k + 1), DIMENSIONS));
+    const float y_1 = asy_x_1 * powf(c1, c2 * k / (DIMENSIONS - 1) / c3);
+    const float z = sqrtf(y * y + y_1 * y_1);
 
-    const TFloat tmp = sin(50 * pow(z, c5));
-    // reduction_sum += pow(z, c4) + pow(z, c4) * tmp*tmp;
-    reduction_sum += sqrt(z) + sqrt(z) * tmp * tmp;
+    const float tmp = sinf(50.0f * powf(z, c5));
+    reduction_sum += sqrtf(z) + sqrtf(z) * tmp * tmp;
 
     y = y_1;
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
-/**
- * @brief Ackley’s function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 ackley(const uint32_t DIMENSIONS,
        const uint32_t DIMENSION_OFFSET,
        const TFloat* evaluation_vector)
 {
-  const TFloat PI = 3.1415926535;
-  const TFloat E = 2.7182818284;
-  const TFloat beta = 0.5;
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 1.0;
-  const TFloat c3 = 2.0;
-  const TFloat c4 = 0.2;
-  const TFloat c5 = 20.0;
+  const float PI = 3.1415926535f;
+  const float E = 2.7182818284f;
+  const float beta = 0.5f;
+  const float c1 = 10.0f;
+  const float c2 = 1.0f;
+  const float c3 = 2.0f;
+  const float c4 = 0.2f;
+  const float c5 = 20.0f;
 
-  TFloat reduction_sum_a = 0.0;
-  TFloat reduction_sum_b = 0.0;
+  float reduction_sum_a = 0.0f;
+  float reduction_sum_b = 0.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
-    const TFloat y = asy_x * pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float asy_x = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x), static_cast<TFloat>(beta), k, DIMENSIONS));
+    const float y = asy_x * powf(c1, c2 * k / (DIMENSIONS - 1) / c3);
 
     reduction_sum_a += y * y;
-    reduction_sum_b += cos(c3 * PI * y);
+    reduction_sum_b += cosf(c3 * PI * y);
   }
 
-  reduction_sum_a = -c4 * sqrt(reduction_sum_a / DIMENSIONS);
+  reduction_sum_a = -c4 * sqrtf(reduction_sum_a / DIMENSIONS);
   reduction_sum_b /= DIMENSIONS;
 
-  return E - c5 * exp(reduction_sum_a) - exp(reduction_sum_b) + c5;
+  return static_cast<TFloat>(E - c5 * expf(reduction_sum_a) - expf(reduction_sum_b) + c5);
 }
-/**
- * @brief Weierstrass function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 weierstrass(const uint32_t DIMENSIONS,
             const uint32_t DIMENSION_OFFSET,
             const TFloat* evaluation_vector)
 {
-  const TFloat PI = 3.14159;
-  const TFloat beta = 0.5;
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 1.0;
-  const TFloat c3 = 2.0;
-  const TFloat c4 = 0.5;
+  const float PI = 3.14159f;
+  const float beta = 0.5f;
+  const float c1 = 10.0f;
+  const float c2 = 1.0f;
+  const float c3 = 2.0f;
+  const float c4 = 0.5f;
 
-  const TFloat a = 0.5;
-  const TFloat b = 3.0;
+  const float a = 0.5f;
+  const float b = 3.0f;
 
   const uint32_t it_max = 20;
 
-  TFloat reduction_sum_a = 0.0;
-  TFloat reduction_sum_b;
-  TFloat reduction_sum_c;
+  float reduction_sum_a = 0.0f;
+  float reduction_sum_b;
+  float reduction_sum_c;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    reduction_sum_b = 0.0;
-    reduction_sum_c = 0.0;
+    reduction_sum_b = 0.0f;
+    reduction_sum_c = 0.0f;
 
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
-    const TFloat y = asy_x * pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float asy_x = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x), static_cast<TFloat>(beta), k, DIMENSIONS));
+    const float y = asy_x * powf(c1, c2 * k / (DIMENSIONS - 1) / c3);
 
-    TFloat pow_a = 1;
-    TFloat pow_b = 1;
+    float pow_a = 1.0f;
+    float pow_b = 1.0f;
 
     for (uint32_t it = 0; it <= it_max; ++it) {
-      reduction_sum_b += pow_a * cos(c3 * PI * pow_b * (y + c4));
-      reduction_sum_c += pow_a * cos(c3 * PI * pow_b * c4);
+      reduction_sum_b += pow_a * cosf(c3 * PI * pow_b * (y + c4));
+      reduction_sum_c += pow_a * cosf(c3 * PI * pow_b * c4);
 
       pow_a *= a;
       pow_b *= b;
@@ -399,48 +340,33 @@ weierstrass(const uint32_t DIMENSIONS,
 
     reduction_sum_a += reduction_sum_b - DIMENSIONS * reduction_sum_c;
   }
-  return reduction_sum_a;
+  return static_cast<TFloat>(reduction_sum_a);
 }
-/**
- * @brief Griewank’s function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
+
 template<typename TFloat>
 __device__ inline TFloat
 griewank(const uint32_t DIMENSIONS,
          const uint32_t DIMENSION_OFFSET,
          const TFloat* evaluation_vector)
 {
-  const TFloat c1 = 100.0;
-  const TFloat c2 = 1.0;
-  const TFloat c3 = 2.0;
-  const TFloat c4 = 1.0;
-  const TFloat c5 = 4000.0;
+  const float c1 = 100.0f;
+  const float c2 = 1.0f;
+  const float c3 = 2.0f;
+  const float c4 = 1.0f;
+  const float c5 = 4000.0f;
 
-  TFloat reduction_sum = 0.0;
-  TFloat reduction_prod = 1.0;
+  float reduction_sum = 0.0f;
+  float reduction_prod = 1.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat y = x * pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float y = x * powf(c1, c2 * k / (DIMENSIONS - 1) / c3);
     reduction_sum += y * y;
-    reduction_prod *= cos(y / sqrt(c2 + k));
+    reduction_prod *= cosf(y / sqrtf(c2 + k));
   }
-  return c4 + reduction_sum / c5 - reduction_prod;
+  return static_cast<TFloat>(c4 + reduction_sum / c5 - reduction_prod);
 }
 
-/**
- * @brief Rastrigin’s function.
- *
- * @param DIMENSIONS Number of dimensions.
- * @param DIMENSION_OFFSET Offset for the dimension index.
- * @param evaluation_vector Vector of values to evaluate.
- * @return Result of the evaluation.
- */
 template<typename TFloat>
 __device__ inline TFloat
 rastrigin(const uint32_t DIMENSIONS,
@@ -448,25 +374,20 @@ rastrigin(const uint32_t DIMENSIONS,
           const TFloat* evaluation_vector)
 {
 
-  const TFloat PI = 3.14159;
-  const TFloat alpha = 10.0;
-  const TFloat beta = 0.2;
-  const TFloat c1 = 1.0;
-  const TFloat c2 = 2.0;
-  const TFloat c3 = 10.0;
+  const float PI = 3.14159f;
+  const float alpha = 10.0f;
+  const float c1 = 1.0f;
+  const float c2 = 2.0f;
+  const float c3 = 10.0f;
 
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
-    const TFloat asy_x = asy<TFloat>(osz_x, beta, k, DIMENSIONS);
-    const TFloat y = pow(alpha, c1 * k / (DIMENSIONS - 1) / 2);
-
-    reduction_sum += (y * y - c3 * cos(c2 * PI * y)) + c3;
+    const float y = powf(alpha, c1 * k / (DIMENSIONS - 1) / 2.0f);
+    reduction_sum += (y * y - c3 * cosf(c2 * PI * y)) + c3;
   }
 
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
 
 /**
@@ -513,7 +434,7 @@ benchmark_kernel(const uint32_t DIMENSIONS,
   const uint32_t OFFSET = ISLES * AGENTS;
 
   const TFloat* genome = evaluation_data + genome_base;
-  TFloat result = 0;
+  TFloat result = static_cast<TFloat>(0.0f);
 
   TFloat (*benchmark_function)(const uint32_t, const uint32_t, const TFloat*);
 
@@ -561,10 +482,11 @@ benchmark_kernel(const uint32_t DIMENSIONS,
     result = benchmark_function(DIMENSIONS, OFFSET, genome);
   }
 
-  result += EVALUATION_BIAS;
+  result = static_cast<TFloat>(static_cast<float>(result) + static_cast<float>(EVALUATION_BIAS));
 
   const uint32_t fitness_idx = isle * AGENTS + agent;
-  evaluation_results[fitness_idx] = F_NEGATE_EVALUATION ? -result : result;
+  float fres = static_cast<float>(result);
+  evaluation_results[fitness_idx] = F_NEGATE_EVALUATION ? static_cast<TFloat>(-fres) : result;
 }
 
 /**
@@ -650,4 +572,10 @@ benchmark_dispatch<double>(const uint32_t ISLES,
                            const double* evaluation_data,
                            double* evaluation_results,
                            prngenerator_cuda<double>* local_generator);
+
+template void benchmark_dispatch<__half>(const uint32_t, const uint32_t, const uint32_t, const bool, const uint32_t, const __half, const __half*, const bool, const __half*, const __half*, __half*, prngenerator_cuda<__half>*);
+template void benchmark_dispatch<__nv_bfloat16>(const uint32_t, const uint32_t, const uint32_t, const bool, const uint32_t, const __nv_bfloat16, const __nv_bfloat16*, const bool, const __nv_bfloat16*, const __nv_bfloat16*, __nv_bfloat16*, prngenerator_cuda<__nv_bfloat16>*);
+template void benchmark_dispatch<__nv_fp8_e4m3>(const uint32_t, const uint32_t, const uint32_t, const bool, const uint32_t, const __nv_fp8_e4m3, const __nv_fp8_e4m3*, const bool, const __nv_fp8_e4m3*, const __nv_fp8_e4m3*, __nv_fp8_e4m3*, prngenerator_cuda<__nv_fp8_e4m3>*);
+template void benchmark_dispatch<__nv_fp8_e5m2>(const uint32_t, const uint32_t, const uint32_t, const bool, const uint32_t, const __nv_fp8_e5m2, const __nv_fp8_e5m2*, const bool, const __nv_fp8_e5m2*, const __nv_fp8_e5m2*, __nv_fp8_e5m2*, prngenerator_cuda<__nv_fp8_e5m2>*);
+
 }

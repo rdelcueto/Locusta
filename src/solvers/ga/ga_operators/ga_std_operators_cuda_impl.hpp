@@ -77,7 +77,7 @@ template<typename TFloat>
 struct WholeCrossoverCuda : BreedCudaFunctor<TFloat>
 {
 
-  const TFloat DEVIATION = 0.2;
+  const TFloat DEVIATION = static_cast<TFloat>(0.2);
   const uint32_t DIST_LIMIT = 3;
 
   /**

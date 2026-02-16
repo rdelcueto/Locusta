@@ -51,7 +51,7 @@ prngenerator_cpu<TFloat>::_initialize_engines(uint64_t seed)
 
   for (uint32_t i = 0; i < _NUM_ENGINES; ++i) {
     std::minstd_rand0 seeder(seed + i);
-    TFloat local_seed = seeder();
+    uint32_t local_seed = seeder();
     this->_prng_engines[i].seed(local_seed);
     this->_prng_distributions[i];
   }
@@ -80,7 +80,7 @@ prngenerator_cpu<TFloat>::_generate(const uint32_t n, TFloat* output)
 
 #pragma omp for
     for (uint32_t i = 0; i < n; ++i) {
-      output[i] = local_real_distribution(local_prng_engine);
+      output[i] = static_cast<TFloat>(local_real_distribution(local_prng_engine));
     }
   }
 }

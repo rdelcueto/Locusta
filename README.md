@@ -50,6 +50,8 @@ See the full dissertation for detailed information and analysis: [Parallelizatio
     
   - **Extensible:** Allows users to define their own custom operators and fitness functions.
 
+  - **Multi-Precision Support:** Supports standard floating-point types (`float`, `double`) as well as NVIDIA's half and quarter precision types (`__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2`) for GPU accelerated workloads.
+
   - **Data-oriented design:**  Recognizes that each platform (CPU, GPU) presents unique data handling challenges, leading to specialized implementations for optimal performance.
 
 ## Getting Started
@@ -89,54 +91,129 @@ The CPU parallel implementation is written using OpenMP, enabling efficient para
 The framework allows for comparing and measuring the performance throughput of each implementation, taking into account the strengths of each targeted architecture. This helps users to choose the best platform for their specific needs and to optimize their evolutionary algorithms for maximum performance.
 
 
-## Building
+## Quick Start & Building with Pixi
 
-Instructions for building the example application and documentation.
+Locusta uses [Pixi](https://pixi.prefix.dev/) for cross-platform dependency management, task execution, and package building via the `pixi-build-cmake` backend.
 
-### Building the Example Application
+### 1. Install Pixi
+Follow the installation instructions at https://pixi.prefix.dev/.
 
-#### Ubuntu & WSL
+### 2. Available Pixi Tasks
 
-1.  Install Dependencies
-    *   CUDA & CUDA Toolkit. See [CUDA Quick start guide](https://docs.nvidia.com/cuda/cuda-quick-start-guide/index.html)
-    *   CMake
-        > sudo apt-get install cmake
-    *   Google Test
-        > sudo apt-get install libtgtest-dev
+* **Configure project**:
+  Configures the build directory using Ninja with Release optimizations, CUDA support, tests, and documentation enabled.
+  ```bash
+  pixi run configure
+  ```
 
-2.  Run Cmake
-    > cmake -B build .
+* **IDE / LSP Integration**:
+  Symlinks `build/compile_commands.json` to the root directory for C++ IDEs and LSP engines (e.g., clangd):
+  ```bash
+  pixi run setup-ide
+  ```
 
-3.  Compile example application
-    > cd Build
-    > make -j
+* **Build binaries**:
+  Compiles all binaries (solvers, examples, and tests).
+  ```bash
+  pixi run build
+  ```
 
-### Building the Documentation
+* **Build Conda Package (via `pixi-build-cmake`)**:
+  Locusta configures `pixi-build-cmake` as its package build backend. Build the binary package with:
+  ```bash
+  pixi build
+  ```
 
-#### Ubuntu
+* **Run CPU Benchmarks & Tests**:
+  Automatically installs all toolchain dependencies, configures, builds, and executes CPU tests:
+  ```bash
+  pixi run locusta_test_cpu
+  ```
 
-1.  Install Dependencies
-    *   CMake
-        > sudo apt-get install cmake
-    *   Doxygen
-        > sudo apt-get install doxygen
-    *   Graphviz
-        > sudo apt-get install graphviz
+* **Run CUDA Benchmarks & Tests**:
+  If a CUDA-capable GPU and drivers are present:
+  ```bash
+  pixi run locusta_test_cuda
+  ```
 
-2.  Run Cmake
-    > cmake -B build .
+* **Build API Documentation**:
+  Generates Doxygen documentation in `build/html/index.html`:
+  ```bash
+  pixi run doc
+  ```
 
-3.  Compile
-    > cd Build
-    > make doc
+### 3. Test Filtering (GoogleTest)
 
-## Implemented Metaheuristic Solvers
+You can filter test execution using standard GoogleTest `--gtest_filter` patterns:
 
-| Metaheuristic Solver           | OMP |  CUDA |
-|--------------------------------|-----|-------|
-| Particle Swarm Optimization    | ✓   | ✓    |
-| Genetic Algorithm              | ✓   | ✓    |
-| Differential Evolution         | ✓   | ✓    |
+```bash
+# Run only Half Precision tests on GPU:
+./build/bin/locustaExamples-cuda --gtest_filter='*Half*'
+
+# Run only Particle Swarm Optimization tests on CPU:
+./build/bin/locustaExamples-cpu --gtest_filter='*PSO*'
+```
+
+---
+
+## Building directly with CMake
+
+If you prefer to manage dependencies manually (without Pixi), you can build Locusta directly using CMake.
+
+### Requirements
+
+* CMake >= 3.5
+* C++14 compliant compiler (GCC, Clang, MSVC)
+* **Optional Dependencies**:
+  * CUDA Toolkit >= 12.0 (for GPU acceleration)
+  * Google Test (for unit tests and benchmarks)
+  * OpenMP (for multi-threaded CPU execution)
+  * Doxygen & Graphviz (for building API documentation)
+
+### CMake Build Instructions
+
+1. **Configure**:
+   ```bash
+   # Release build (default optimization flags: -O3 -DNDEBUG):
+   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_CUDA=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON
+
+   # Debug build (with debug symbols and no optimization: -O0 -ggdb -g -D_DEBUG):
+   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=ON -DENABLE_TESTS=ON -DENABLE_DOCS=ON
+   ```
+   *Configuration Flags:*
+   - `-DCMAKE_BUILD_TYPE=Release/Debug/RelWithDebInfo`: Set build optimization level (`Debug` enables `-O0 -ggdb -g -D_DEBUG`, `Release` enables `-O3 -DNDEBUG`).
+   - `-DENABLE_CUDA=ON/OFF`: Enable or disable CUDA GPU support (default: `ON`).
+   - `-DENABLE_TESTS=ON/OFF`: Enable or disable building tests and examples (default: `ON`).
+   - `-DENABLE_DOCS=ON/OFF`: Enable or disable Doxygen documentation target (default: `ON`).
+   - `-DENABLE_SIMD=ON/OFF`: Enable SIMD vectorization flags (default: `ON`).
+
+2. **Build**:
+   ```bash
+   cmake --build build -j
+   ```
+
+3. **Run Executables**:
+   ```bash
+   # Run CPU benchmark example tests:
+   ./build/bin/locustaExamples-cpu
+
+   # Run CUDA benchmark example tests (if ENABLE_CUDA=ON):
+   ./build/bin/locustaExamples-cuda
+   ```
+
+4. **Build Documentation**:
+   ```bash
+   cmake --build build --target doc
+   ```
+   Output documentation is located at `build/html/index.html`.
+
+## Implemented Metaheuristic Solvers & Precision Support
+
+| Metaheuristic Solver           | OMP (CPU) | CUDA (GPU) | Precision Types Supported |
+|--------------------------------|-----------|------------|---------------------------|
+| Particle Swarm Optimization    | ✓         | ✓          | `float`, `double`, `__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2` |
+| Genetic Algorithm              | ✓         | ✓          | `float`, `double`, `__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2` |
+| Differential Evolution         | ✓         | ✓          | `float`, `double`, `__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2` |
 
 ## License
 

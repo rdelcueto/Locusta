@@ -36,10 +36,9 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
                               const TFloat base_vector,
                               const TFloat DIFFERENTIAL_SCALE_FACTOR)
   {
-    TFloat trial_gene = difference_a_vector - difference_b_vector;
-    trial_gene *= DIFFERENTIAL_SCALE_FACTOR;
-    trial_gene += base_vector;
-    return trial_gene;
+    float diff = static_cast<float>(difference_a_vector) - static_cast<float>(difference_b_vector);
+    float val = diff * static_cast<float>(DIFFERENTIAL_SCALE_FACTOR) + static_cast<float>(base_vector);
+    return static_cast<TFloat>(val);
   }
 
   /**
@@ -54,10 +53,11 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
                          const TFloat lower_bound,
                          const TFloat upper_bound)
   {
-    TFloat cropped_gene = trial_gene;
-    cropped_gene = trial_gene < lower_bound ? lower_bound : trial_gene;
-    cropped_gene = trial_gene > upper_bound ? upper_bound : trial_gene;
-    return cropped_gene;
+    float ft = static_cast<float>(trial_gene);
+    float fl = static_cast<float>(lower_bound);
+    float fu = static_cast<float>(upper_bound);
+    float cropped = ft < fl ? fl : (ft > fu ? fu : ft);
+    return static_cast<TFloat>(cropped);
   }
 
   /**
@@ -127,16 +127,8 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
 
         const TFloat* agents_prns =
           prn_array + i * AGENTS * GENOME_RND_OFFSET + j * GENOME_RND_OFFSET;
-        const bool FORCE_PARAMETER_COPY_FLAG = (*agents_prns++);
+        const bool FORCE_PARAMETER_COPY_FLAG = (static_cast<float>(*agents_prns++) != 0.0f);
 
-        // TODO: Profile case:
-        //         Assume CROSSOVER operations for all genes/dimensions. (with
-        //         SIMD, this should be very fast)
-        //         Then only replace genes/dimensions with those in target
-        //         vector, if the criteria wasn't met
-        //         Since this case is the least probable, this implementation
-        //         might help branch predictions performance,
-        //         while taking advantage of SIMD operations
         const TFloat* difference_a_vector =
           current_vectors + DIFFERENCE_A_OFFSET;
         const TFloat* difference_b_vector =
@@ -145,7 +137,7 @@ struct DeWholeCrossover : DeBreedFunctor<TFloat>
 
 #pragma omp simd
         for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-          const bool CROSSOVER_FLAG = (agents_prns[k]) >= CROSSOVER_RATE;
+          const bool CROSSOVER_FLAG = static_cast<float>(agents_prns[k]) >= static_cast<float>(CROSSOVER_RATE);
           const TFloat& lower_bound = solver->_LOWER_BOUNDS[k];
           const TFloat& upper_bound = solver->_UPPER_BOUNDS[k];
 
@@ -322,7 +314,7 @@ struct DeTournamentSelection : DeSelectionFunctor<TFloat>
         // AGENTS - (1 + RANDOM_VECTORS)
 
         for (uint32_t k = RANDOM_VECTORS; k < iter_limit; ++k) {
-          selection_idx = (AGENTS - 1) * (*agents_prns);
+          selection_idx = static_cast<uint32_t>((AGENTS - 1) * static_cast<float>(*agents_prns));
           agents_prns++;
 
           if (selection_idx <= RANDOM_VECTORS) {
@@ -345,9 +337,9 @@ struct DeTournamentSelection : DeSelectionFunctor<TFloat>
 
         for (uint32_t k = 1; k < RANDOM_VECTORS; ++k) {
           const TFloat candidate = candidates_fitness[k];
-          switch_flag = (candidate > best_fitness);
+          switch_flag = (static_cast<float>(candidate) > static_cast<float>(best_fitness));
 
-          if ((SELECTION_P != 0.0f) && (SELECTION_P >= (*agents_prns))) {
+          if ((static_cast<float>(SELECTION_P) != 0.0f) && (static_cast<float>(SELECTION_P) >= static_cast<float>(*agents_prns))) {
             switch_flag = !switch_flag;
           }
 

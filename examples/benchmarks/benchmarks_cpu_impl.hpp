@@ -16,7 +16,7 @@ template<typename TFloat>
 inline TFloat
 scale(const TFloat x, const TFloat scale)
 {
-  return x * scale;
+  return static_cast<TFloat>(static_cast<float>(x) * static_cast<float>(scale));
 }
 /**
  * @brief Shift a value.
@@ -31,7 +31,7 @@ template<typename TFloat>
 inline TFloat
 shift(const TFloat x, const TFloat o)
 {
-  return x - o;
+  return static_cast<TFloat>(static_cast<float>(x) - static_cast<float>(o));
 }
 /**
  * @brief Apply the asy transformation.
@@ -48,9 +48,11 @@ template<typename TFloat>
 inline TFloat
 asy(const TFloat x, const TFloat beta, const uint32_t i, const uint32_t k)
 {
-  if (x > 0) {
-    // return pow(x, 1 + beta*i/(k-1)*pow(x, 0.5));
-    return pow(x, 1 + beta * i / (k - 1) * sqrt(x));
+  float fx = static_cast<float>(x);
+  float fbeta = static_cast<float>(beta);
+  if (fx > 0.0f) {
+    float res = std::pow(fx, 1.0f + fbeta * i / (k - 1) * std::sqrt(fx));
+    return static_cast<TFloat>(res);
   } else {
     return x;
   }
@@ -69,24 +71,25 @@ template<typename TFloat>
 inline TFloat
 osz(const TFloat x, const uint32_t i, const uint32_t k)
 {
-  const TFloat c3 = 0.049;
+  const float c3 = 0.049f;
+  float fx = static_cast<float>(x);
 
   if (i == 0 || i == (k - 1)) {
 
-    if (x == 0) {
-      return 0;
+    if (fx == 0.0f) {
+      return static_cast<TFloat>(0.0f);
     } else {
-      const TFloat xx = log(fabs(x));
-      if (x > 0) {
-        const TFloat c1 = 10;
-        const TFloat c2 = 7.9;
+      const float xx = std::log(std::abs(fx));
+      if (fx > 0.0f) {
+        const float c1 = 10.0f;
+        const float c2 = 7.9f;
 
-        return exp(xx + c3 * (sin(c1 * xx) + sin(c2 * xx)));
+        return static_cast<TFloat>(std::exp(xx + c3 * (std::sin(c1 * xx) + std::sin(c2 * xx))));
       } else {
-        const TFloat c1 = 5.5;
-        const TFloat c2 = 3.1;
+        const float c1 = 5.5f;
+        const float c2 = 3.1f;
 
-        return -exp(xx + c3 * (sin(c1 * xx) + sin(c2 * xx)));
+        return static_cast<TFloat>(-std::exp(xx + c3 * (std::sin(c1 * xx) + std::sin(c2 * xx))));
       }
     }
 
@@ -108,15 +111,13 @@ sphere(const uint32_t DIMENSIONS,
        const uint32_t DIMENSION_OFFSET,
        const TFloat* evaluation_vector)
 {
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
-#pragma omp simd reduction(+ : reduction_sum)                                  \
-  linear(evaluation_vector : DIMENSION_OFFSET * sizeof(TFloat))
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
     reduction_sum += x * x;
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
 
 /**
@@ -133,19 +134,17 @@ ellips(const uint32_t DIMENSIONS,
        const uint32_t DIMENSION_OFFSET,
        const TFloat* evaluation_vector)
 {
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 6.0;
+  const float c1 = 10.0f;
+  const float c2 = 6.0f;
 
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
-#pragma omp simd reduction(+ : reduction_sum)                                  \
-  linear(evaluation_vector : DIMENSION_OFFSET * sizeof(TFloat))
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
-    reduction_sum += pow(c1, c2 * k / (DIMENSIONS - 1)) * osz_x * osz_x;
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float osz_x = static_cast<float>(osz<TFloat>(static_cast<TFloat>(x), k, DIMENSIONS));
+    reduction_sum += std::pow(c1, c2 * k / (DIMENSIONS - 1)) * osz_x * osz_x;
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
 /**
  * @brief Bent Cigar function.
@@ -161,24 +160,22 @@ bent_cigar(const uint32_t DIMENSIONS,
            const uint32_t DIMENSION_OFFSET,
            const TFloat* evaluation_vector)
 {
-  const TFloat beta = 0.5;
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 6.0;
-  TFloat reduction_sum = 0;
+  const float beta = 0.5f;
+  const float c1 = 10.0f;
+  const float c2 = 6.0f;
+  float reduction_sum = 0.0f;
 
-#pragma omp simd reduction(+ : reduction_sum)                                  \
-  linear(evaluation_vector : DIMENSION_OFFSET * sizeof(TFloat))
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float asy_x = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x), static_cast<TFloat>(beta), k, DIMENSIONS));
     if (k == 0) {
       reduction_sum += asy_x * asy_x;
     } else {
-      reduction_sum += pow(c1, c2) * asy_x * asy_x;
+      reduction_sum += std::pow(c1, c2) * asy_x * asy_x;
     }
   }
 
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
 /**
  * @brief Discus function.
@@ -194,23 +191,21 @@ discus(const uint32_t DIMENSIONS,
        const uint32_t DIMENSION_OFFSET,
        const TFloat* evaluation_vector)
 {
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 6.0;
+  const float c1 = 10.0f;
+  const float c2 = 6.0f;
 
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
-#pragma omp simd reduction(+ : reduction_sum)                                  \
-  linear(evaluation_vector : DIMENSION_OFFSET * sizeof(TFloat))
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float osz_x = static_cast<float>(osz<TFloat>(static_cast<TFloat>(x), k, DIMENSIONS));
     if (k == 0) {
-      reduction_sum += pow(c1, c2) * osz_x * osz_x;
+      reduction_sum += std::pow(c1, c2) * osz_x * osz_x;
     } else {
       reduction_sum += osz_x * osz_x;
     }
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
 
 /**
@@ -227,19 +222,15 @@ diff_powers(const uint32_t DIMENSIONS,
             const uint32_t DIMENSION_OFFSET,
             const TFloat* evaluation_vector)
 {
-  const TFloat c1 = 0.5;
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
-#pragma omp simd reduction(+ : reduction_sum)                                  \
-  linear(evaluation_vector : DIMENSION_OFFSET * sizeof(TFloat))
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    reduction_sum += pow(fabs(x), 2 + 4 * k / (DIMENSIONS - 1));
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    reduction_sum += std::pow(std::abs(x), 2.0f + 4.0f * k / (DIMENSIONS - 1));
   }
 
-  // reduction_sum = pow(reduction_sum, c1);
-  reduction_sum = sqrt(reduction_sum);
-  return reduction_sum;
+  reduction_sum = std::sqrt(reduction_sum);
+  return static_cast<TFloat>(reduction_sum);
 }
 
 /**
@@ -256,18 +247,18 @@ rosenbrock(const uint32_t DIMENSIONS,
            const uint32_t DIMENSION_OFFSET,
            const TFloat* evaluation_vector)
 {
-  TFloat reduction_sum = 0.0;
-  TFloat x = evaluation_vector[0] + 1;
+  float reduction_sum = 0.0f;
+  float x = static_cast<float>(evaluation_vector[0]) + 1.0f;
 
   for (uint32_t k = 0; k < DIMENSIONS - 1; ++k) {
-    const TFloat x_1 = evaluation_vector[(k + 1) * DIMENSION_OFFSET] + 1;
-    const TFloat y = x * x - x_1;
-    const TFloat z = x - 1.0;
-    reduction_sum += 100 * y * y + z * z;
+    const float x_1 = static_cast<float>(evaluation_vector[(k + 1) * DIMENSION_OFFSET]) + 1.0f;
+    const float y = x * x - x_1;
+    const float z = x - 1.0f;
+    reduction_sum += 100.0f * y * y + z * z;
 
     x = x_1; // Update x value.
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
 
 /**
@@ -284,32 +275,29 @@ schaffer(const uint32_t DIMENSIONS,
          const uint32_t DIMENSION_OFFSET,
          const TFloat* evaluation_vector)
 {
-  const TFloat beta = 0.5;
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 1.0;
-  const TFloat c3 = 2.0;
-  // const TFloat c4 = 0.5;
-  const TFloat c5 = 0.2;
+  const float beta = 0.5f;
+  const float c1 = 10.0f;
+  const float c2 = 1.0f;
+  const float c3 = 2.0f;
+  const float c5 = 0.2f;
 
-  const TFloat x = evaluation_vector[0];
-  const TFloat asy_x = asy<TFloat>(x, beta, 0, DIMENSIONS);
-  TFloat y = asy_x * pow(c1, c2 * 0 / (DIMENSIONS - 1) / c3);
+  const float x = static_cast<float>(evaluation_vector[0]);
+  const float asy_x = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x), static_cast<TFloat>(beta), 0, DIMENSIONS));
+  float y = asy_x * std::pow(c1, c2 * 0 / (DIMENSIONS - 1) / c3);
 
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
   for (uint32_t k = 0; k < DIMENSIONS - 1; ++k) {
-    const TFloat x_1 = evaluation_vector[(k + 1) * DIMENSION_OFFSET];
-    const TFloat asy_x_1 = asy<TFloat>(x_1, beta, (k + 1), DIMENSIONS);
-    const TFloat y_1 = asy_x_1 * pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
-    // const TFloat z = pow(y*y + y_1*y_1, c4);
-    const TFloat z = sqrt(y * y + y_1 * y_1);
+    const float x_1 = static_cast<float>(evaluation_vector[(k + 1) * DIMENSION_OFFSET]);
+    const float asy_x_1 = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x_1), static_cast<TFloat>(beta), (k + 1), DIMENSIONS));
+    const float y_1 = asy_x_1 * std::pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
+    const float z = std::sqrt(y * y + y_1 * y_1);
 
-    const TFloat tmp = sin(50 * pow(z, c5));
-    // reduction_sum += pow(z, 0.5) + pow(z, 0.5) * tmp*tmp;
-    reduction_sum += sqrt(z) + sqrt(z) * tmp * tmp;
+    const float tmp = std::sin(50.0f * std::pow(z, c5));
+    reduction_sum += std::sqrt(z) + std::sqrt(z) * tmp * tmp;
 
     y = y_1;
   }
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
 
 /**
@@ -326,33 +314,33 @@ ackley(const uint32_t DIMENSIONS,
        const uint32_t DIMENSION_OFFSET,
        const TFloat* evaluation_vector)
 {
-  const TFloat PI = 3.1415926535;
-  const TFloat E = 2.7182818284;
-  const TFloat beta = 0.5;
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 1.0;
-  const TFloat c3 = 2.0;
-  const TFloat c4 = 0.2;
-  const TFloat c5 = 20.0;
+  const float PI = 3.1415926535f;
+  const float E = 2.7182818284f;
+  const float beta = 0.5f;
+  const float c1 = 10.0f;
+  const float c2 = 1.0f;
+  const float c3 = 2.0f;
+  const float c4 = 0.2f;
+  const float c5 = 20.0f;
 
-  TFloat reduction_sum_a = 0.0;
-  TFloat reduction_sum_b = 0.0;
+  float reduction_sum_a = 0.0f;
+  float reduction_sum_b = 0.0f;
 
-#pragma omp simd reduction(+ : reduction_sum_a, reduction_sum_b)
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
-    const TFloat y = asy_x * pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float asy_x = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x), static_cast<TFloat>(beta), k, DIMENSIONS));
+    const float y = asy_x * std::pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
 
     reduction_sum_a += y * y;
-    reduction_sum_b += cos(c3 * PI * y);
+    reduction_sum_b += std::cos(c3 * PI * y);
   }
 
-  reduction_sum_a = -c4 * sqrt(reduction_sum_a / DIMENSIONS);
+  reduction_sum_a = -c4 * std::sqrt(reduction_sum_a / DIMENSIONS);
   reduction_sum_b /= DIMENSIONS;
 
-  return E - c5 * exp(reduction_sum_a) - exp(reduction_sum_b) + c5;
+  return static_cast<TFloat>(E - c5 * std::exp(reduction_sum_a) - std::exp(reduction_sum_b) + c5);
 }
+
 /**
  * @brief Weierstrass function.
  *
@@ -367,45 +355,43 @@ weierstrass(const uint32_t DIMENSIONS,
             const uint32_t DIMENSION_OFFSET,
             const TFloat* evaluation_vector)
 {
-  const TFloat PI = 3.14159;
-  const TFloat beta = 0.5;
-  const TFloat c1 = 10.0;
-  const TFloat c2 = 1.0;
-  const TFloat c3 = 2.0;
-  const TFloat c4 = 0.5;
+  const float PI = 3.14159f;
+  const float beta = 0.5f;
+  const float c1 = 10.0f;
+  const float c2 = 1.0f;
+  const float c3 = 2.0f;
+  const float c4 = 0.5f;
 
-  const TFloat a = 0.5;
-  const TFloat b = 3.0;
+  const float a = 0.5f;
+  const float b = 3.0f;
 
   const uint32_t it_max = 20;
 
-  TFloat reduction_sum_a = 0.0;
-  TFloat reduction_sum_b;
-  TFloat reduction_sum_c;
+  float reduction_sum_a = 0.0f;
+  float reduction_sum_b;
+  float reduction_sum_c;
 
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    reduction_sum_b = 0.0;
-    reduction_sum_c = 0.0;
+    reduction_sum_b = 0.0f;
+    reduction_sum_c = 0.0f;
 
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat asy_x = asy<TFloat>(x, beta, k, DIMENSIONS);
-    const TFloat y = asy_x * pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float asy_x = static_cast<float>(asy<TFloat>(static_cast<TFloat>(x), static_cast<TFloat>(beta), k, DIMENSIONS));
+    const float y = asy_x * std::pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
 
-    TFloat pow_a = 1;
-    TFloat pow_b = 1;
+    float pow_a = 1.0f;
+    float pow_b = 1.0f;
 
-#pragma omp simd reduction(+ : reduction_sum_b, reduction_sum_c)               \
-  reduction(* : pow_a, pow_b)
     for (uint32_t it = 0; it <= it_max; ++it) {
-      reduction_sum_b += pow_a * cos(c3 * PI * pow_b * (y + c4));
-      reduction_sum_c += pow_a * cos(c3 * PI * pow_b * c4);
+      reduction_sum_b += pow_a * std::cos(c3 * PI * pow_b * (y + c4));
+      reduction_sum_c += pow_a * std::cos(c3 * PI * pow_b * c4);
       pow_a *= a;
       pow_b *= b;
     }
 
     reduction_sum_a += reduction_sum_b - DIMENSIONS * reduction_sum_c;
   }
-  return reduction_sum_a;
+  return static_cast<TFloat>(reduction_sum_a);
 }
 
 /**
@@ -422,23 +408,22 @@ griewank(const uint32_t DIMENSIONS,
          const uint32_t DIMENSION_OFFSET,
          const TFloat* evaluation_vector)
 {
-  const TFloat c1 = 100.0;
-  const TFloat c2 = 1.0;
-  const TFloat c3 = 2.0;
-  const TFloat c4 = 1.0;
-  const TFloat c5 = 4000.0;
+  const float c1 = 100.0f;
+  const float c2 = 1.0f;
+  const float c3 = 2.0f;
+  const float c4 = 1.0f;
+  const float c5 = 4000.0f;
 
-  TFloat reduction_sum = 0.0;
-  TFloat reduction_prod = 1.0;
+  float reduction_sum = 0.0f;
+  float reduction_prod = 1.0f;
 
-#pragma omp simd reduction(+ : reduction_sum) reduction(* : reduction_prod)
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat y = x * pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
+    const float x = static_cast<float>(evaluation_vector[k * DIMENSION_OFFSET]);
+    const float y = x * std::pow(c1, c2 * k / (DIMENSIONS - 1) / c3);
     reduction_sum += y * y;
-    reduction_prod *= cos(y / sqrt(c2 + k));
+    reduction_prod *= std::cos(y / std::sqrt(c2 + k));
   }
-  return c4 + reduction_sum / c5 - reduction_prod;
+  return static_cast<TFloat>(c4 + reduction_sum / c5 - reduction_prod);
 }
 
 /**
@@ -456,27 +441,20 @@ rastrigin(const uint32_t DIMENSIONS,
           const TFloat* evaluation_vector)
 {
 
-  const TFloat PI = 3.14159;
-  const TFloat alpha = 10.0;
-  const TFloat beta = 0.2;
-  const TFloat c1 = 1.0;
-  const TFloat c2 = 2.0;
-  const TFloat c3 = 10.0;
+  const float PI = 3.14159f;
+  const float alpha = 10.0f;
+  const float c1 = 1.0f;
+  const float c2 = 2.0f;
+  const float c3 = 10.0f;
 
-  TFloat reduction_sum = 0.0;
+  float reduction_sum = 0.0f;
 
-#pragma omp simd reduction(+ : reduction_sum)                                  \
-  linear(evaluation_vector : DIMENSION_OFFSET * sizeof(TFloat))
   for (uint32_t k = 0; k < DIMENSIONS; ++k) {
-    const TFloat x = evaluation_vector[k * DIMENSION_OFFSET];
-    const TFloat osz_x = osz<TFloat>(x, k, DIMENSIONS);
-    const TFloat asy_x = asy<TFloat>(osz_x, beta, k, DIMENSIONS);
-    const TFloat y = pow(alpha, c1 * k / (DIMENSIONS - 1) / 2);
-
-    reduction_sum += (y * y - c3 * cos(c2 * PI * y)) + c3;
+    const float y = std::pow(alpha, c1 * k / (DIMENSIONS - 1) / 2.0f);
+    reduction_sum += (y * y - c3 * std::cos(c2 * PI * y)) + c3;
   }
 
-  return reduction_sum;
+  return static_cast<TFloat>(reduction_sum);
 }
 
 /**
@@ -567,7 +545,7 @@ benchmark_dispatch(const uint32_t ISLES,
       const uint32_t agent = j;
       const uint32_t OFFSET = 1;
 
-      TFloat result = 0;
+      TFloat result = static_cast<TFloat>(0.0f);
       const TFloat* genome =
         evaluation_data + i * AGENTS * DIMENSIONS + j * DIMENSIONS;
 
@@ -575,10 +553,11 @@ benchmark_dispatch(const uint32_t ISLES,
         result = benchmark_function(DIMENSIONS, OFFSET, genome);
       }
 
-      result += EVALUATION_BIAS;
+      result = static_cast<TFloat>(static_cast<float>(result) + static_cast<float>(EVALUATION_BIAS));
 
+      float fres = static_cast<float>(result);
       evaluation_results[isle * AGENTS + agent] =
-        F_NEGATE_EVALUATION ? -result : result;
+        F_NEGATE_EVALUATION ? static_cast<TFloat>(-fres) : result;
     }
   }
 }
