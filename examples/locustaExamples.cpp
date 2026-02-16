@@ -7,33 +7,54 @@
 #include <time.h>
 
 #include "./benchmarks/benchmarks_cpu.hpp"
+
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "./benchmarks/benchmarks_cuda.hpp"
+#endif
 
 #include "evaluator/evaluator_cpu.hpp"
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "evaluator/evaluator_cuda.hpp"
+#endif
 
 #include "prngenerator/prngenerator_cpu.hpp"
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "prngenerator/prngenerator_cuda.hpp"
+#endif
 
 #include "solvers/pso/pso_solver_cpu.hpp"
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/pso/pso_solver_cuda.hpp"
+#endif
 
 #include "solvers/pso/pso_operators/pso_std_operators_cpu_impl.hpp"
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/pso/pso_operators/pso_std_operators_cuda_impl.hpp"
+#endif
 
 #include "solvers/ga/ga_solver_cpu.hpp"
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/ga/ga_solver_cuda.hpp"
+#endif
 
 #include "solvers/ga/ga_operators/ga_std_operators_cpu_impl.hpp"
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/ga/ga_operators/ga_std_operators_cuda_impl.hpp"
+#endif
 
 #include "solvers/de/de_solver_cpu.hpp"
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/de/de_solver_cuda.hpp"
+#endif
 
 #include "solvers/de/de_operators/de_std_operators_cpu_impl.hpp"
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/de/de_operators/de_std_operators_cuda_impl.hpp"
+#endif
 
+#ifdef LOCUSTA_ENABLE_CUDA
 #include "cuda_runtime.h"
+#endif
 
 using namespace locusta;
 
@@ -159,6 +180,7 @@ public:
   population_set_cpu<float>* population_cpu_ptr;
 };
 
+#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU-based Locusta tests.
  *
@@ -251,6 +273,7 @@ public:
   // Population
   population_set_cuda<float>* population_cuda_ptr;
 };
+#endif
 
 /**
  * @brief Test fixture for CPU-based Particle Swarm Optimization tests.
@@ -284,6 +307,7 @@ public:
   pso_solver_cpu<float>* pso_solver_cpu_ptr;
 };
 
+#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU-based Particle Swarm Optimization tests.
  *
@@ -315,6 +339,7 @@ protected:
 public:
   pso_solver_cuda<float>* pso_solver_cuda_ptr;
 };
+#endif
 
 /**
  * @brief Test fixture for CPU-based Genetic Algorithm tests.
@@ -347,6 +372,7 @@ public:
   ga_solver_cpu<float>* ga_solver_cpu_ptr;
 };
 
+#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU-based Genetic Algorithm tests.
  *
@@ -377,6 +403,7 @@ protected:
 public:
   ga_solver_cuda<float>* ga_solver_cuda_ptr;
 };
+#endif
 
 /**
  * @brief Test fixture for CPU-based Differential Evolution tests.
@@ -409,6 +436,7 @@ public:
   de_solver_cpu<float>* de_solver_cpu_ptr;
 };
 
+#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU-based Differential Evolution tests.
  *
@@ -439,6 +467,7 @@ protected:
 public:
   de_solver_cuda<float>* de_solver_cuda_ptr;
 };
+#endif
 
 /**
  * @brief Test case for CPU-based Particle Swarm Optimization.
@@ -489,6 +518,7 @@ TEST_P(CPUDifferentialEvolutionTest, BenchmarkCpu)
   de_solver_cpu_ptr->teardown_solver();
 }
 
+#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test case for GPU-based Particle Swarm Optimization.
  */
@@ -505,7 +535,9 @@ TEST_P(GPUParticleSwarmTest, BenchmarkCuda)
   // pso_solver_cuda_ptr->print_population();
   pso_solver_cuda_ptr->teardown_solver();
 }
+#endif
 
+#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU genetic algorithm.
  */
@@ -520,7 +552,9 @@ TEST_P(GPUGeneticAlgorithmTest, BenchmarkCuda)
   // ga_solver_cuda_ptr->print_population();
   ga_solver_cuda_ptr->teardown_solver();
 }
+#endif
 
+#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU differential evolution.
  */
@@ -535,6 +569,7 @@ TEST_P(GPUDifferentialEvolutionTest, BenchmarkCuda)
   // de_solver_cuda_ptr->print_population();
   de_solver_cuda_ptr->teardown_solver();
 }
+#endif
 
 // CPU Benchmarks
 INSTANTIATE_TEST_CASE_P(CPUParticleSwarmTestSuite,
@@ -561,6 +596,7 @@ INSTANTIATE_TEST_CASE_P(CPUDifferentialEvolutionTestSuite,
                                            ::testing::ValuesIn(DimensionsCombinations)
                                            ));
 
+#ifdef LOCUSTA_ENABLE_CUDA
 // GPU Benchmarks
 INSTANTIATE_TEST_CASE_P(GPUParticleSwarmTestSuite,
                         GPUParticleSwarmTest,
@@ -585,6 +621,7 @@ INSTANTIATE_TEST_CASE_P(GPUDifferentialEvolutionTestSuite,
                                            ::testing::ValuesIn(AgentsCombinations),
                                            ::testing::ValuesIn(DimensionsCombinations)
                                            ));
+#endif
 
 /**
  * @brief Main function for running the unit tests.

@@ -8,13 +8,25 @@ set(VERSION_MINOR   1   CACHE STRING "Project minor version number.")
 set(VERSION_PATCH   0   CACHE STRING "Project patch version number.")
 mark_as_advanced(VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
 
-find_package(CUDAToolkit)
-set(CMAKE_CUDA_COMPILER ${CUDAToolkit_NVCC_EXECUTABLE})
 
-# Fix CUDA Arch Target
-set(CMAKE_CUDA_ARCHITECTURES "native")
+# Options
+option(ENABLE_CUDA "Enable CUDA support" ON)
+option(ENABLE_DOCS "Enable documentation generation" OFF)
+option(ENABLE_TESTS "Enable testing" ON)
 
-enable_language(CXX CUDA)
+# Conditional CUDA support
+if(ENABLE_CUDA)
+  find_package(CUDAToolkit)
+  if(CUDAToolkit_FOUND)
+    enable_language(CUDA)
+    set(CMAKE_CUDA_COMPILER ${CUDAToolkit_NVCC_EXECUTABLE})
+    set(CMAKE_CUDA_ARCHITECTURES "native")
+  else()
+    message(FATAL_ERROR "CUDA Toolkit not found, but ENABLE_CUDA is ON.")
+  endif()
+endif()
+
+enable_language(CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 14)
 
@@ -97,20 +109,13 @@ set(locusta_INCLUDE_DIRS
   ${CMAKE_SOURCE_DIR}/include
   )
 
-include_directories(${locusta_INCLUDE_DIRS})
-#include_directories(${locusta_INCLUDE_DIRS} ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-set(LIB_TYPE STATIC)
+# include_directories(${locusta_INCLUDE_DIRS})
+
 
 add_subdirectory (src)
 
-# Examples
-option(BUILD_EXAMPLES
-  "On to build example suite."
-  ON
-  )
-
-if (BUILD_EXAMPLES)
+if (ENABLE_TESTS)
   find_package(GTest REQUIRED)
   include_directories(${GTEST_INCLUDE_DIRS})
 
@@ -121,12 +126,7 @@ endif()
 
 
 # Documentation
-option(BUILD_DOCS
-  "On to build doxygen documentation."
-  ON
-  )
-
-if(BUILD_DOCS)
+if(ENABLE_DOCS)
   find_package(Doxygen REQUIRED)
 
     if(NOT DOXYGEN_FOUND)
@@ -148,3 +148,4 @@ if(BUILD_DOCS)
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc)
 
 endif()
+
