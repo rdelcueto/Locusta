@@ -6,53 +6,28 @@
 #include <tuple>
 #include <time.h>
 
+// CPU Includes
 #include "./benchmarks/benchmarks_cpu.hpp"
+#include "evaluator/evaluator_cpu.hpp"
+#include "prngenerator/prngenerator_cpu.hpp"
+#include "solvers/pso/pso_solver_cpu.hpp"
+#include "solvers/pso/pso_operators/pso_std_operators_cpu_impl.hpp"
+#include "solvers/ga/ga_solver_cpu.hpp"
+#include "solvers/ga/ga_operators/ga_std_operators_cpu_impl.hpp"
+#include "solvers/de/de_solver_cpu.hpp"
+#include "solvers/de/de_operators/de_std_operators_cpu_impl.hpp"
 
+// CUDA Includes
 #ifdef LOCUSTA_ENABLE_CUDA
 #include "./benchmarks/benchmarks_cuda.hpp"
-#endif
-
-#include "evaluator/evaluator_cpu.hpp"
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "evaluator/evaluator_cuda.hpp"
-#endif
-
-#include "prngenerator/prngenerator_cpu.hpp"
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "prngenerator/prngenerator_cuda.hpp"
-#endif
-
-#include "solvers/pso/pso_solver_cpu.hpp"
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/pso/pso_solver_cuda.hpp"
-#endif
-
-#include "solvers/pso/pso_operators/pso_std_operators_cpu_impl.hpp"
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/pso/pso_operators/pso_std_operators_cuda_impl.hpp"
-#endif
-
-#include "solvers/ga/ga_solver_cpu.hpp"
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/ga/ga_solver_cuda.hpp"
-#endif
-
-#include "solvers/ga/ga_operators/ga_std_operators_cpu_impl.hpp"
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/ga/ga_operators/ga_std_operators_cuda_impl.hpp"
-#endif
-
-#include "solvers/de/de_solver_cpu.hpp"
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/de/de_solver_cuda.hpp"
-#endif
-
-#include "solvers/de/de_operators/de_std_operators_cpu_impl.hpp"
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "solvers/de/de_operators/de_std_operators_cuda_impl.hpp"
-#endif
-
-#ifdef LOCUSTA_ENABLE_CUDA
 #include "cuda_runtime.h"
 #endif
 
@@ -180,7 +155,181 @@ public:
   population_set_cpu<float>* population_cpu_ptr;
 };
 
+/**
+ * @brief Test fixture for CPU-based Particle Swarm Optimization tests.
+ *
+ * This class provides a test fixture for CPU-based Particle Swarm Optimization tests,
+ * inheriting from the CPULocustaTest class and adding a PSO solver.
+ */
+class CPUParticleSwarmTest : public CPULocustaTest
+{
+
+public:
+  virtual ~CPUParticleSwarmTest() {}
+
+protected:
+  virtual void SetUp()
+  {
+    CPULocustaTest::SetUp();
+    pso_solver_cpu_ptr = new pso_solver_cpu<float>(
+      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
+      upper_bounds_ptr, lower_bounds_ptr);
+  }
+
+  virtual void TearDown()
+  {
+    delete pso_solver_cpu_ptr;
+    pso_solver_cpu_ptr = NULL;
+    CPULocustaTest::TearDown();
+  }
+
+public:
+  pso_solver_cpu<float>* pso_solver_cpu_ptr;
+};
+
+/**
+ * @brief Test fixture for CPU-based Genetic Algorithm tests.
+ *
+ * This class provides a test fixture for CPU-based Genetic Algorithm tests,
+ * inheriting from the CPULocustaTest class and adding a GA solver.
+ */
+class CPUGeneticAlgorithmTest : public CPULocustaTest
+{
+public:
+  virtual ~CPUGeneticAlgorithmTest() {}
+
+protected:
+  virtual void SetUp()
+  {
+    CPULocustaTest::SetUp();
+    ga_solver_cpu_ptr = new ga_solver_cpu<float>(
+      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
+      upper_bounds_ptr, lower_bounds_ptr);
+  }
+
+  virtual void TearDown()
+  {
+    delete ga_solver_cpu_ptr;
+    ga_solver_cpu_ptr = NULL;
+    CPULocustaTest::TearDown();
+  }
+
+public:
+  ga_solver_cpu<float>* ga_solver_cpu_ptr;
+};
+
+/**
+ * @brief Test fixture for CPU-based Differential Evolution tests.
+ *
+ * This class provides a test fixture for CPU-based Differential Evolution tests,
+ * inheriting from the CPULocustaTest class and adding a DE solver.
+ */
+class CPUDifferentialEvolutionTest : public CPULocustaTest
+{
+public:
+  virtual ~CPUDifferentialEvolutionTest() {}
+
+protected:
+  virtual void SetUp()
+  {
+    CPULocustaTest::SetUp();
+    de_solver_cpu_ptr = new de_solver_cpu<float>(
+      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
+      upper_bounds_ptr, lower_bounds_ptr);
+  }
+
+  virtual void TearDown()
+  {
+    delete de_solver_cpu_ptr;
+    de_solver_cpu_ptr = NULL;
+    CPULocustaTest::TearDown();
+  }
+
+public:
+  de_solver_cpu<float>* de_solver_cpu_ptr;
+};
+
+/**
+ * @brief Test case for CPU-based Particle Swarm Optimization.
+ */
+TEST_P(CPUParticleSwarmTest, BenchmarkCpu)
+{
+  CanonicalParticleRecordUpdate<float> cpru;
+  CanonicalSpeedUpdate<float> csu;
+  CanonicalPositionUpdate<float> cpu;
+
+  pso_solver_cpu_ptr->setup_operators(&cpru, &csu, &cpu);
+
+  pso_solver_cpu_ptr->setup_solver();
+  pso_solver_cpu_ptr->run();
+  // pso_solver_cpu_ptr->print_solutions();
+  pso_solver_cpu_ptr->teardown_solver();
+}
+
+/**
+ * @brief Test case for CPU-based Genetic Algorithm.
+ */
+TEST_P(CPUGeneticAlgorithmTest, BenchmarkCpu)
+{
+  WholeCrossover<float> wc;
+  TournamentSelection<float> ts;
+
+  ga_solver_cpu_ptr->setup_operators(&wc, &ts);
+
+  ga_solver_cpu_ptr->setup_solver();
+  ga_solver_cpu_ptr->run();
+  // ga_solver_cpu_ptr->print_solutions();
+  ga_solver_cpu_ptr->teardown_solver();
+}
+
+/**
+ * @brief Test case for CPU-based Differential Evolution.
+ */
+TEST_P(CPUDifferentialEvolutionTest, BenchmarkCpu)
+{
+  DeWholeCrossover<float> dwc;
+  DeRandomSelection<float> drs;
+
+  de_solver_cpu_ptr->setup_operators(&dwc, &drs);
+
+  de_solver_cpu_ptr->setup_solver();
+  de_solver_cpu_ptr->run();
+  // de_solver_cpu_ptr->print_solutions();
+  de_solver_cpu_ptr->teardown_solver();
+}
+
+// CPU Benchmarks
+INSTANTIATE_TEST_CASE_P(CPUParticleSwarmTestSuite,
+                        CPUParticleSwarmTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+INSTANTIATE_TEST_CASE_P(CPUGeneticAlgorithmTestSuite,
+                        CPUGeneticAlgorithmTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+INSTANTIATE_TEST_CASE_P(CPUDifferentialEvolutionTestSuite,
+                        CPUDifferentialEvolutionTest,
+                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
+                                           ::testing::ValuesIn(IslesCombinations),
+                                           ::testing::ValuesIn(AgentsCombinations),
+                                           ::testing::ValuesIn(DimensionsCombinations)
+                                           ));
+
+
+// =================================================================================================
+// CUDA Specific Code
+// =================================================================================================
+
 #ifdef LOCUSTA_ENABLE_CUDA
+
 /**
  * @brief Test fixture for GPU-based Locusta tests.
  *
@@ -273,41 +422,7 @@ public:
   // Population
   population_set_cuda<float>* population_cuda_ptr;
 };
-#endif
 
-/**
- * @brief Test fixture for CPU-based Particle Swarm Optimization tests.
- *
- * This class provides a test fixture for CPU-based Particle Swarm Optimization tests,
- * inheriting from the CPULocustaTest class and adding a PSO solver.
- */
-class CPUParticleSwarmTest : public CPULocustaTest
-{
-
-public:
-  virtual ~CPUParticleSwarmTest() {}
-
-protected:
-  virtual void SetUp()
-  {
-    CPULocustaTest::SetUp();
-    pso_solver_cpu_ptr = new pso_solver_cpu<float>(
-      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
-      upper_bounds_ptr, lower_bounds_ptr);
-  }
-
-  virtual void TearDown()
-  {
-    delete pso_solver_cpu_ptr;
-    pso_solver_cpu_ptr = NULL;
-    CPULocustaTest::TearDown();
-  }
-
-public:
-  pso_solver_cpu<float>* pso_solver_cpu_ptr;
-};
-
-#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU-based Particle Swarm Optimization tests.
  *
@@ -339,40 +454,7 @@ protected:
 public:
   pso_solver_cuda<float>* pso_solver_cuda_ptr;
 };
-#endif
 
-/**
- * @brief Test fixture for CPU-based Genetic Algorithm tests.
- *
- * This class provides a test fixture for CPU-based Genetic Algorithm tests,
- * inheriting from the CPULocustaTest class and adding a GA solver.
- */
-class CPUGeneticAlgorithmTest : public CPULocustaTest
-{
-public:
-  virtual ~CPUGeneticAlgorithmTest() {}
-
-protected:
-  virtual void SetUp()
-  {
-    CPULocustaTest::SetUp();
-    ga_solver_cpu_ptr = new ga_solver_cpu<float>(
-      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
-      upper_bounds_ptr, lower_bounds_ptr);
-  }
-
-  virtual void TearDown()
-  {
-    delete ga_solver_cpu_ptr;
-    ga_solver_cpu_ptr = NULL;
-    CPULocustaTest::TearDown();
-  }
-
-public:
-  ga_solver_cpu<float>* ga_solver_cpu_ptr;
-};
-
-#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU-based Genetic Algorithm tests.
  *
@@ -403,40 +485,7 @@ protected:
 public:
   ga_solver_cuda<float>* ga_solver_cuda_ptr;
 };
-#endif
 
-/**
- * @brief Test fixture for CPU-based Differential Evolution tests.
- *
- * This class provides a test fixture for CPU-based Differential Evolution tests,
- * inheriting from the CPULocustaTest class and adding a DE solver.
- */
-class CPUDifferentialEvolutionTest : public CPULocustaTest
-{
-public:
-  virtual ~CPUDifferentialEvolutionTest() {}
-
-protected:
-  virtual void SetUp()
-  {
-    CPULocustaTest::SetUp();
-    de_solver_cpu_ptr = new de_solver_cpu<float>(
-      population_cpu_ptr, evaluator_cpu_ptr, prngenerator_cpu_ptr, GENERATIONS,
-      upper_bounds_ptr, lower_bounds_ptr);
-  }
-
-  virtual void TearDown()
-  {
-    delete de_solver_cpu_ptr;
-    de_solver_cpu_ptr = NULL;
-    CPULocustaTest::TearDown();
-  }
-
-public:
-  de_solver_cpu<float>* de_solver_cpu_ptr;
-};
-
-#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU-based Differential Evolution tests.
  *
@@ -467,58 +516,8 @@ protected:
 public:
   de_solver_cuda<float>* de_solver_cuda_ptr;
 };
-#endif
 
-/**
- * @brief Test case for CPU-based Particle Swarm Optimization.
- */
-TEST_P(CPUParticleSwarmTest, BenchmarkCpu)
-{
-  CanonicalParticleRecordUpdate<float> cpru;
-  CanonicalSpeedUpdate<float> csu;
-  CanonicalPositionUpdate<float> cpu;
 
-  pso_solver_cpu_ptr->setup_operators(&cpru, &csu, &cpu);
-
-  pso_solver_cpu_ptr->setup_solver();
-  pso_solver_cpu_ptr->run();
-  // pso_solver_cpu_ptr->print_solutions();
-  pso_solver_cpu_ptr->teardown_solver();
-}
-
-/**
- * @brief Test case for CPU-based Genetic Algorithm.
- */
-TEST_P(CPUGeneticAlgorithmTest, BenchmarkCpu)
-{
-  WholeCrossover<float> wc;
-  TournamentSelection<float> ts;
-
-  ga_solver_cpu_ptr->setup_operators(&wc, &ts);
-
-  ga_solver_cpu_ptr->setup_solver();
-  ga_solver_cpu_ptr->run();
-  // ga_solver_cpu_ptr->print_solutions();
-  ga_solver_cpu_ptr->teardown_solver();
-}
-
-/**
- * @brief Test case for CPU-based Differential Evolution.
- */
-TEST_P(CPUDifferentialEvolutionTest, BenchmarkCpu)
-{
-  DeWholeCrossover<float> dwc;
-  DeRandomSelection<float> drs;
-
-  de_solver_cpu_ptr->setup_operators(&dwc, &drs);
-
-  de_solver_cpu_ptr->setup_solver();
-  de_solver_cpu_ptr->run();
-  // de_solver_cpu_ptr->print_solutions();
-  de_solver_cpu_ptr->teardown_solver();
-}
-
-#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test case for GPU-based Particle Swarm Optimization.
  */
@@ -535,9 +534,8 @@ TEST_P(GPUParticleSwarmTest, BenchmarkCuda)
   // pso_solver_cuda_ptr->print_population();
   pso_solver_cuda_ptr->teardown_solver();
 }
-#endif
 
-#ifdef LOCUSTA_ENABLE_CUDA
+
 /**
  * @brief Test fixture for GPU genetic algorithm.
  */
@@ -552,9 +550,7 @@ TEST_P(GPUGeneticAlgorithmTest, BenchmarkCuda)
   // ga_solver_cuda_ptr->print_population();
   ga_solver_cuda_ptr->teardown_solver();
 }
-#endif
 
-#ifdef LOCUSTA_ENABLE_CUDA
 /**
  * @brief Test fixture for GPU differential evolution.
  */
@@ -569,34 +565,7 @@ TEST_P(GPUDifferentialEvolutionTest, BenchmarkCuda)
   // de_solver_cuda_ptr->print_population();
   de_solver_cuda_ptr->teardown_solver();
 }
-#endif
 
-// CPU Benchmarks
-INSTANTIATE_TEST_CASE_P(CPUParticleSwarmTestSuite,
-                        CPUParticleSwarmTest,
-                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
-                                           ::testing::ValuesIn(IslesCombinations),
-                                           ::testing::ValuesIn(AgentsCombinations),
-                                           ::testing::ValuesIn(DimensionsCombinations)
-                                           ));
-
-INSTANTIATE_TEST_CASE_P(CPUGeneticAlgorithmTestSuite,
-                        CPUGeneticAlgorithmTest,
-                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
-                                           ::testing::ValuesIn(IslesCombinations),
-                                           ::testing::ValuesIn(AgentsCombinations),
-                                           ::testing::ValuesIn(DimensionsCombinations)
-                                           ));
-
-INSTANTIATE_TEST_CASE_P(CPUDifferentialEvolutionTestSuite,
-                        CPUDifferentialEvolutionTest,
-                        ::testing::Combine(::testing::ValuesIn(BenchmarkFunctions),
-                                           ::testing::ValuesIn(IslesCombinations),
-                                           ::testing::ValuesIn(AgentsCombinations),
-                                           ::testing::ValuesIn(DimensionsCombinations)
-                                           ));
-
-#ifdef LOCUSTA_ENABLE_CUDA
 // GPU Benchmarks
 INSTANTIATE_TEST_CASE_P(GPUParticleSwarmTestSuite,
                         GPUParticleSwarmTest,
@@ -621,7 +590,9 @@ INSTANTIATE_TEST_CASE_P(GPUDifferentialEvolutionTestSuite,
                                            ::testing::ValuesIn(AgentsCombinations),
                                            ::testing::ValuesIn(DimensionsCombinations)
                                            ));
-#endif
+
+#endif // LOCUSTA_ENABLE_CUDA
+
 
 /**
  * @brief Main function for running the unit tests.
