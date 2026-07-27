@@ -1,7 +1,10 @@
 #include "gtest/gtest.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
+#include <random>
+#include <string>
 #include <time.h>
 #include <tuple>
 #include <vector>
@@ -440,6 +443,141 @@ INSTANTIATE_TEST_CASE_P(
                        ::testing::ValuesIn(IslesCombinations),
                        ::testing::ValuesIn(AgentsCombinations),
                        ::testing::ValuesIn(DimensionsCombinations)));
+
+// =================================================================================================
+// PRNG Allocator Optimization and Robustness Test Suite
+// =================================================================================================
+
+template <typename TFloat>
+void test_prng_robustness() {
+  uint32_t num_engines = 256;
+  prngenerator_cuda<TFloat> generator(num_engines);
+
+  // ---------------------------------------------------------------------------------------------
+  // Runtime Random Source Seed Selection & Derived Seed Generation
+  // ---------------------------------------------------------------------------------------------
+  uint64_t source_seed;
+  const char* env_seed = std::getenv("LOCUSTA_PRNG_SEED");
+  if (env_seed != nullptr) {
+    source_seed = std::stoull(env_seed);
+    std::cout << "[PRNG Test] Using environment source_seed: " << source_seed << std::endl;
+  } else {
+    std::random_device rd;
+    source_seed = (static_cast<uint64_t>(rd()) << 32) ^ rd();
+    std::cout << "[PRNG Test] Runtime source_seed: " << source_seed << std::endl;
+  }
+
+  std::mt19937_64 rng(source_seed);
+  std::vector<uint64_t> seeds = {rng(), rng(), rng()};
+
+  // ---------------------------------------------------------------------------------------------
+  // Buffer Resizing, Unaligned Batch Sizes, and Multi-Seed Sweeps
+  // ---------------------------------------------------------------------------------------------
+  std::vector<uint32_t> test_sizes = {1, 1007, 65537, 3333, 17, 100000};
+
+  for (uint64_t seed : seeds) {
+    std::cout << "[PRNG Test] Testing Seed: " << seed << " (source_seed: " << source_seed << ")" << std::endl;
+    SCOPED_TRACE("Testing PRNG with seed: " + std::to_string(seed) + " (source_seed: " + std::to_string(source_seed) + ")");
+
+    generator._initialize_engines(seed);
+
+    for (uint32_t size : test_sizes) {
+      TFloat* d_out;
+      CudaSafeCall(cudaMalloc((void**)&d_out, size * sizeof(TFloat)));
+      generator._generate(size, d_out);
+
+      // Range check sample
+      uint32_t sample_n = std::min(size, 100u);
+      std::vector<TFloat> h_sample(sample_n);
+      CudaSafeCall(cudaMemcpy(h_sample.data(), d_out, sample_n * sizeof(TFloat), cudaMemcpyDeviceToHost));
+
+      for (uint32_t i = 0; i < sample_n; ++i) {
+        float val = static_cast<float>(h_sample[i]);
+        EXPECT_GE(val, 0.0f);
+        EXPECT_LE(val, 1.0f);
+      }
+      CudaSafeCall(cudaFree(d_out));
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Large-Sample Statistical Moments, Serial Independence, and Chi-Square Distribution Analysis
+  // ---------------------------------------------------------------------------------------------
+  uint64_t stat_seed = rng();
+  std::cout << "[PRNG Test] Testing Statistical Distribution with Seed: " << stat_seed << std::endl;
+  SCOPED_TRACE("Testing Statistical Distribution with seed: " + std::to_string(stat_seed));
+
+  generator._initialize_engines(stat_seed);
+  const uint32_t N = 100000;
+  TFloat* d_out;
+  CudaSafeCall(cudaMalloc((void**)&d_out, N * sizeof(TFloat)));
+  generator._generate(N, d_out);
+
+  std::vector<TFloat> h_data(N);
+  CudaSafeCall(cudaMemcpy(h_data.data(), d_out, N * sizeof(TFloat), cudaMemcpyDeviceToHost));
+  CudaSafeCall(cudaFree(d_out));
+
+  double sum = 0.0;
+  const uint32_t num_bins = 10;
+  std::vector<uint32_t> bin_counts(num_bins, 0);
+
+  for (uint32_t i = 0; i < N; ++i) {
+    float val = static_cast<float>(h_data[i]);
+    sum += val;
+
+    int bin = static_cast<int>(val * num_bins);
+    if (bin >= static_cast<int>(num_bins)) bin = num_bins - 1;
+    if (bin < 0) bin = 0;
+    bin_counts[bin]++;
+  }
+
+  // 1. Mean check (theoretical U(0,1) mean = 0.5)
+  double mean = sum / N;
+  EXPECT_NEAR(mean, 0.5, 0.015);
+
+  // 2. Variance check (theoretical U(0,1) variance = 1/12 ≈ 0.083333)
+  double sq_diff_sum = 0.0;
+  double lag1_cov_sum = 0.0;
+  for (uint32_t i = 0; i < N; ++i) {
+    float val = static_cast<float>(h_data[i]);
+    double diff = val - mean;
+    sq_diff_sum += diff * diff;
+
+    if (i < N - 1) {
+      float next_val = static_cast<float>(h_data[i + 1]);
+      lag1_cov_sum += diff * (next_val - mean);
+    }
+  }
+  double variance = sq_diff_sum / N;
+  EXPECT_NEAR(variance, 1.0 / 12.0, 0.01);
+
+  // 3. Lag-1 Serial Autocorrelation / Covariance Check
+  double lag1_covariance = lag1_cov_sum / (N - 1);
+  EXPECT_NEAR(lag1_covariance, 0.0, 0.005);
+
+  // 4. Chi-Square Goodness-of-Fit Test
+  double expected_per_bin = static_cast<double>(N) / num_bins;
+  double chi_square = 0.0;
+  for (uint32_t b = 0; b < num_bins; ++b) {
+    double dev = bin_counts[b] - expected_per_bin;
+    chi_square += (dev * dev) / expected_per_bin;
+  }
+
+  if (sizeof(TFloat) >= 2) {
+    // 16-bit (half, bfloat16), 32-bit (float), 64-bit (double)
+    EXPECT_LT(chi_square, 50.0);
+  } else {
+    // 8-bit FP8 (E4M3, E5M2) quantization binning density check
+    EXPECT_LT(chi_square, 7000.0);
+  }
+}
+
+TEST(PRNGRobustnessTest, Precision_Float) { test_prng_robustness<float>(); }
+TEST(PRNGRobustnessTest, Precision_Double) { test_prng_robustness<double>(); }
+TEST(PRNGRobustnessTest, Precision_Half) { test_prng_robustness<__half>(); }
+TEST(PRNGRobustnessTest, Precision_BFloat16) { test_prng_robustness<__nv_bfloat16>(); }
+TEST(PRNGRobustnessTest, Precision_FP8_E4M3) { test_prng_robustness<__nv_fp8_e4m3>(); }
+TEST(PRNGRobustnessTest, Precision_FP8_E5M2) { test_prng_robustness<__nv_fp8_e5m2>(); }
 
 int main(int argc, char **argv) {
   BenchmarkFunctions = {1, 9};

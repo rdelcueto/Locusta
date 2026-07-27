@@ -44,6 +44,9 @@ prngenerator_cuda<TFloat>::~prngenerator_cuda()
 {
   CurandSafeCall(curandDestroyGenerator(_dev_bulk_prng_engine));
   CudaSafeCall(cudaFree(_dev_prng_engines));
+  if (_dev_scratch_float != nullptr) {
+    CudaSafeCall(cudaFree(_dev_scratch_float));
+  }
 }
 
 /**
@@ -80,11 +83,15 @@ template<typename TFloat>
 void
 prngenerator_cuda<TFloat>::_generate(const uint32_t n, TFloat* output)
 {
-  float* dev_float = nullptr;
-  CudaSafeCall(cudaMalloc((void**)&dev_float, n * sizeof(float)));
-  CurandSafeCall(curandGenerateUniform(_dev_bulk_prng_engine, dev_float, n));
-  gpu_cast_float_to_tfloat_dispatch(dev_float, output, n);
-  CudaSafeCall(cudaFree(dev_float));
+  if (n > _dev_scratch_capacity) {
+    if (_dev_scratch_float != nullptr) {
+      CudaSafeCall(cudaFree(_dev_scratch_float));
+    }
+    _dev_scratch_capacity = n;
+    CudaSafeCall(cudaMalloc((void**)&_dev_scratch_float, _dev_scratch_capacity * sizeof(float)));
+  }
+  CurandSafeCall(curandGenerateUniform(_dev_bulk_prng_engine, _dev_scratch_float, n));
+  gpu_cast_float_to_tfloat_dispatch(_dev_scratch_float, output, n);
 }
 
 template<>

@@ -76,6 +76,10 @@ struct prngenerator_cuda : prngenerator<TFloat>
 
   /// CUDA prng kernel engines.
   curandState* _dev_prng_engines;
+
+  /// Reusable scratch memory for bulk random float generation.
+  float* _dev_scratch_float = nullptr;
+  uint32_t _dev_scratch_capacity = 0;
 };
 
 }

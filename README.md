@@ -207,6 +207,29 @@ If you prefer to manage dependencies manually (without Pixi), you can build Locu
    ```
    Output documentation is located at `build/html/index.html`.
 
+## Reduced Precision PRNG Implementation & Experimental Verification
+
+Reduced precision PRNG support (FP16, BF16, and FP8) is currently in an **experimentation phase**. While initial checks pass, these tests are intended as a preliminary attempt to catch obvious defects rather than a formal proof of correctness. Further verification, empirical testing across complex evolutionary workloads, and careful strategy review remain necessary.
+
+### Rationale Behind the PRNG Modifications
+
+NVIDIA's `cuRAND` library natively generates single-precision (`float`) and double-precision (`double`) random numbers, but lacks native device generators for reduced precision types (`__half`, `__nv_bfloat16`, `__nv_fp8_e4m3`, `__nv_fp8_e5m2`).
+
+To generate reduced precision random numbers on the GPU, Locusta uses a two-step process:
+1. **Reusable VRAM Scratch Memory**: Allocating temporary GPU memory with `cudaMalloc` and `cudaFree` on every PRNG call introduces significant CPU blocking and GPU synchronization. The updated `prngenerator_cuda` maintains a persistent device scratch buffer (`_dev_scratch_float`) that expands as needed and reuses existing VRAM allocations on subsequent calls.
+2. **On-Device Hardware Conversion**: Instead of transferring temporary floats back to host memory, a CUDA grid-stride kernel (`gpu_cast_float_to_tfloat`) casts generated floats directly on the GPU using hardware conversion intrinsics (`__float2half_rn`, `__float2bfloat16_rn`, and FP8 constructors).
+
+### Robustness Test Suite (`PRNGRobustnessTest`)
+
+The test suite in `examples/locustaExamples_cuda.cpp` includes targeted checks designed to help catch potential issues introduced by reduced precision generation:
+
+* **Buffer Resizing & Odd Batch Sizes**: Requests small, large, and odd-length arrays ($N = 1, 1007, 65537, \dots$). Helps catch memory corruption, buffer overflows, or missing tail elements during GPU thread scheduling.
+* **Multi-Seed Sweeps**: Picks a random 64-bit source seed at runtime (via `std::random_device`), generating test seeds that print to stdout. If a test fails, setting `LOCUSTA_PRNG_SEED=<seed>` in the environment reproduces the exact run. Helps catch seed-specific crashes or repeated output patterns.
+* **Range Bounds**: Confirms all generated numbers fall within $[0, 1]$. Helps catch numeric overflow, `NaN` values, or corrupted floating-point bits.
+* **[Mean](https://en.wikipedia.org/wiki/Mean) & [Variance](https://en.wikipedia.org/wiki/Variance)**: Verifies that the sample average is close to $0.5$ and variance is close to $\frac{1}{12} \approx 0.083333$. Helps catch systematic drift or clustering toward boundary values (see [Continuous Uniform Distribution](https://en.wikipedia.org/wiki/Continuous_uniform_distribution)).
+* **[Serial Autocorrelation](https://en.wikipedia.org/wiki/Autocorrelation)**: Measures correlation between consecutive values ($\text{Cov}(X_i, X_{i+1}) \approx 0$). Helps catch repeating patterns or sequence dependencies between neighboring generated numbers.
+* **[Chi-Square Goodness-of-Fit Test](https://en.wikipedia.org/wiki/Chi-squared_test)**: Bins values across $[0, 1]$ to check frequency distribution. Helps catch severe bin imbalance while accounting for coarse quantization step sizes in 8-bit float formats.
+
 ## Implemented Metaheuristic Solvers & Precision Support
 
 | Metaheuristic Solver           | OMP (CPU) | CUDA (GPU) | Precision Types Supported |

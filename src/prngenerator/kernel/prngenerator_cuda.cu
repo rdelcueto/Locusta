@@ -49,12 +49,38 @@ gpu_setup_curand_dispatch(uint64_t seed,
 }
 
 template<typename TFloat>
+__device__ __forceinline__ TFloat cast_float_to_type(float v) {
+  return static_cast<TFloat>(v);
+}
+
+template<>
+__device__ __forceinline__ __half cast_float_to_type<__half>(float v) {
+  return __float2half_rn(v);
+}
+
+template<>
+__device__ __forceinline__ __nv_bfloat16 cast_float_to_type<__nv_bfloat16>(float v) {
+  return __float2bfloat16_rn(v);
+}
+
+template<>
+__device__ __forceinline__ __nv_fp8_e4m3 cast_float_to_type<__nv_fp8_e4m3>(float v) {
+  return __nv_fp8_e4m3(v);
+}
+
+template<>
+__device__ __forceinline__ __nv_fp8_e5m2 cast_float_to_type<__nv_fp8_e5m2>(float v) {
+  return __nv_fp8_e5m2(v);
+}
+
+template<typename TFloat>
 __global__ void
 gpu_cast_float_to_tfloat(const float* __restrict__ in, TFloat* __restrict__ out, uint32_t n)
 {
   uint32_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < n) {
-    out[idx] = static_cast<TFloat>(in[idx]);
+  uint32_t stride = blockDim.x * gridDim.x;
+  for (uint32_t i = idx; i < n; i += stride) {
+    out[i] = cast_float_to_type<TFloat>(in[i]);
   }
 }
 
